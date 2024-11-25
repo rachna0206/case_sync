@@ -141,10 +141,10 @@ if (isset($_REQUEST["update"])) {
         INNER JOIN 
             advocate ON advocate.id = task.alloted_by 
         WHERE 
-            task.alloted_to = ? and task.case_id=?
+            task.case_id=?
         ORDER BY 
             `case_hist`.id DESC");
-        $stmt->bind_param("ii", $intern_id,$Id);
+        $stmt->bind_param("i", $Id);
 
         $stmt->execute();   
         $Resp = $stmt->get_result();

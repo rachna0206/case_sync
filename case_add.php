@@ -24,6 +24,7 @@ if (isset($_REQUEST["save"])) {
     $city_id = $_REQUEST['city_id'];
     $sr_date = $_REQUEST['sr_date'];
     $status = $_REQUEST['radio'];
+    $stage = $_REQUEST['stage'];
 
 
     $multi_docs = $_FILES['docs']['name'];
@@ -33,12 +34,12 @@ if (isset($_REQUEST["save"])) {
 //echo $multi_docs;
 
     if ($multi_docs != "") {
-    if (file_exists("documnets/case/" . $multi_docs)) {
+    if (file_exists("documents/case/" . $multi_docs)) {
     $i = 0;
     $DocFileName = $multi_docs;
     $Arr1 = explode('.', $DocFileName);
     $DocFileName = $Arr1[0] . $i . "." . $Arr1[1];
-    while (file_exists("documnets/case/" . $DocFileName)) {
+    while (file_exists("documents/case/" . $DocFileName)) {
     $i++;
     $DocFileName = $Arr1[0] . $i . "." . $Arr1[1];
     }
@@ -49,8 +50,8 @@ if (isset($_REQUEST["save"])) {
 
     try {
         //echo("INSERT INTO `case`(case_no, year, case_type, company_id, handle_by, docs, applicant, opp_name, court_name, city_id, sr_date, status) VALUES ($case_no, $case_year, $case_type, $company_id, $handle_by, $DocFileName, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status)");
-        $stmt = $obj->con1->prepare("INSERT INTO `case`(case_no, year, case_type, company_id, handle_by, docs, applicant, opp_name, court_name, city_id, sr_date, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
-        $stmt->bind_param("sisiissssiss", $case_no, $case_year, $case_type, $company_id, $handle_by, $DocFileName, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status);
+        $stmt = $obj->con1->prepare("INSERT INTO `case`(case_no, year, case_type, company_id, handle_by, docs, applicant, opp_name, court_name, city_id, sr_date, `status`,stage) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        $stmt->bind_param("sisiissssissi", $case_no, $case_year, $case_type, $company_id, $handle_by, $DocFileName, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status,$stage);
         $Resp = $stmt->execute();
         $insert_doc_id = mysqli_insert_id($obj->con1);
 
@@ -123,6 +124,7 @@ if (isset($_REQUEST["update"])) {
      $multi_docs  = str_replace(' ', '_', $multi_docs );
      $multi_docs_path = $_FILES['docs']['tmp_name'];
     $old_img = $_REQUEST['old_img'];
+    $stage = $_REQUEST['stage'];
 
 
     if ($multi_docs  != "") {
@@ -148,8 +150,8 @@ if (isset($_REQUEST["update"])) {
 
     try {
         // Prepare update statement
-        $stmt = $obj->con1->prepare("UPDATE case SET case_no=?, year=?, case_type=?, company_id=?, handle_by=?, docs=?, applicant=?, opp_name=?, court_name=?, city_id=?, sr_date=?, status=? WHERE id=?");
-        $stmt->bind_param("ssssssssssssi", $case_no, $case_year, $case_type, $company_id, $handle_by, $DocFileName, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status, $e_id);
+        $stmt = $obj->con1->prepare("UPDATE `case` SET case_no=?, year=?, case_type=?, company_id=?, handle_by=?, docs=?, applicant=?, opp_name=?, court_name=?, city_id=?, sr_date=?, `status`=?,stage=? WHERE id=?");
+        $stmt->bind_param("ssssssssssssii", $case_no, $case_year, $case_type, $company_id, $handle_by, $DocFileName, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status,$stage,$e_id);
         $Resp = $stmt->execute();
             if (!$Resp) {
             throw new Exception("Problem in updating! " . strtok($obj->con1->error, "("));
@@ -331,18 +333,37 @@ if (isset($_REQUEST["btndelete"])) {
 
 
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="applicant" class="form-label">Applicant / Appellant / Complainant</label>
                                 <input type="text" class="form-control" id="applicant" name="applicant"
                                     value="<?php echo (isset($mode)) ? $data['applicant'] : '' ?>"
                                     <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="opp_name" class="form-label">Opponent / Respondent / Accused</label>
                                 <input type="text" class="form-control" id="opp_name" name="opp_name"
                                     value="<?php echo (isset($mode)) ? $data['opp_name'] : '' ?>"
                                     <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="stage" class="form-label">Stage</label>
+                                <select class="form-control" id="stage" name="stage"
+                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
+                                    <option value="">Select a Stage</option>
+                                    <?php 
+                                    $comp = "SELECT * FROM `stage` where status='Enable'";
+                                    $result = $obj->select($comp);
+                                   
+                                    while ($row = mysqli_fetch_array($result)) { 
+                                       
+                                    ?>
+                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= (isset($mode) && $row["id"]== $data["stage"])?"selected":"" ?>>
+                                        <?= htmlspecialchars($row["stage"]) ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                                
                             </div>
                         </div>
 
@@ -583,7 +604,7 @@ function readURL(input) {
         var filename = input.files[0].name; // Get the name of the first file
         var extn = filename.split(".").pop().toLowerCase();
 
-        if (["pdf", "doc", "docx"].includes(extn)) {
+        if (["pdf", "doc", "docx","xlsx","jpg","png","jpeg","bmp","txt"].includes(extn)) {
             document.getElementById('save').disabled = false; // Enable save button if valid file
 
             // Display only the file name with a delete button

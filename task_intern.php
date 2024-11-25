@@ -121,7 +121,7 @@ function viewdata(id, cno) {
                                     <a href="javascript:viewdata('<?php echo $row["id"] ?>','<?php echo $row["case_no"] ?>')"><i
                                             class="bx bx-show-alt bx-sm me-2"></i> </a>
                                     <?php
-                                        if($row["status"]!="re_alloted" )
+                                        if($row["status"]!="re_alloted" && $row["status"]!="completed")
                                         {
                                             ?>
                                             <a href="javascript:add_data('<?php echo $row["id"] ?>','<?php echo $row["case_no"] ?>')"><i

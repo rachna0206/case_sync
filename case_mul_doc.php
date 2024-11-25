@@ -201,7 +201,7 @@ function generateUniqueFileName($directory, $filename)
                 var filename = input.files[i].name;
                 var extn = filename.split(".").pop().toLowerCase();
 
-                if (["pdf", "doc", "docx"].includes(extn)) {
+                if (["pdf", "doc", "docx","xlsx","jpg","png","jpeg","bmp","txt"].includes(extn)) {
                     document.getElementById('save').disabled = false; // Enable save button if valid file
 
                     // Display file name with a delete "X" button
