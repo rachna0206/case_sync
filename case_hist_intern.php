@@ -45,7 +45,7 @@ function deletedata(id) {
 <!-- End Basic Modal-->
 
 <div class="pagetitle">
-    <h1>Case History</h1>
+    <h1>Case History  <span></span></h1>
     <nav>
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="index.php">Home</a></li>
@@ -53,6 +53,7 @@ function deletedata(id) {
             <li class="breadcrumb-item active">Data</li>
         </ol>
     </nav>
+    <button type="button" class="btn btn-primary"><i class="bx bx-plus me-1"></i> Next Date & Stage</button>
 </div><!-- End Page Title -->
 
 <section class="section">

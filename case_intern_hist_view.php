@@ -161,8 +161,8 @@ if (isset($_REQUEST["update"])) {
             <td><?php echo $row["fdt"] ?></td>
             <td>
                 <h4>
-                    <span class="badge rounded-pill bg-<?php echo ($row['status']=='Enable') ? 'success' : 'danger' ?>">
-                        <?php echo $row["status"]; ?>
+                    <span class="badge rounded-pill bg-<?php echo ($row['status']=='completed') ? 'success' : 'danger' ?>">
+                        <?php echo ucfirst($row["status"]); ?>
                     </span>
                 </h4>
             </td>

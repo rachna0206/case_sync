@@ -106,7 +106,7 @@ if (isset($_REQUEST["save"])) {
     header("location:case.php");
     }
     }
-
+ 
 if (isset($_REQUEST["update"])) {
     $e_id = $_COOKIE['edit_id'];
     $case_no = $_REQUEST['case_no'];

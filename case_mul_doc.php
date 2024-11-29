@@ -219,8 +219,7 @@ function generateUniqueFileName($directory, $filename)
 
     function deleteFile(index) {
         $('#file_' + index).remove(); // Remove the corresponding file preview
-        // Optionally, you can manage the files array here to keep track of files to be uploaded
-        // For example, you could store the remaining file names in a hidden input if needed
+        
     }
 </script>
 

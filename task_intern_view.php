@@ -84,7 +84,7 @@ if (isset($_REQUEST["update"])) {
                         <?php
                             $id = $_COOKIE["view_id"];
                             // $stmt = $obj->con1->prepare("SELECT * FROM `case_hist` inner join `task` on case_hist.task_id = task.id where task_id = '$id' order by case_hist.id DESC");
-                            $stmt = $obj->con1->prepare("SELECT *, stage.stage as stage_name , date_format(dos,'%d-%m-%Y') as rd, date_format(nextdate,'%d-%m-%Y') as nd FROM `case_hist` inner join `task` on case_hist.task_id = task.id inner join `stage`on case_hist.stage = stage.id  where case_hist.task_id = '$id' and alloted_to = {$_SESSION['intern_id']} order by case_hist.id DESC");
+                            $stmt = $obj->con1->prepare("SELECT case_hist.*, stage.stage as stage_name , date_format(dos,'%d-%m-%Y') as rd, date_format(nextdate,'%d-%m-%Y') as nd FROM `case_hist` inner join `task` on case_hist.task_id = task.id inner join `stage`on case_hist.stage = stage.id  where case_hist.task_id = '$id' and alloted_to = {$_SESSION['intern_id']} order by case_hist.id DESC");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
@@ -92,13 +92,13 @@ if (isset($_REQUEST["update"])) {
                             <tr>
 
                                 <th scope="row"><?php echo $i; ?></th>
-                                <td ><?php echo $row["stage"] ?></td>
+                                <td ><?php echo $row["stage_name"] ?></td>
                                 <td ><?php echo $row["remarks"] ?></td>
                                 <td><?php echo $row["rd"] ?></td>
                                 <td><?php echo  $row["nd"] ?></td>
                                 <td>
                                 <h4><span
-                                        class="badge rounded-pill bg-<?php echo ($row['status']=='Enable')?'success':'danger'?>"><?php echo $row["status"]; ?></span>
+                                        class="badge rounded-pill bg-<?php echo ($row['status']=='completed')?'success':'danger'?>"><?php echo ucfirst($row["status"]); ?></span>
                                 </h4>
                                 </td>
                                 <?php $i++;}?>

@@ -95,10 +95,11 @@ function deletedata(id, case_no) {
                         </thead>
                         <tbody>
                             <?php
-                                $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.case_type,c1.docs from `case` c1,case_type c2,task t WHERE c1.case_type=c2.id  and t.case_id= c1.id and t.alloted_to=?
+                           
+                                $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.case_type,c1.docs from `case` c1,case_type c2 WHERE c1.case_type=c2.id  and  c1.id=?
                                 union
-                                SELECT c1.case_no,c2.case_type,m.docs from `case` c1,case_type c2,task t,multiple_doc m WHERE c1.case_type=c2.id  and t.case_id= c1.id and t.alloted_to=? and m.c_id=c1.id");
-                                $stmt->bind_param("ii",$_SESSION["intern_id"],$_SESSION["intern_id"]);
+                                SELECT c1.case_no,c2.case_type,m.docs from `case` c1,case_type c2,multiple_doc m WHERE c1.case_type=c2.id and   m.c_id=c1.id and c1.id=?");
+                                $stmt->bind_param("ii",$id,$id);
                                 $stmt->execute();
                                 $Resp = $stmt->get_result();
                                 $i = 1;

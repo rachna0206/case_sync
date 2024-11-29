@@ -23,6 +23,7 @@ if (isset($_REQUEST["save"])) {
     $date = $_REQUEST['dos'];
     $nextdate = $_REQUEST['ndt'];
     $status = $_REQUEST['radio'];
+    $next_stage = $_REQUEST['next_stage'];
 
     //get case data
     
@@ -39,11 +40,33 @@ if (isset($_REQUEST["save"])) {
 
         //update case stage
 
-        $stmt_case = $obj->con1->prepare("UPDATE `case` SET stage=? WHERE id=?");
-        $stmt_case->bind_param("ii",  $stage,$Resp_case["id"]);
+        $stmt_case = $obj->con1->prepare("UPDATE `case` SET `stage`=?,`next_date`=?,`next_stage`=? WHERE id=?");
+        $stmt_case->bind_param("isii",  $stage,$nextdate,$next_stage,$Resp_case["id"]);
         $Resp_case_update = $stmt_case->execute();
         
         $stmt_case->close();
+
+        //upload documents
+        foreach ($_FILES["docs"]['name'] as $key => $value) {
+            if ($_FILES["docs"]['name'][$key] != "") {
+                $PicSubImage = $_FILES["docs"]["name"][$key];
+                // Generate unique file name if file already exists
+                $SubImageName = generateUniqueFileName("documents/case/", $PicSubImage);
+                $SubImageTemp = $_FILES["docs"]["tmp_name"][$key];
+                $SubImageName = str_replace(' ', '_', $SubImageName);
+
+                // Move uploaded file
+                move_uploaded_file($SubImageTemp, "documents/case/" . $SubImageName);
+                $added_by=$_SESSION["intern_id"];
+                $user_type="intern";
+                
+                $stmt_image = $obj->con1->prepare("INSERT INTO `multiple_doc`(`c_id`, `docs`,`added_by`,`user_type`) VALUES (?, ?,?,?)");
+                $stmt_image->bind_param("isis", $Resp_case["id"], $SubImageName,$added_by,$user_type);
+                $Resp_img = $stmt_image->execute();
+                $stmt_image->close();
+
+            }
+        }
 
         
         if (!$Resp) {
@@ -113,6 +136,22 @@ if (isset($_REQUEST["update"])) {
     header("location:case_hist.php");
     header("location:case_hist.php");
 }
+
+// Function to generate unique file name
+function generateUniqueFileName($directory, $filename)
+{
+    if (file_exists($directory . $filename)) {
+        $i = 0;
+        $Arr = explode('.', $filename);
+        $baseName = $Arr[0];
+        $extension = end($Arr);
+        do {
+            $i++;
+            $filename = $baseName . $i . '.' . $extension;
+        } while (file_exists($directory . $filename));
+    }
+    return $filename;
+}
 ?>
 <!-- <a href="javascript:go_back();"><i class="bi bi-arrow-left"></i></a> -->
 <div class="pagetitle">
@@ -137,7 +176,7 @@ if (isset($_REQUEST["update"])) {
                     <!-- Multi Columns Form -->
                     <form class="row g-3 pt-3" method="post" enctype="multipart/form-data">
                         <div class="col-md-12">
-                            <label for="stage" class="form-label">Stage</label>
+                            <label for="stage" class="form-label">Current Stage</label>
                             <select class="form-control" id="stage" name="stage"
                                 <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
                                 <option value="">Select a Stage</option>
@@ -172,6 +211,35 @@ if (isset($_REQUEST["update"])) {
                                 value="<?php echo (isset($mode) && isset($data['dos']) && !empty($data['dos'])) ? date('Y-m-d', strtotime($data['dos'])) : date('Y-m-d'); ?>"
                                 <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
                         </div>
+
+                        <div class="col-md-12" <?php echo (isset($mode)) ? 'hidden' : '' ?>>
+                            <label for="docs" class="form-label">Documents</label>
+                            <input type="file" class="form-control mb-3" id="docs" name="docs[]"
+                                onchange="readURL_multiple(this)" multiple <?php echo (isset($mode)) ? '' : 'required' ?>>
+                            <div id="preview_file_div" style="color:blue"></div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label for="stage" class="form-label">Next Stage</label>
+                            <select class="form-control" id="next_stage" name="next_stage">
+                                <option value="">Select a Stage</option>
+                                <?php 
+                                $stmt_case = $obj->con1->prepare("select * from `case` ");
+                               
+                                $stmt_case->execute();
+                                $Resp_case = $stmt_case->get_result()->fetch_assoc();
+                                $stmt_case->close();
+
+                                $comp = "SELECT * FROM stage";
+                                $result = $obj->select($comp);
+                                while ($row = mysqli_fetch_array($result)) { ?>
+                                <option value="<?= htmlspecialchars($row["id"]) ?>"  >
+                                    <?= htmlspecialchars($row["stage"]) ?>
+                                </option>
+                                <?php } ?>
+                            </select>
+                        </div>
+
 
 
                         <div class="col-md-12">
@@ -225,6 +293,34 @@ function go_back() {
     eraseCookie("case_no");
     window.location = "task_intern.php";
 }
+function readURL_multiple(input) {
+        $('#preview_file_div').html(""); // Clear previous preview
+        var filesAmount = input.files.length;
+        for (let i = 0; i < filesAmount; i++) {
+            if (input.files && input.files[i]) {
+                var filename = input.files[i].name;
+                var extn = filename.split(".").pop().toLowerCase();
+
+                if (["pdf", "doc", "docx","xlsx","jpg","png","jpeg","bmp","txt"].includes(extn)) {
+                    document.getElementById('save').disabled = false; // Enable save button if valid file
+
+                    // Display file name with a delete "X" button
+                    $('#preview_file_div').append('<p id="file_' + i + '">' + filename +
+                        ' <button type="button" class="btn btn-danger btn-sm" onclick="deleteFile(' + i + ')">' +
+                        '<i class="bi bi-x-circle"></i></button></p>');
+                } else {
+                    $('#preview_file_div').html("Please select a valid file (PDF, DOC, and DOCX)");
+                    document.getElementById('save').disabled = true;
+                    break; // Stop the loop for invalid file
+                }
+            }
+        }
+    }
+    function deleteFile(index) {
+        $('#file_' + index).remove(); // Remove the corresponding file preview
+        // Optionally, you can manage the files array here to keep track of files to be uploaded
+        // For example, you could store the remaining file names in a hidden input if needed
+    }
 </script>
 <?php
 include "footer_intern.php";
