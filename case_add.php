@@ -234,7 +234,7 @@ if (isset($_REQUEST["btndelete"])) {
                             <div class="col-md-4">
                                 <label for="case_type" class="form-label">Case Type</label>
                                 <select class="form-control" id="case_type" name="case_type"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> onchange="get_stage(this.value)">
                                     <option value="">Select a Case Type</option>
                                     <?php 
                                     $comp = "SELECT * FROM `case_type` where status='Enable'";
@@ -421,17 +421,17 @@ if (isset($_REQUEST["btndelete"])) {
                                 <label for="status" class="form-label">Status</label> <br />
                                 <div class="form-check-inline">
                                     <input class="form-check-input" type="radio" name="radio" id="radio1"
-                                        <?php echo isset($mode) && $data['status'] == 'Enable' ? 'checked' : '' ?>
-                                        class="form-radio text-primary" value="Enable" required
+                                        <?php echo isset($mode) && $data['status'] == 'pending' ? 'checked' : '' ?>
+                                        class="form-radio text-primary" value="pending" required
                                         <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
-                                    <label class="form-check-label" for="radio1">Enable</label>
+                                    <label class="form-check-label" for="radio1">Pending</label>
                                 </div>
                                 <div class="form-check-inline">
                                     <input class="form-check-input" type="radio" name="radio" id="radio2"
-                                        <?php echo isset($mode) && $data['status'] == 'Disable' ? 'checked' : '' ?>
-                                        class="form-radio text-danger" value="Disable" required
+                                        <?php echo isset($mode) && $data['status'] == 'disposed' ? 'checked' : '' ?>
+                                        class="form-radio text-danger" value="disposed" required
                                         <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
-                                    <label class="form-check-label" for="radio2">Disable</label>
+                                    <label class="form-check-label" for="radio2">Disposed</label>
                                 </div>
                             </div>
                         </div>
@@ -547,6 +547,24 @@ if (isset($_REQUEST["btndelete"])) {
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
+    function get_stage(case_type)
+    {
+        $.ajax({
+            async: true,
+            type: "POST",
+            url: "action.php?action=get_stage",
+            data: "case_type=" + case_type,
+            cache: false,
+            success: function(result) {
+                var data = result.split("@@@@@");
+                $("#stage").html("");
+                $("#stage").html(data[0]);
+                $("#court_name").html("");
+                $("#court_name").html(data[1]);
+                
+            }
+        });
+    }
 function go_back() {
     eraseCookie("edit_id");
     eraseCookie("view_id");
