@@ -108,7 +108,7 @@ if (isset($_REQUEST["update"])) {
                                 <label for="case_type" class="form-label">Case Type</label>
                                 <select class="form-control" id="case_type" name="case_type"
                                     <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                                    <option value="">Select Task</option>
+                                    <option value="">Select Case Type</option>
                                     <?php 
                                         $comp = "SELECT * FROM `case_type` where status='enable'";
                                         $result = $obj->select($comp);
