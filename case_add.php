@@ -250,46 +250,67 @@ if (isset($_REQUEST["btndelete"])) {
                                     <?php } ?>
                                 </select>
                             </div>
-
                             <div class="col-md-4">
-                                <label for="company_id" class="form-label">Company</label>
-                                <select class="form-control" id="company_id" name="company_id"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                                    <option value="">Select a Company</option>
+                                <label for="stage" class="form-label">Stage</label>
+                                <select class="form-control" id="stage" name="stage"
+                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
+                                    <option value="">--Select Stage--</option>
                                     <?php 
-                                    $comp = "SELECT * FROM `company` where status='Enable'";
+                                    if(isset($mode))
+                                    {
+                                        $comp = "SELECT * FROM `stage` where case_type_id='".$data["case_type"]."' and lower(`status`)='enable'";
+                                    }
+                                    else
+                                    {
+                                        $comp = "SELECT * FROM `stage` where lower(`status`)='enable'";
+                                    }
+                                    
                                     $result = $obj->select($comp);
-                                    $selectedCompanyId = isset($data['company_id']) ? $data['company_id'] : '';
+                                   
+                                    while ($row = mysqli_fetch_array($result)) { 
+                                       
+                                    ?>
+                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= (isset($mode) && $row["id"]== $data["stage"])?"selected":"" ?>>
+                                        <?= htmlspecialchars($row["stage"]) ?>
+                                    </option>
+                                    <?php }
+                                     
+                                    ?>
+                                </select>
+                                
+                            </div>
+                            <div class="col-md-4">
+                                <label for="court_name" class="form-label">Court</label>
+                                <select class="form-control" id="court_name" name="court_name"
+                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                    <option value="">--Select Court--</option>
+                                    <?php 
+                                    if(isset($mode))
+                                    {
+                                        $comp = "SELECT * FROM `court` where case_type='".$data["case_type"]."' and lower(`status`)='enable'";
+                                    }
+                                    else
+                                    {
+                                        $comp = "SELECT * FROM `court` where lower(`status`)='enable'";
+                                    }
+                                    $result = $obj->select($comp);
+                                    $selectedcourtId = isset($data['court_name']) ? $data['court_name'] : ''; 
 
                                     while ($row = mysqli_fetch_array($result)) { 
-                                        $selected = ($row["id"] == $selectedCompanyId) ? 'selected' : '';
+                                        $selected = ($row["id"] == $selectedcourtId) ? 'selected' : '';
                                     ?>
                                     <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
                                         <?= htmlspecialchars($row["name"]) ?>
                                     </option>
-                                    <?php } ?>
+                                    <?php } 
+                                    
+                                   ?>
                                 </select>
                             </div>
 
-                            <div class="col-md-4">
-                                <label for="handle_by" class="form-label">Handle By</label>
-                                <select class="form-control" id="handle_by" name="handle_by"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                                    <option value="">Select an Advocate</option>
-                                    <?php 
-                                    $comp = "SELECT * FROM `advocate` where status='Enable'";
-                                    $result = $obj->select($comp);
-                                    $selectedAdvocateId = isset($data['handle_by']) ? $data['handle_by'] : '';
+                            
 
-                                    while ($row = mysqli_fetch_array($result)) { 
-                                        $selected = ($row["id"] == $selectedAdvocateId) ? 'selected' : '';
-                                    ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                        <?= htmlspecialchars($row["name"]) ?>
-                                    </option>
-                                    <?php } ?>
-                                </select>
-                            </div>
+                            
                         </div>
                         <div class="row g-3">
                             <div class="col-md-12">
@@ -301,12 +322,9 @@ if (isset($_REQUEST["btndelete"])) {
                         </div>
 
                         <div>
-                            <h4 class="font-bold text-primary mt-2 mb-3"
-                                style="display:<?php echo (isset($mode)) ? 'block' : 'none' ?>">
-                                Document Preview
-                            </h4>
+                            
 
-                            <div id="preview_file_div" style="color:blue"></div>
+                            <div id="preview_file_div" class="text-danger"></div>
                             <input type="hidden" name="old_file" id="old_file"
                                 value="<?php echo (isset($mode) && $mode == 'edit') ? htmlspecialchars($data["docs"]) : '' ?>" />
                         </div>
@@ -347,39 +365,17 @@ if (isset($_REQUEST["btndelete"])) {
                                     <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
                             </div>
                             <div class="col-md-4">
-                                <label for="stage" class="form-label">Stage</label>
-                                <select class="form-control" id="stage" name="stage"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
-                                    <option value="">Select a Stage</option>
-                                    <?php 
-                                    $comp = "SELECT * FROM `stage` where status='Enable'";
-                                    $result = $obj->select($comp);
-                                   
-                                    while ($row = mysqli_fetch_array($result)) { 
-                                       
-                                    ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= (isset($mode) && $row["id"]== $data["stage"])?"selected":"" ?>>
-                                        <?= htmlspecialchars($row["stage"]) ?>
-                                    </option>
-                                    <?php } ?>
-                                </select>
-                                
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label for="court_name" class="form-label">Court</label>
-                                <select class="form-control" id="court_name" name="court_name"
+                                <label for="company_id" class="form-label">Company</label>
+                                <select class="form-control" id="company_id" name="company_id"
                                     <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                                    <option value="">Select a Court</option>
+                                    <option value="">Select a Company</option>
                                     <?php 
-                                    $comp = "SELECT * FROM `court` where status='Enable'";
+                                    $comp = "SELECT * FROM `company` where status='Enable'";
                                     $result = $obj->select($comp);
-                                    $selectedcourtId = isset($data['court_name']) ? $data['court_name'] : ''; 
+                                    $selectedCompanyId = isset($data['company_id']) ? $data['company_id'] : '';
 
                                     while ($row = mysqli_fetch_array($result)) { 
-                                        $selected = ($row["id"] == $selectedcourtId) ? 'selected' : '';
+                                        $selected = ($row["id"] == $selectedCompanyId) ? 'selected' : '';
                                     ?>
                                     <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
                                         <?= htmlspecialchars($row["name"]) ?>
@@ -387,6 +383,33 @@ if (isset($_REQUEST["btndelete"])) {
                                     <?php } ?>
                                 </select>
                             </div>
+                            
+
+
+
+                        </div>
+
+                        <div class="row g-3">
+                        <div class="col-md-4">
+                                <label for="handle_by" class="form-label">Handled By</label>
+                                <select class="form-control" id="handle_by" name="handle_by"
+                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                    <option value="">Select an Advocate</option>
+                                    <?php 
+                                    $comp = "SELECT * FROM `advocate` where status='Enable'";
+                                    $result = $obj->select($comp);
+                                    $selectedAdvocateId = isset($data['handle_by']) ? $data['handle_by'] : '';
+
+                                    while ($row = mysqli_fetch_array($result)) { 
+                                        $selected = ($row["id"] == $selectedAdvocateId) ? 'selected' : '';
+                                    ?>
+                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                        <?= htmlspecialchars($row["name"]) ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+
 
                             <div class="col-md-4">
                                 <label for="city_id" class="form-label">City Name</label>
@@ -421,7 +444,7 @@ if (isset($_REQUEST["btndelete"])) {
                                 <label for="status" class="form-label">Status</label> <br />
                                 <div class="form-check-inline">
                                     <input class="form-check-input" type="radio" name="radio" id="radio1"
-                                        <?php echo isset($mode) && $data['status'] == 'pending' ? 'checked' : '' ?>
+                                        <?php echo (!isset($mode) || (isset($mode)  && $data['status'])) == 'pending' ? 'checked' : '' ?>
                                         class="form-radio text-primary" value="pending" required
                                         <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
                                     <label class="form-check-label" for="radio1">Pending</label>
@@ -547,6 +570,7 @@ if (isset($_REQUEST["btndelete"])) {
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
+   
     function get_stage(case_type)
     {
         $.ajax({
