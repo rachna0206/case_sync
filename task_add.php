@@ -101,13 +101,56 @@ if (isset($_REQUEST["update"])) {
             <div class="card">
                 <div class="card-body">
 
-                        <form class="row g-3 pt-3" method="post" enctype="multipart/form-data">
-                            <div class="col-md-12">
-                                <label for="case_id" class="form-label">Case Number</label>
-                                <select class="form-control" id="case_id" name="case_id"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
-                                    <option value="">Select a Case</option>
+                    <form class="row g-3 pt-3" method="post" enctype="multipart/form-data">
+                        <div class="row pt-3">
+                            <div class="col-md-6">
+                                <label for="case_type" class="form-label">Case Type</label>
+                                <select class="form-control" id="case_type" name="case_type"
+                                    <?= isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                    <option value="">Select Case Type</option>
                                     <?php 
+                                        $comp = "SELECT * FROM `case_type` WHERE status='enable'";
+                                        $result = $obj->select($comp);
+                                        $selectedcourtId = isset($data['case_type']) ? $data['case_type'] : '';
+
+                                        while ($row = mysqli_fetch_array($result)) { 
+                                            $selected = ($row["id"] == $selectedcourtId) ? 'selected' : '';
+                                    ?>
+                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                        <?= htmlspecialchars($row["case_type"]) ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="city" class="form-label">City</label>
+                                <select class="form-control" id="city" name="city"
+                                    <?= isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                    <option value="">Select City</option>
+                                    <?php 
+                                        $task = "SELECT * FROM `city` WHERE status='Enable'";
+                                        $result = $obj->select($task);
+                                        $selectedCaseId = isset($data['city_id']) ? $data['city_id'] : ''; 
+
+                                        while ($row = mysqli_fetch_array($result)) { 
+                                            $selected = ($row["id"] == $selectedCaseId) ? 'selected' : '';
+                                    ?>
+                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                        <?= htmlspecialchars($row["name"]) ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-12">
+                            <label for="case_id" class="form-label">Case Number</label>
+                            <select class="form-control" id="case_id" name="case_id"
+                                <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
+                                <option value="">Select a Case</option>
+                                <?php 
                                     $task = "SELECT * FROM `case`";
                                     $result = $obj->select($task);
                                     $selectedCaseId = isset($data['case_id']) ? $data['case_id'] : ''; 
@@ -115,19 +158,19 @@ if (isset($_REQUEST["update"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                         $selected = ($row["id"] == $selectedCaseId) ? 'selected' : '';
                                     ?>
-                                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                            <?= htmlspecialchars($row["case_no"]) ?>   
-                                        </option>
-                                    <?php } ?>
-                                </select>
-                            </div>
-                        
-                            <div class="col-md-12">
-                                <label for="case_id" class="form-label">Alloted To</label>
-                                <select class="form-control" id="alloted_to" name="alloted_to"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                                    <option value="">Select Intern</option>
-                                    <?php 
+                                <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                    <?= htmlspecialchars($row["case_no"]) ?>
+                                </option>
+                                <?php } ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label for="case_id" class="form-label">Alloted To</label>
+                            <select class="form-control" id="alloted_to" name="alloted_to"
+                                <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                <option value="">Select Intern</option>
+                                <?php 
                                     $task = "SELECT * FROM `interns`";
                                     $result = $obj->select($task);
                                     $selectedCaseId = isset($data['alloted_to']) ? $data['alloted_to'] : ''; 
@@ -135,38 +178,36 @@ if (isset($_REQUEST["update"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                         $selected = ($row["id"] == $selectedCaseId) ? 'selected' : '';
                                     ?>
-                                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                            <?= htmlspecialchars($row["name"]) ?>   
-                                        </option>
-                                    <?php } ?>
-                                </select>
-                            </div>
-                            
-                             <div class="col-md-12">
-                                <label for="title" class="form-label">Task Instruction</label>
-                                <textarea rows="5" cols="30" class="form-control" name="instruction">
-                                    <?php
-                                        if(isset($data["instruction"]))
-                                        {
-                                            echo trim($data["instruction"]);
-                                        }
-                                    ?></textarea>
-                            </div>
+                                <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                    <?= htmlspecialchars($row["name"]) ?>
+                                </option>
+                                <?php } ?>
+                            </select>
+                        </div>
 
-                            <div class="col-md-12">
+
+                        <div class="col-md-12">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Task Instruction</label>
+                            <textarea class="form-control" style="height: 100px" id="instruction" name="instruction"
+                                required
+                                <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>><?php echo (isset($mode)) ? $data['instruction'] : '' ?></textarea>
+                        </div>
+                        <div class="row pt-3">
+                            <div class="col-md-6">
                                 <label for="title" class="form-label">Allotted Date</label>
                                 <input type="date" class="form-control" id="alloted_date" name="alloted_date"
                                     value="<?php echo (isset($mode) && isset($data['alloted_date']) && !empty($data['alloted_date'])) ? date('Y-m-d', strtotime($data['alloted_date'])) : date('Y-m-d'); ?>"
                                     <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
                             </div>
-                            
-                            <div class="col-md-12">
+
+                            <div class="col-md-6">
                                 <label for="title" class="form-label">Expected End Date</label>
                                 <input type="date" class="form-control" id="exp_end_date" name="exp_end_date"
                                     value="<?php echo (isset($mode) && isset($data['expected_end_date']) && !empty($data['expected_end_date'])) ? date('Y-m-d', strtotime($data['alloted_date'])) : date('Y-m-d'); ?>"
                                     <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
                             </div>
-                            <input type="hidden" name="radio" value="allotted">
+                        </div>
+                        <input type="hidden" name="radio" value="allotted">
                         <div class="text-left mt-4">
                             <button type="submit"
                                 name="<?php echo isset($mode) && $mode == 'edit' ? 'update' : 'save' ?>" id="save"
@@ -188,7 +229,6 @@ function go_back() {
     eraseCookie("view_id");
     window.location = "task.php";
 }
-
 </script>
 <?php
 include "footer.php";

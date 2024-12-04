@@ -105,13 +105,14 @@ function deletedata(id,name) {
                             <tr>
                                 <th scope="col">Sr no.</th>
                                 <th scope="col">Court Name</th>
+                                <th scope="col">Case Type</th>    
                                 <th scope="col">Status</th>
                                 <th scope="col">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
-                            $stmt = $obj->con1->prepare("SELECT * FROM `court` ORDER BY `id` DESC");
+                            $stmt = $obj->con1->prepare("SELECT c2.case_type as type, c1.* FROM `court` c1 JOIN `case_type` c2 ON c1.case_type = c2.id ORDER BY c1.id DESC;");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
@@ -120,6 +121,7 @@ function deletedata(id,name) {
 
                                 <th scope="row"><?php echo $i; ?></th>
                                 <td ><?php echo $row["name"] ?></td>
+                                <td ><?php echo $row["type"] ?></td>
                                 <td>
                                 <h4><span
                                         class="badge rounded-pill bg-<?php echo ($row['status']=='Enable')?'success':'danger'?>"><?php echo $row["status"]; ?></span>

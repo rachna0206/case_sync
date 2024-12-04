@@ -13,12 +13,13 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
 
 if (isset($_REQUEST["save"])) {
     $name = $_REQUEST['name'];
+    $case_type = $_REQUEST['case_type'];
     $status = $_REQUEST['radio'];
 
     try {
        // echo "INSERT INTO `company`(`company_name`, `contact_person`,`contact_num`, `status`) VALUES (".$company_name.",".$contact_person.",".$contact_num.", ".$status.")";
-        $stmt = $obj->con1->prepare("INSERT INTO `court`(`name`, `status`) VALUES (?,?)");
-        $stmt->bind_param("ss", $name, $status);
+        $stmt = $obj->con1->prepare("INSERT INTO `court`(`name`, `case_type`,`status`) VALUES (?,?,?)");
+        $stmt->bind_param("sis", $name, $case_type,$status);
         $Resp = $stmt->execute();
         if (!$Resp) {
             throw new Exception(
@@ -47,12 +48,13 @@ if (isset($_REQUEST["save"])) {
 if (isset($_REQUEST["update"])) {
     $e_id = $_COOKIE['edit_id'];
     $name = $_REQUEST['name'];
+    $case_type = $_REQUEST['case_type'];
     $status = $_REQUEST['radio'];
 
 
     try {
-        $stmt = $obj->con1->prepare("UPDATE `court` SET `name`=?,`status`=? WHERE `id`=?");
-        $stmt->bind_param("ssi",  $name, $status, $e_id);
+        $stmt = $obj->con1->prepare("UPDATE `court` SET `name`=?,`case_type`=?,`status`=? WHERE `id`=?");
+        $stmt->bind_param("sisi",  $name,$case_type, $status, $e_id);
         $Resp = $stmt->execute();
         if (!$Resp) {
             throw new Exception(
@@ -95,13 +97,32 @@ if (isset($_REQUEST["update"])) {
 
                     <!-- Multi Columns Form -->
                     <form class="row g-3 pt-3" method="post" enctype="multipart/form-data">
-                            <div class="col-md-12">
-                                <label for="title" class="form-label">Name</label>
-                                <input type="text" class="form-control" id="name" name="name"
-                                    value="<?php echo (isset($mode)) ? $data['name'] : '' ?>"
-                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
-                            </div>
+                        <div class="col-md-12">
+                            <label for="title" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" name="name"
+                                value="<?php echo (isset($mode)) ? $data['name'] : '' ?>"
+                                <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
+                        </div>
 
+                        <div class="col-md-12">
+                                <label for="case_type" class="form-label">Case Type</label>
+                                <select class="form-control" id="case_type" name="case_type"
+                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                    <option value="">Select Task</option>
+                                    <?php 
+                                        $comp = "SELECT * FROM `case_type` where status='enable'";
+                                        $result = $obj->select($comp);
+                                        $selectedcourtId = isset($data['case_type']) ? $data['case_type'] : '';
+
+                                        while ($row = mysqli_fetch_array($result)) { 
+                                            $selected = ($row["id"] == $selectedcourtId) ? 'selected' : '';
+                                        ?>
+                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                        <?= htmlspecialchars($row["case_type"]) ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
                         <div class="col-md-6">
                             <label for="inputEmail5" class="form-label">Status</label> <br />
                             <div class="form-check-inline">
@@ -140,7 +161,6 @@ function go_back() {
     eraseCookie("view_id");
     window.location = "court.php";
 }
-
 </script>
 <?php
 include "footer.php";
