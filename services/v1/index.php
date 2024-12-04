@@ -119,7 +119,7 @@ $app->post('/add_company', function () use ($app) {
     $data = array();
     $data["data"] = array();
 
-    $result = $db->add_company($name, $contact_person,  $contact_no);
+    $result = $db->add_company($name, $contact_person, $contact_no);
     if ($result == 1) {
         $data['message'] = "Company Added";
         $data['success'] = true;
@@ -145,7 +145,7 @@ $app->post('/intern_registration', function () use ($app) {
     $data = array();
     $data["data"] = array();
 
-    $result = $db->addNewIntern($name, $contact, $email, $password,$start_date);
+    $result = $db->addNewIntern($name, $contact, $email, $password, $start_date);
     // echo $result;
     if ($result == 1) {
         $data['message'] = "Intern Added";
@@ -163,6 +163,83 @@ $app->get('/get_case_type_list', function () use ($app) {
     $data = array();
     $data["data"] = array();
     $result = $db->get_case_type_list();
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Data found.";
+        $data['success'] = true;
+    } else {
+        $data["message"] = "No data found";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+$app->get('/get_advocate_list', function () use ($app) {
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+    $result = $db->get_advocate_list();
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Data found.";
+        $data['success'] = true;
+    } else {
+        $data["message"] = "No data found";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+$app->post('/get_case_stage_list', function () use ($app) {
+
+    verifyRequiredParams(array('case_type_id'));
+    $case_stage = $app->request->post("case_type_id");
+    // echo $stage . "\n";
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+    $result = $db->get_case_stage_list($case_stage);
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Data found.";
+        $data['success'] = true;
+    } else {
+        $data["message"] = "No data found";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+$app->post('/get_case_info', function () use ($app) {
+
+    verifyRequiredParams(array('case_no'));
+    $case_no = $app->request->post("case_no");
+    // echo $stage . "\n";
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+    $result = $db->get_case_info($case_no);
 
     if (mysqli_num_rows($result) > 0) {
         while ($row = $result->fetch_assoc()) {
@@ -254,11 +331,11 @@ $app->get('/get_city_list', function () use ($app) {
     echoResponse(200, $data);
 });
 
-$app->get('/get_case_list', function () use ($app) {
+$app->get('/get_case_history', function () use ($app) {
     $db = new DbOperation();
     $data = array();
     $data["data"] = array();
-    $result = $db->get_case_list();
+    $result = $db->get_case_history();
 
     if (mysqli_num_rows($result) > 0) {
         while ($row = $result->fetch_assoc()) {
@@ -277,6 +354,38 @@ $app->get('/get_case_list', function () use ($app) {
     }
     echoResponse(200, $data);
 });
+
+
+$app->post('/get_task_list', function () use ($app) {
+    verifyRequiredParams(array('data'));
+    $data_request = json_decode($app->request->post('data'));
+    $case_no = $data_request->case_no;
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->get_task_list($case_no);
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Data found.";
+        $data['success'] = true;
+    } else {
+        $data["message"] = "No data found";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+
+
 $app->get('/get_unassigned_case_list', function () use ($app) {
     $db = new DbOperation();
     $data = array();
@@ -299,7 +408,8 @@ $app->get('/get_unassigned_case_list', function () use ($app) {
         $data["success"] = false;
     }
     echoResponse(200, $data);
-});$app->get('/get_assigned_case_list', function () use ($app) {
+});
+$app->get('/get_assigned_case_list', function () use ($app) {
     $db = new DbOperation();
     $data = array();
     $data["data"] = array();
@@ -358,27 +468,26 @@ $app->post('/add_case', function () use ($app) {
     $handle_by = $data_request->handle_by;
     $applicant = $data_request->applicant;
     $company_id = $data_request->company_id;
-    // $docs = $data_request->docs;
     $opp_name = $data_request->opp_name;
     $court_name = $data_request->court_name;
     $city_id = $data_request->city_id;
     $sr_date = $data_request->sr_date;
+    $stage = $data_request->stage;
+    $added_by = $data_request->added_by;
+    $user_type = $data_request->user_type;
 
 
-    //rename file for case image
     $case_img = $_FILES["case_image"]["name"];
     $case_img_path = $_FILES["case_image"]["tmp_name"];
-
-    // Convert spaces and special characters in the file name to underscores
     $case_img = preg_replace('/[^A-Za-z0-9.\-]/', '_', $case_img);
 
-    if (file_exists("../../case_image/" . $case_img)) {
+    if (file_exists("../../documents/case/" . $case_img)) {
         $i = 0;
         $ImageFileName1 = $case_img;
         $Arr1 = explode('.', $ImageFileName1);
 
         $ImageFileName1 = $Arr1[0] . $i . "." . $Arr1[1];
-        while (file_exists("../../case_image/" . $ImageFileName1)) {
+        while (file_exists("../../documents/case/" . $ImageFileName1)) {
             $i++;
             $ImageFileName1 = $Arr1[0] . $i . "." . $Arr1[1];
         }
@@ -386,12 +495,60 @@ $app->post('/add_case', function () use ($app) {
         $ImageFileName1 = $case_img;
     }
 
+    $ImageFileName2 = null;
+
+    if (isset($_FILES["case_docs"]["name"])) {
+        for ($i = 0; $i < sizeof($_FILES["case_docs"]["name"]); $i++) {
+
+            $case_docs[$i] = $_FILES["case_docs"]["name"][$i];
+            $case_docs_path[$i] = $_FILES["case_docs"]["tmp_name"][$i];
+
+            $case_docs[$i] = preg_replace('/[^A-Za-z0-9.\-]/', '_', $case_docs[$i]);
+
+            if (file_exists("../../documents/case/" . $case_docs[$i])) {
+                $i = 0;
+                $ImageFileName2[$i] = $case_img[$i];
+                $Arr1 = explode('.', $ImageFileName1);
+
+                $ImageFileName2[$i] = $Arr1[0] . $i . "." . $Arr1[1];
+                while (file_exists("../../documents/case/" . $ImageFileName1)) {
+                    $i++;
+                    $ImageFileName2[$i] = $Arr1[0] . $i . "." . $Arr1[1];
+                }
+            } else {
+                $ImageFileName2[$i] = $case_docs[$i];
+            }
+        }
+    }
+
 
     $db = new DbOperation();
     $data = array();
-    $result = $db->add_case($case_no, $year, $company_id, $ImageFileName1, $opp_name, $court_name, $city_id, $sr_date,$case_type,$handle_by,$applicant);
+    $result = $db->add_case(
+        $case_no,
+        $year,
+        $company_id,
+        $ImageFileName1,
+        $opp_name,
+        $court_name,
+        $city_id,
+        $sr_date,
+        $case_type,
+        $handle_by,
+        $applicant,
+        $stage,
+        $ImageFileName2,
+        $added_by,
+        $user_type
+    );
     if ($result) {
-        move_uploaded_file($case_img, "../../case_img/" . $ImageFileName1);
+        move_uploaded_file($case_img_path, "../../documents/case/" . $ImageFileName1);
+        if (isset($_FILES["case_docs"]["name"])) {
+            for ($i = 0; $i < sizeof($ImageFileName2); $i++) {
+                move_uploaded_file($case_docs_path[$i], "../../documents/case/" . $ImageFileName2[$i]);
+            }
+        }
+        // for($i=0;$i<sizeof($))
         $data["message"] = "Case added successfully";
         $data["success"] = true;
     } else {
@@ -410,14 +567,16 @@ $app->post('/task_assignment', function () use ($app) {
     $alloted_to = $data_request->alloted_to;
     $alloted_by = $data_request->alloted_by;
     $remark = $data_request->remark;
+    $expected_end_date = $data_request->expected_end_date;
+    $instruction = $data_request->instruction;
 
     $db = new DbOperation();
     $data = array();
     $data["data"] = array();
 
-    $result = $db->task_assignment($case_id, $alloted_to, $alloted_by, $remark);
+    $result = $db->task_assignment($case_id, $alloted_to, $alloted_by, $remark, $expected_end_date, $instruction);
     // echo $result;
-    if ($result == 1) {
+    if ($result) {
         $data['message'] = "Task Assigned Successfully.";
         $data['success'] = true;
     } else {

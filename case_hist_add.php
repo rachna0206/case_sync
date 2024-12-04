@@ -215,7 +215,7 @@ function generateUniqueFileName($directory, $filename)
                         <div class="col-md-12" <?php echo (isset($mode)) ? 'hidden' : '' ?>>
                             <label for="docs" class="form-label">Documents</label>
                             <input type="file" class="form-control mb-3" id="docs" name="docs[]"
-                                onchange="readURL_multiple(this)" multiple <?php echo (isset($mode)) ? '' : 'required' ?>>
+                                onchange="readURL_multiple(this)" multiple >
                             <div id="preview_file_div" style="color:blue"></div>
                         </div>
 

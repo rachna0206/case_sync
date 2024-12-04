@@ -117,24 +117,38 @@ function addmuldocs(id) {
                                 <th scope="col">Case Year</th>
                                 <th scope="col">Case Type</th>
                                 <th scope="col">Company</th>
-                                <th scope="col">Handle By</th>
-                                <th scope="col">Applicant</th>
-                                <th scope="col">Opponent</th>
+                                <th scope="col">Handled By</th>
+                               
                                 <th scope="col">Court</th>
                                 <th scope="col">City</th>
                                 <th scope="col">Summon Date</th>
+                                <th scope="col">Next Date</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
-                            $stmt = $obj->con1->prepare("SELECT *, case.id as case_id, company.name as company_name, case_type.case_type as case_type_name, court.name as cname, city.name as city_name, advocate.name as adv_name FROM `case` inner join `company` on case.company_id = company.id inner join `case_type` on case.case_type = case_type.id inner join `court` on court.id = case.court_name inner join `city` on city.id = case.city_id inner join `advocate` on case.handle_by = advocate.id ORDER BY case.id DESC");
+                            $stmt = $obj->con1->prepare("SELECT c1.*,c1.id as case_id,c2.name as company_name, c3.case_type as case_type_name, c4.name as cname, c5.name as city_name, a1.name as adv_name FROM `case` c1,company c2,case_type c3,court c4,city c5,advocate a1 WHERE c1.company_id=c2.id and c1.case_type = c3.id and  c1.court_name=c4.id and c1.city_id=c5.id and c1.handle_by = a1.id ORDER BY c1.id DESC");
                             // $stmt = $obj->con1->prepare("SELECT t1.name, t2.* FROM `company` t1, `case` t2 where t1.id = t2.company_id ORDER BY t2.id DESC");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
-                            while ($row = mysqli_fetch_array($Resp)) { ?>
+                            while ($row = mysqli_fetch_array($Resp)) { 
+                                
+                                if($row['status']=='dispossed')
+                                {
+                                    $class="success";
+                                }
+                                else if($row['status']=='pending')
+                                {
+                                    $class="warning";
+                                }
+                                else{
+                                    $class="secondary";
+                                }
+                                
+                                ?>
                             <tr>
 
                                 <th scope="row"><?php echo $i; ?></th>
@@ -144,14 +158,14 @@ function addmuldocs(id) {
                                 <td ><?php echo $row["case_type_name"] ?></td>
                                 <td ><?php echo $row["company_name"] ?></td>
                                 <td><?php echo $row["adv_name"] ?></td>
-                                <td><?php echo $row["applicant"] ?></td>
-                                <td><?php echo $row["opp_name"] ?></td>
+                                
                                 <td><?php echo $row["cname"] ?></td>
                                 <td><?php echo $row["city_name"] ?></td>
-                                <td><?php echo $row["sr_date"] ?></td>
+                                <td><?php echo date("d/m/Y",strtotime($row["sr_date"])) ?></td>
+                                <td><?php echo  ($row["next_date"]!="")?date("d/m/Y",strtotime($row["next_date"])):"-" ?></td>
                                 <td>
                                 <h4><span
-                                        class="badge rounded-pill bg-<?php echo ($row['status']=='Enable')?'success':'danger'?>"><?php echo $row["status"]; ?></span>
+                                        class="badge rounded-pill bg-<?php echo $class?>"><?php echo ucfirst($row["status"]); ?></span>
                                 </h4>
                                 </td>
 
