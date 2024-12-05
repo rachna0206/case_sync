@@ -124,9 +124,12 @@ function deletedata(id) {
                                 <td ><?php echo $row["state_name"] ?></td>
                                 <td ><?php echo $row["name"] ?></td>
                                 <td>
-                                <h4><span
-                                        class="badge rounded-pill bg-<?php echo ($row['status']=='Enable')?'success':'danger'?>"><?php echo $row["status"]; ?></span>
-                                </h4>
+                                    <h4>
+                                        <span
+                                            class="badge rounded-pill bg-<?php echo ($row["status"] === "enable") ? 'success' : 'danger'; ?>">
+                                            <?php echo ucfirst($row["status"]); ?>
+                                        </span>
+                                    </h4>
                                 </td>
 
                                 <td>
@@ -134,7 +137,7 @@ function deletedata(id) {
                                             class="bx bx-show-alt bx-sm me-2"></i> </a>
                                     <a href="javascript:editdata('<?php echo$row["id"]?>')"><i
                                             class="bx bx-edit-alt bx-sm me-2 text-success"></i> </a>
-                                    <a href="javascript:deletedata('<?php echo $row["id"]?>');"><i
+                                 
                                     <a href="javascript:deletedata('<?php echo $row["id"]?>');"><i
                                             class="bx bx-trash bx-sm me-2 text-danger"></i> </a>
                                 </td>

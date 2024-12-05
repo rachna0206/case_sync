@@ -129,7 +129,7 @@ if (isset($_REQUEST["update"])) {
                                     <?= isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
                                     <option value="">Select City</option>
                                     <?php 
-                                        $task = "SELECT * FROM `city` WHERE status='Enable'";
+                                        $task = "SELECT * FROM `city` WHERE status='enable'";
                                         $result = $obj->select($task);
                                         $selectedCaseId = isset($data['city_id']) ? $data['city_id'] : ''; 
 

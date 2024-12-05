@@ -98,7 +98,8 @@ function deletedata(id) {
             <div class="card">
                 <div class="card-body">
                     <div class="card-title">
-                        <a href="javascript:add_data()"><button type="button" class="btn btn-success"><i class="bi bi-plus me-1"></i> Add </button></a>
+                        <a href="javascript:add_data()"><button type="button" class="btn btn-success"><i
+                                    class="bi bi-plus me-1"></i> Add </button></a>
                     </div>
                     <table class="table datatable">
                         <thead>
@@ -121,22 +122,27 @@ function deletedata(id) {
                             <tr>
 
                                 <th scope="row"><?php echo $i; ?></th>
-                                <td ><?php echo $row["name"] ?></td>
+                                <td><?php echo $row["name"] ?></td>
 
-                                <td ><?php echo $row["contact"] ?></td>
-                                <td ><?php echo $row["email"] ?></td>
+                                <td><?php echo $row["contact"] ?></td>
+                                <td><?php echo $row["email"] ?></td>
                                 <td>
-                                <h4><span
-                                        class="badge rounded-pill bg-<?php echo ($row['status']=='Enable')?'success':'danger'?>"><?php echo $row["status"]; ?></span>
-                                </h4>
+                                    <h4>
+                                        <span
+                                            class="badge rounded-pill bg-<?php echo ($row["status"] === "enable") ? 'success' : 'danger'; ?>">
+                                            <?php echo ucfirst($row["status"]); ?>
+                                        </span>
+                                    </h4>
                                 </td>
+
 
                                 <td>
                                     <a href="javascript:viewdata('<?php echo $row["id"]?>')"><i
                                             class="bx bx-show-alt bx-sm me-2"></i> </a>
                                     <a href="javascript:editdata('<?php echo$row["id"]?>')"><i
                                             class="bx bx-edit-alt bx-sm me-2 text-success"></i> </a>
-                                    <a href="javascript:deletedata('<?php echo $row["id"]?>','<?php echo $row["email"]?>');"><i
+                                    <a
+                                        href="javascript:deletedata('<?php echo $row["id"]?>','<?php echo $row["email"]?>');"><i
                                             class="bx bx-trash bx-sm me-2 text-danger"></i> </a>
                                 </td>
                             </tr>

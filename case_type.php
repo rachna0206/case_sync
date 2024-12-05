@@ -120,10 +120,14 @@ function deletedata(id,case_type) {
                                 <th scope="row"><?php echo $i; ?></th>
                                 <td ><?php echo $row["case_type"] ?></td>
                                 <td>
-                                <h4><span
-                                        class="badge rounded-pill bg-<?php echo ($row['status']=='Enable')?'success':'danger'?>"><?php echo $row["status"]; ?></span>
-                                </h4>
+                                    <h4>
+                                        <span
+                                            class="badge rounded-pill bg-<?php echo ($row["status"] === "enable") ? 'success' : 'danger'; ?>">
+                                            <?php echo ucfirst($row["status"]); ?>
+                                        </span>
+                                    </h4>
                                 </td>
+
 
                                 <td>
                                     <a href="javascript:viewdata('<?php echo $row["id"]?>')"><i
