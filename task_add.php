@@ -248,11 +248,11 @@ if (isset($_REQUEST["update"])) {
 
                         <div class="col-md-12">
                             <label for="case_id" class="form-label">Case Number</label>
-                          
-                                <select class="form-control" id="case_id" name="case_id"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
-                                    <option value="">Select a Case</option>
-                                    <?php
+
+                            <select class="form-control" id="case_id" name="case_id"
+                                <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
+                                <option value="">Select a Case</option>
+                                <?php
                                 $task = "SELECT * FROM `case`";
                                 $result = $obj->select($task);
                                 $selectedCaseId = isset($data['case_id']) ? $data['case_id'] : '';
@@ -260,21 +260,19 @@ if (isset($_REQUEST["update"])) {
                                 while ($row = mysqli_fetch_array($result)) {
                                     $selected = ($row["id"] == $selectedCaseId) ? 'selected' : '';
                                 ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                        <?= htmlspecialchars($row["case_no"]) ?>
-                                    </option>
-                                    <?php } ?>
-                                </select>
-                               
+                                <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                    <?= htmlspecialchars($row["case_no"]) ?>
+                                </option>
+                                <?php } ?>
+                            </select>
                         </div>
-
                         <div class="col-md-12">
                             <label for="case_id" class="form-label">Alloted To</label>
                             <div class="d-flex">
-                            <select class="form-control" id="alloted_to" name="alloted_to"
-                                <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                                <option value="">Select Intern</option>
-                                <?php
+                                <select class="form-control" id="alloted_to" name="alloted_to"
+                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                    <option value="">Select Intern</option>
+                                    <?php
                                 $task = "SELECT * FROM `interns`";
                                 $result = $obj->select($task);
                                 $selectedCaseId = isset($data['alloted_to']) ? $data['alloted_to'] : '';
@@ -282,12 +280,12 @@ if (isset($_REQUEST["update"])) {
                                 while ($row = mysqli_fetch_array($result)) {
                                     $selected = ($row["id"] == $selectedCaseId) ? 'selected' : '';
                                 ?>
-                                <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                    <?= htmlspecialchars($row["name"]) ?>
-                                </option>
-                                <?php } ?>
-                            </select>
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                        <?= htmlspecialchars($row["name"]) ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                                     data-bs-target="#addintrnmodal">
                                     <i class="bi bi-plus"></i>
                                 </button>
