@@ -91,8 +91,8 @@ class DbOperation
 
         $status = "enable";
 
-        $stmt = $this->con->prepare("INSERT INTO `interns`(`name`, `contact`, `email`,`status`, `password`,`date_time`) VALUES (?,?,?,?,?,?)");
-        $stmt->bind_param("ssssss", $name, $contact, $email, $status, $password, $start_date);
+        $stmt = $this->con->prepare("INSERT INTO `interns`(`name`, `contact`, `email`,`status`, `password`) VALUES (?,?,?,?,?)");
+        $stmt->bind_param("sssss", $name, $contact, $email, $status, $password);
         $result = $stmt->execute();
         $stmt->close();
         return $result;
@@ -144,7 +144,7 @@ class DbOperation
     }
     public function get_case_history()
     {
-        $stmt = $this->con->prepare("SELECT a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id where a.status = 'enable';");
+        $stmt = $this->con->prepare("SELECT a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id;");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -169,15 +169,26 @@ class DbOperation
     }
     public function get_unassigned_case_list()
     {
-        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.year, a.sr_date, b.name as court_name, a.applicant, a.opp_name, c.case_type, d.name as city_name,a.handle_by from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id where a.status = 'enable' AND a.id  not in (select DISTINCT(case_id) from task);");
+        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.year, a.sr_date, b.name as court_name, a.applicant, a.opp_name, c.case_type, d.name as city_name,a.handle_by from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id where a.id  not in (select DISTINCT(case_id) from task);");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
         return $result;
     }
-    public function get_case_info($case_no){
-        $stmt = $this->con->prepare("");
-        $stmt->bind_param("s",$case_no);
+    public function get_case_task($case_no)
+    {
+        $case_id = $this->getCaseId($case_no);
+        $stmt = $this->con->prepare("SELECT * from task where case_id = ?");
+        $stmt->bind_param("s", $case_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
+    public function get_task_history($task_no)
+    {
+        $stmt = $this->con->prepare("SELECT * from case_hist where task_id = ?");
+        $stmt->bind_param("s", $task_no);
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -185,7 +196,7 @@ class DbOperation
     }
     public function get_assigned_case_list()
     {
-        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.year, a.sr_date, b.name as court_name, a.applicant, a.opp_name, c.case_type, d.name as city_name,a.handle_by from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id where a.status = 'enable' AND a.id in (select DISTINCT(case_id) from task);");
+        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.year, a.sr_date, b.name as court_name, a.applicant, a.opp_name, c.case_type, d.name as city_name,a.handle_by from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id where a.id in (select DISTINCT(case_id) from task);");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -193,7 +204,7 @@ class DbOperation
     }
     public function get_interns_list()
     {
-        $stmt = $this->con->prepare("SELECT id,name,contact,date_time FROM `interns` where `status` = 'enable'");
+        $stmt = $this->con->prepare("SELECT id,name,contact,date_time , email FROM `interns` where `status` = 'enable'");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -219,7 +230,7 @@ class DbOperation
     }
     public function get_company_list()
     {
-        $stmt = $this->con->prepare("SELECT * from `company`");
+        $stmt = $this->con->prepare("SELECT * from `company` where status = 'enable '");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
