@@ -285,7 +285,7 @@ if (isset($_REQUEST["update"])) {
                                     </option>
                                     <?php } ?>
                                 </select>
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
                                     data-bs-target="#addintrnmodal">
                                     <i class="bi bi-plus"></i>
                                 </button>

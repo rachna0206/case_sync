@@ -77,6 +77,34 @@ if (isset($_REQUEST["update"])) {
         header("location:city.php");
     }
 }
+
+if (isset($_REQUEST["btn_case_type"])) {
+
+    $case_type_m = $_REQUEST['c_type'];
+    $status='enable';
+    try {
+        // echo "INSERT INTO `city`(`case_type`, `status`) VALUES (". $case_type_m.", ".$status.")";
+        $stmt = $obj->con1->prepare("INSERT INTO `state`(`state_name`, `status`) VALUES (?,?)");
+        $stmt->bind_param("ss",$case_type_m, $status);
+        $Resp = $stmt->execute();
+        if (!$Resp) {
+            throw new Exception(
+                "Problem in adding! " . strtok($obj->con1->error, "(")
+            );
+        }
+        $stmt->close();
+    } catch (\Exception $e) {
+        setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
+    }
+    if ($Resp) {
+        
+        
+        header("location:city_add.php");
+    } else {
+        
+        header("location:city_add.php"); 
+    }
+}
 ?>
 <!-- <a href="javascript:go_back();"><i class="bi bi-arrow-left"></i></a> -->
 <div class="pagetitle">
@@ -123,6 +151,7 @@ if (isset($_REQUEST["update"])) {
                             
                                 <div class="col-md-12">
                                     <label for="state_id" class="form-label">State</label>
+                                    <div class="d-flex">
                                     <select class="form-control" id="state_id" name="state_id"
                                         <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
                                         <option value="">Select State</option>
@@ -139,6 +168,11 @@ if (isset($_REQUEST["update"])) {
                                             </option>
                                         <?php } ?>
                                     </select>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                        data-bs-target="#addcasetypemodal">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
                                 </div>
                             
                             
@@ -182,6 +216,30 @@ if (isset($_REQUEST["update"])) {
         </div>
     </div>
 </section>
+
+<div class="modal fade" id="addcasetypemodal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Case Type</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+
+                    <div class="col-md-12">
+                        <label for="title" class="form-label">Case Type</label>
+                        <input type="text" class="form-control" id="c_type" name="c_type" required>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" name="btn_case_type" class="btn btn-primary">Save</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div><!-- End add case type Modal-->
 
 <script>
 function go_back() {
