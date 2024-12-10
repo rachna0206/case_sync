@@ -191,6 +191,184 @@ if (isset($_REQUEST["btndelete"])) {
     header("location:case_add.php");
   }
 
+  if (isset($_REQUEST["btn_city"])) {
+
+    $state = $_REQUEST['state_id'];
+    $city_name = $_REQUEST['name'];
+    $status='enable';
+    try {
+        // echo "INSERT INTO `city`(`name`, `status`) VALUES (". $city_name.", ".$status.")";
+        $stmt = $obj->con1->prepare("INSERT INTO `city`(`state_id`,`name`, `status`) VALUES (?,?,?)");
+        $stmt->bind_param("iss",$state, $city_name, $status);
+        $Resp = $stmt->execute();
+        if (!$Resp) {
+            throw new Exception(
+                "Problem in adding! " . strtok($obj->con1->error, "(")
+            );
+        }
+        $stmt->close();
+    } catch (\Exception $e) {
+        setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
+    }
+    if ($Resp) {
+        
+        
+        header("location:case_add.php");
+    } else {
+        
+        header("location:case_add.php"); 
+    }
+}
+
+
+if (isset($_REQUEST["btn_stage"])) {
+
+    $case_type = $_REQUEST['case_type_id'];
+    $stage_name = $_REQUEST['stage'];
+    $status='enable';
+    try {
+        // echo "INSERT INTO `city`(`name`, `status`) VALUES (". $city_name.", ".$status.")";
+        $stmt = $obj->con1->prepare("INSERT INTO `stage`(`case_type_id`,`stage`, `status`) VALUES (?,?,?)");
+        $stmt->bind_param("iss",$case_type, $stage_name, $status);
+        $Resp = $stmt->execute();
+        if (!$Resp) {
+            throw new Exception(
+                "Problem in adding! " . strtok($obj->con1->error, "(")
+            );
+        }
+        $stmt->close();
+    } catch (\Exception $e) {
+        setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
+    }
+    if ($Resp) {
+        
+        
+        header("location:case_add.php");
+    } else {
+        
+        header("location:case_add.php"); 
+    }
+}
+
+if (isset($_REQUEST["btn_case_type"])) {
+
+    $case_type_m = $_REQUEST['c_type'];
+    $status='enable';
+    try {
+        // echo "INSERT INTO `city`(`case_type`, `status`) VALUES (". $case_type_m.", ".$status.")";
+        $stmt = $obj->con1->prepare("INSERT INTO `case_type`(`case_type`, `status`) VALUES (?,?)");
+        $stmt->bind_param("ss",$case_type_m, $status);
+        $Resp = $stmt->execute();
+        if (!$Resp) {
+            throw new Exception(
+                "Problem in adding! " . strtok($obj->con1->error, "(")
+            );
+        }
+        $stmt->close();
+    } catch (\Exception $e) {
+        setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
+    }
+    if ($Resp) {
+        
+        
+        header("location:case_add.php");
+    } else {
+        
+        header("location:case_add.php"); 
+    }
+}
+
+if (isset($_REQUEST["btn_court"])) {
+
+    $case_type = $_REQUEST['case_type'];
+    $court_name = $_REQUEST['court'];
+    $status='enable';
+    try {
+        // echo "INSERT INTO `city`(`name`, `status`) VALUES (". $city_name.", ".$status.")";
+        $stmt = $obj->con1->prepare("INSERT INTO `court`(`case_type`,`name`, `status`) VALUES (?,?,?)");
+        $stmt->bind_param("iss",$case_type, $court_name, $status);
+        $Resp = $stmt->execute();
+        if (!$Resp) {
+            throw new Exception(
+                "Problem in adding! " . strtok($obj->con1->error, "(")
+            );
+        }
+        $stmt->close();
+    } catch (\Exception $e) {
+        setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
+    }
+    if ($Resp) {
+        
+        
+        header("location:case_add.php");
+    } else {
+        
+        header("location:case_add.php"); 
+    }
+}
+
+if (isset($_REQUEST["btn_company"])) {
+
+    $comp_name = $_REQUEST['comp_name'];
+    $person = $_REQUEST['person'];
+    $contact_no = $_REQUEST['contact'];
+    $status='enable';
+    try {
+        // echo "INSERT INTO `city`(`name`, `status`) VALUES (". $city_name.", ".$status.")";
+        $stmt = $obj->con1->prepare("INSERT INTO `company`(`name`,`contact_person`,`contact_no`,`status`) VALUES (?,?,?,?)");
+        $stmt->bind_param("ssss",$comp_name, $person,$contact_no, $status);
+        $Resp = $stmt->execute();
+        if (!$Resp) {
+            throw new Exception(
+                "Problem in adding! " . strtok($obj->con1->error, "(")
+            );
+        }
+        $stmt->close();
+    } catch (\Exception $e) {
+        setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
+    }
+    if ($Resp) {
+        
+        
+        header("location:case_add.php");
+    } else {
+        
+        header("location:case_add.php"); 
+    }
+}
+
+if (isset($_REQUEST["btn_handle_by"])) {
+
+    $adv_name = $_REQUEST['adv_name'];
+    $adv_contact = $_REQUEST['adv_contact'];
+    $adv_email = $_REQUEST['adv_email'];
+    $adv_password = $_REQUEST['adv_password'];
+    $status='enable';
+    try {
+        // echo "INSERT INTO `city`(`name`, `status`) VALUES (". $city_name.", ".$status.")";
+        $stmt = $obj->con1->prepare("INSERT INTO `advocate`(`name`,`contact`,`email`,`password`,`status`) VALUES (?,?,?,?,?)");
+        $stmt->bind_param("sssss",$adv_name, $adv_contact,$adv_email, $adv_password, $status);
+        $Resp = $stmt->execute();
+        if (!$Resp) {
+            throw new Exception(
+                "Problem in adding! " . strtok($obj->con1->error, "(")
+            );
+        }
+        $stmt->close();
+    } catch (\Exception $e) {
+        setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
+    }
+    if ($Resp) {
+        
+        
+        header("location:case_add.php");
+    } else {
+        
+        header("location:case_add.php"); 
+    }
+}
+
+
 ?>
 
 <!-- <a href="javascript:go_back();"><i class="bi bi-arrow-left"></i></a> -->
@@ -233,10 +411,13 @@ if (isset($_REQUEST["btndelete"])) {
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label for="case_type" class="form-label">Case Type</label>
-                                <select class="form-control" id="case_type" name="case_type"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> onchange="get_stage(this.value)">
-                                    <option value="">Select a Case Type</option>
-                                    <?php 
+                                <div class="d-flex">
+                                <select class="form-select" id="case_type" name="case_type"
+                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>
+                                    onchange="get_stage(this.value)">
+                            
+                                        <option value="">Select a Case Type</option>
+                                        <?php 
                                     $comp = "SELECT * FROM `case_type` where status='Enable'";
                                     $result = $obj->select($comp);
                                     $selectedcourtId = isset($data['case_type']) ? $data['case_type'] : '';
@@ -244,17 +425,24 @@ if (isset($_REQUEST["btndelete"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                         $selected = ($row["id"] == $selectedcourtId) ? 'selected' : '';
                                     ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                        <?= htmlspecialchars($row["case_type"]) ?>
-                                    </option>
-                                    <?php } ?>
+                                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                            <?= htmlspecialchars($row["case_type"]) ?>
+                                        </option>
+                                        <?php } ?>
                                 </select>
+                                <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                    data-bs-target="#addcasetypemodal">
+                                    <i class="bi bi-plus"></i>
+                                </button>
                             </div>
-                            <div class="col-md-4">
-                                <label for="stage" class="form-label">Stage</label>
-                                <select class="form-control" id="stage" name="stage"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
-                                    <option value="">--Select Stage--</option>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="stage" class="form-label">Stage</label>
+                            <div class="d-flex">
+                            <select class="form-select" id="stage" name="stage"
+                                <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
+                            
+                                    <option value="">Select Stage</option>
                                     <?php 
                                     if(isset($mode))
                                     {
@@ -270,21 +458,28 @@ if (isset($_REQUEST["btndelete"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                        
                                     ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= (isset($mode) && $row["id"]== $data["stage"])?"selected":"" ?>>
+                                    <option value="<?= htmlspecialchars($row["id"]) ?>"
+                                        <?= (isset($mode) && $row["id"]== $data["stage"])?"selected":"" ?>>
                                         <?= htmlspecialchars($row["stage"]) ?>
                                     </option>
                                     <?php }
                                      
                                     ?>
-                                </select>
-                                
-                            </div>
-                            <div class="col-md-4">
-                                <label for="court_name" class="form-label">Court</label>
-                                <select class="form-control" id="court_name" name="court_name"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                                    <option value="">--Select Court--</option>
-                                    <?php 
+                            </select>
+                            <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                data-bs-target="#addstagemodal">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+
+                </div>
+                <div class="col-md-4">
+                    <label for="court_name" class="form-label">Court</label>
+                    <div class="d-flex">
+                    <select class="form-select" id="court_name" name="court_name"
+                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                        <option value="">Select Court</option>
+                        <?php 
                                     if(isset($mode))
                                     {
                                         $comp = "SELECT * FROM `court` where case_type='".$data["case_type"]."' and lower(`status`)='enable'";
@@ -299,77 +494,82 @@ if (isset($_REQUEST["btndelete"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                         $selected = ($row["id"] == $selectedcourtId) ? 'selected' : '';
                                     ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                        <?= htmlspecialchars($row["name"]) ?>
-                                    </option>
-                                    <?php } 
+                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                            <?= htmlspecialchars($row["name"]) ?>
+                        </option>
+                        <?php } 
                                     
                                    ?>
-                                </select>
-                            </div>
-
-                            
-
-                            
+                    </select>
+                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                data-bs-target="#addcourtmodal">
+                                <i class="bi bi-plus"></i>
+                            </button>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label for="docs" class="form-label">Documents</label>
-                                <input type="file" class="form-control" id="docs" name="docs"
-                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>
-                                    onchange="readURL(this)">
-                            </div>
-                        </div>
-
-                        <div>
-                            
-
-                            <div id="preview_file_div" class="text-danger"></div>
-                            <input type="hidden" name="old_file" id="old_file"
-                                value="<?php echo (isset($mode) && $mode == 'edit') ? htmlspecialchars($data["docs"]) : '' ?>" />
-                        </div>
-                        <?php if (isset($mode) && $mode == 'edit' && !empty($data['docs'])): ?>
-                        <div>
-                            <div style="display: flex; align-items: center;">
-                                <span><?php echo htmlspecialchars($data['docs']); ?></span>
-                                <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDelete()">
-                                    <i class="bi bi-x-circle"></i> Delete
-                                </button>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        <?php if (isset($mode) && $mode == 'view' && !empty($data['docs'])): ?>
-                        <div>
-
-                            <a href="documents/case/<?php echo htmlspecialchars($data['docs']); ?>"
-                                class="btn btn-primary" download>
-                                <i class="bi bi-download"></i> Download <?php echo htmlspecialchars($data['docs']); ?>
-                            </a>
-                        </div>
-                        <?php endif; ?>
+                </div>
 
 
 
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label for="applicant" class="form-label">Applicant / Appellant / Complainant</label>
-                                <input type="text" class="form-control" id="applicant" name="applicant"
-                                    value="<?php echo (isset($mode)) ? $data['applicant'] : '' ?>"
-                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
-                            </div>
 
-                            <div class="col-md-4">
-                                <label for="opp_name" class="form-label">Opponent / Respondent / Accused</label>
-                                <input type="text" class="form-control" id="opp_name" name="opp_name"
-                                    value="<?php echo (isset($mode)) ? $data['opp_name'] : '' ?>"
-                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="company_id" class="form-label">Company</label>
-                                <select class="form-control" id="company_id" name="company_id"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                                    <option value="">Select a Company</option>
-                                    <?php 
+            </div>
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <label for="docs" class="form-label">Documents</label>
+                    <input type="file" class="form-control" id="docs" name="docs"
+                        <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?> onchange="readURL(this)">
+                </div>
+            </div>
+
+            <div>
+
+
+                <div id="preview_file_div" class="text-danger"></div>
+                <input type="hidden" name="old_file" id="old_file"
+                    value="<?php echo (isset($mode) && $mode == 'edit') ? htmlspecialchars($data["docs"]) : '' ?>" />
+            </div>
+            <?php if (isset($mode) && $mode == 'edit' && !empty($data['docs'])): ?>
+            <div>
+                <div style="display: flex; align-items: center;">
+                    <span><?php echo htmlspecialchars($data['docs']); ?></span>
+                    <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDelete()">
+                        <i class="bi bi-x-circle"></i> Delete
+                    </button>
+                </div>
+            </div>
+            <?php endif; ?>
+            <?php if (isset($mode) && $mode == 'view' && !empty($data['docs'])): ?>
+            <div>
+
+                <a href="documents/case/<?php echo htmlspecialchars($data['docs']); ?>" class="btn btn-primary"
+                    download>
+                    <i class="bi bi-download"></i> Download <?php echo htmlspecialchars($data['docs']); ?>
+                </a>
+            </div>
+            <?php endif; ?>
+
+
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="applicant" class="form-label">Applicant / Appellant / Complainant</label>
+                    <input type="text" class="form-control" id="applicant" name="applicant"
+                        value="<?php echo (isset($mode)) ? $data['applicant'] : '' ?>"
+                        <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="opp_name" class="form-label">Opponent / Respondent / Accused</label>
+                    <input type="text" class="form-control" id="opp_name" name="opp_name"
+                        value="<?php echo (isset($mode)) ? $data['opp_name'] : '' ?>"
+                        <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
+                </div>
+                <div class="col-md-4">
+                    <label for="company_id" class="form-label">Company</label>
+                    <div class="d-flex">
+                    <select class="form-select" id="company_id" name="company_id"
+                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                        <option value="">Select a Company</option>
+                        <?php 
                                     $comp = "SELECT * FROM `company` where status='Enable'";
                                     $result = $obj->select($comp);
                                     $selectedCompanyId = isset($data['company_id']) ? $data['company_id'] : '';
@@ -377,25 +577,31 @@ if (isset($_REQUEST["btndelete"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                         $selected = ($row["id"] == $selectedCompanyId) ? 'selected' : '';
                                     ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                        <?= htmlspecialchars($row["name"]) ?>
-                                    </option>
-                                    <?php } ?>
-                                </select>
-                            </div>
-                            
-
-
-
+                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                            <?= htmlspecialchars($row["name"]) ?>
+                        </option>
+                        <?php } ?>
+                    </select>
+                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                data-bs-target="#addcompanymodal">
+                                <i class="bi bi-plus"></i>
+                            </button>
                         </div>
+                </div>
 
-                        <div class="row g-3">
-                        <div class="col-md-4">
-                                <label for="handle_by" class="form-label">Handled By</label>
-                                <select class="form-control" id="handle_by" name="handle_by"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                                    <option value="">Select an Advocate</option>
-                                    <?php 
+
+
+
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="handle_by" class="form-label">Handled By</label>
+                    <div class="d-flex">
+                    <select class="form-select" id="handle_by" name="handle_by"
+                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                        <option value="">Select an Advocate</option>
+                        <?php 
                                     $comp = "SELECT * FROM `advocate` where status='Enable'";
                                     $result = $obj->select($comp);
                                     $selectedAdvocateId = isset($data['handle_by']) ? $data['handle_by'] : '';
@@ -403,20 +609,26 @@ if (isset($_REQUEST["btndelete"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                         $selected = ($row["id"] == $selectedAdvocateId) ? 'selected' : '';
                                     ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                        <?= htmlspecialchars($row["name"]) ?>
-                                    </option>
-                                    <?php } ?>
-                                </select>
-                            </div>
+                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                            <?= htmlspecialchars($row["name"]) ?>
+                        </option>
+                        <?php } ?>
+                    </select>
+                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                data-bs-target="#addhandlebymodal">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                </div>
 
 
-                            <div class="col-md-4">
-                                <label for="city_id" class="form-label">City Name</label>
-                                <select class="form-control" id="city_id" name="city_id"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                                    <option value="">Select a City</option>
-                                    <?php 
+                <div class="col-md-4">
+                    <label for="city_id" class="form-label">City Name</label>
+                    <div class="d-flex">
+                    <select class="form-select" id="city_id" name="city_id"
+                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                        <option value="">Select a City</option>
+                        <?php 
                                     $comp = "SELECT * FROM `city`";
                                     $result = $obj->select($comp);
                                     $selectedCompanyId = isset($data['city_id']) ? $data['city_id'] : ''; 
@@ -424,56 +636,62 @@ if (isset($_REQUEST["btndelete"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                         $selected = ($row["id"] == $selectedCompanyId) ? 'selected' : '';
                                     ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                        <?= htmlspecialchars($row["name"]) ?>
-                                    </option>
-                                    <?php } ?>
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="sr_date" class="form-label">Summon Date</label>
-                                <input type="date" class="form-control" id="sr_date" name="sr_date"
-                                    value="<?php echo (isset($mode) && isset($data['sr_date']) && !empty($data['sr_date'])) ? date('Y-m-d', strtotime($data['sr_date'])) : date('Y-m-d'); ?>"
-                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="status" class="form-label">Status</label> <br />
-                                <div class="form-check-inline">
-                                    <input class="form-check-input" type="radio" name="radio" id="radio1"
-                                        <?php echo (!isset($mode) || (isset($mode)  && $data['status'])) == 'pending' ? 'checked' : '' ?>
-                                        class="form-radio text-primary" value="pending" required
-                                        <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
-                                    <label class="form-check-label" for="radio1">Pending</label>
-                                </div>
-                                <div class="form-check-inline">
-                                    <input class="form-check-input" type="radio" name="radio" id="radio2"
-                                        <?php echo isset($mode) && $data['status'] == 'disposed' ? 'checked' : '' ?>
-                                        class="form-radio text-danger" value="disposed" required
-                                        <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
-                                    <label class="form-check-label" for="radio2">Disposed</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="text-left mt-4">
-                            <button type="submit"
-                                name="<?php echo isset($mode) && $mode == 'edit' ? 'update' : 'save' ?>" id="save"
-                                class="btn btn-success <?php echo isset($mode) && $mode == 'view' ? 'd-none' : '' ?>">
-                                <?php echo isset($mode) && $mode == 'edit' ? 'Update' : 'Save' ?>
+                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                            <?= htmlspecialchars($row["name"]) ?>
+                        </option>
+                        <?php } ?>
+                    </select>
+                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                data-bs-target="#addcitymodal">
+                                <i class="bi bi-plus"></i>
                             </button>
-                            <button type="button" class="btn btn-danger" onclick="javascript: go_back();">
-                                Close</button>
                         </div>
-                    </form>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="sr_date" class="form-label">Summon Date</label>
+                    <input type="date" class="form-control" id="sr_date" name="sr_date"
+                        value="<?php echo (isset($mode) && isset($data['sr_date']) && !empty($data['sr_date'])) ? date('Y-m-d', strtotime($data['sr_date'])) : date('Y-m-d'); ?>"
+                        <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
                 </div>
             </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="status" class="form-label">Status</label> <br />
+                    <div class="form-check-inline">
+                        <input class="form-check-input" type="radio" name="radio" id="radio1"
+                            <?php echo (!isset($mode) || (isset($mode)  && $data['status'])) == 'pending' ? 'checked' : '' ?>
+                            class="form-radio text-primary" value="pending" required
+                            <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
+                        <label class="form-check-label" for="radio1">Pending</label>
+                    </div>
+                    <div class="form-check-inline">
+                        <input class="form-check-input" type="radio" name="radio" id="radio2"
+                            <?php echo isset($mode) && $data['status'] == 'disposed' ? 'checked' : '' ?>
+                            class="form-radio text-danger" value="disposed" required
+                            <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
+                        <label class="form-check-label" for="radio2">Disposed</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-left mt-4">
+                <button type="submit" name="<?php echo isset($mode) && $mode == 'edit' ? 'update' : 'save' ?>" id="save"
+                    class="btn btn-success <?php echo isset($mode) && $mode == 'view' ? 'd-none' : '' ?>">
+                    <?php echo isset($mode) && $mode == 'edit' ? 'Update' : 'Save' ?>
+                </button>
+                <button type="button" class="btn btn-danger" onclick="javascript: go_back();">
+                    Close</button>
+            </div>
+            </form>
         </div>
     </div>
+    </div>
+    </div>
 </section>
+
+
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -494,6 +712,230 @@ if (isset($_REQUEST["btndelete"])) {
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="addcasetypemodal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Case Type</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+
+                    <div class="col-md-12">
+                        <label for="title" class="form-label">Case Type</label>
+                        <input type="text" class="form-control" id="c_type" name="c_type" required>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" name="btn_case_type" class="btn btn-primary">Save</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div><!-- End add case type Modal-->
+
+<div class="modal fade" id="addstagemodal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Stage</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    <div class="col-md-12 mb-3">
+                        <label for="case_type_id" class="form-label">Case Type</label>
+                        <select class="form-control" id="case_type_id" name="case_type_id" required>
+                            <option value="">Select Case Type</option>
+                            <?php
+                        $task = "SELECT * FROM `case_type` where `status` = 'Enable'";
+                        $result = $obj->select($task);
+                        $selectedCaseId = isset($data['case_type_id']) ? $data['case_type_id'] : '';
+
+                        while ($row = mysqli_fetch_array($result)) {
+                           
+                        ?>
+                            <option value="<?= htmlspecialchars($row["id"]) ?>">
+                                <?= htmlspecialchars($row["case_type"]) ?>
+                            </option>
+                            <?php } ?>
+                        </select>
+                    </div>
+
+
+                    <div class="col-md-12">
+                        <label for="stage" class="form-label">Stage</label>
+                        <input type="text" class="form-control" id="stage" name="stage" required>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" name="btn_stage" class="btn btn-primary">Save</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div><!-- End add stage Modal-->
+
+<div class="modal fade" id="addcourtmodal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Court</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    <div class="col-md-12 mb-3">
+                        <label for="case_type" class="form-label">Case Type</label>
+                        <select class="form-control" id="case_type" name="case_type" required>
+                            <option value="">Select Case Type</option>
+                            <?php
+                        $task = "SELECT * FROM `case_type` where `status` = 'Enable'";
+                        $result = $obj->select($task);
+                        $selectedCaseId = isset($data['case_type']) ? $data['case_type'] : '';
+
+                        while ($row = mysqli_fetch_array($result)) {
+                           
+                        ?>
+                            <option value="<?= htmlspecialchars($row["id"]) ?>">
+                                <?= htmlspecialchars($row["case_type"]) ?>
+                            </option>
+                            <?php } ?>
+                        </select>
+                    </div>
+
+
+                    <div class="col-md-12">
+                        <label for="court" class="form-label">Court</label>
+                        <input type="text" class="form-control" id="court" name="court" required>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" name="btn_court" class="btn btn-primary">Save</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div><!-- End add Court Modal-->
+
+<div class="modal fade" id="addcompanymodal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Company</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+
+                    <div class="col-md-12">
+                        <label for="comp_name" class="form-label">Company Name</label>
+                        <input type="text" class="form-control" id="comp_name" name="comp_name" required>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label for="person" class="form-label">Person</label>
+                        <input type="text" class="form-control" id="person" name="person" required>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label for="contact" class="form-label">Contact No.</label>
+                        <input type="text" class="form-control" id="contact" name="contact" required>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" name="btn_company" class="btn btn-primary">Save</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div><!-- End add company Modal-->
+
+<div class="modal fade" id="addhandlebymodal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Handle By</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+
+                    <div class="col-md-12">
+                        <label for="title" class="form-label">Advocate Name</label>
+                        <input type="text" class="form-control" id="adv_name" name="adv_name" required>
+                    </div>
+                    <div class="col-md-12">
+                        <label for="title" class="form-label">Advocate Contact No.</label>
+                        <input type="text" class="form-control" id="adv_contact" name="adv_contact" required>
+                    </div>
+                    <div class="col-md-12">
+                        <label for="title" class="form-label">Advocate Email</label>
+                        <input type="text" class="form-control" id="adv_email" name="adv_email" required>
+                    </div>
+                    <div class="col-md-12">
+                        <label for="title" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="adv_password" name="adv_password" required>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" name="btn_handle_by" class="btn btn-primary">Save</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div><!-- End add handleby Modal-->
+
+
+<div class="modal fade" id="addcitymodal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add City</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    <div class="col-md-12 mb-3">
+                        <label for="state_id" class="form-label">State</label>
+                        <select class="form-control" id="state_id" name="state_id" required>
+                            <option value="">Select State</option>
+                            <?php
+                        $task = "SELECT * FROM `state` where `status` = 'Enable'";
+                        $result = $obj->select($task);
+                        $selectedCaseId = isset($data['state_id']) ? $data['state_id'] : '';
+
+                        while ($row = mysqli_fetch_array($result)) {
+                           
+                        ?>
+                            <option value="<?= htmlspecialchars($row["id"]) ?>">
+                                <?= htmlspecialchars($row["state_name"]) ?>
+                            </option>
+                            <?php } ?>
+                        </select>
+                    </div>
+
+
+                    <div class="col-md-12">
+                        <label for="title" class="form-label">City Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" name="btn_city" class="btn btn-primary">Save</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div><!-- End add city Modal-->
 
 <section class="section" <?php echo (isset($mode))?'':'hidden' ?>>
     <div class="row">
@@ -570,25 +1012,24 @@ if (isset($_REQUEST["btndelete"])) {
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-   
-    function get_stage(case_type)
-    {
-        $.ajax({
-            async: true,
-            type: "POST",
-            url: "action.php?action=get_stage",
-            data: "case_type=" + case_type,
-            cache: false,
-            success: function(result) {
-                var data = result.split("@@@@@");
-                $("#stage").html("");
-                $("#stage").html(data[0]);
-                $("#court_name").html("");
-                $("#court_name").html(data[1]);
-                
-            }
-        });
-    }
+function get_stage(case_type) {
+    $.ajax({
+        async: true,
+        type: "POST",
+        url: "action.php?action=get_stage",
+        data: "case_type=" + case_type,
+        cache: false,
+        success: function(result) {
+            var data = result.split("@@@@@");
+            $("#stage").html("");
+            $("#stage").html(data[0]);
+            $("#court_name").html("");
+            $("#court_name").html(data[1]);
+
+        }
+    });
+}
+
 function go_back() {
     eraseCookie("edit_id");
     eraseCookie("view_id");
@@ -646,7 +1087,7 @@ function readURL(input) {
         var filename = input.files[0].name; // Get the name of the first file
         var extn = filename.split(".").pop().toLowerCase();
 
-        if (["pdf", "doc", "docx","xlsx","jpg","png","jpeg","bmp","txt"].includes(extn)) {
+        if (["pdf", "doc", "docx", "xlsx", "jpg", "png", "jpeg", "bmp", "txt"].includes(extn)) {
             document.getElementById('save').disabled = false; // Enable save button if valid file
 
             // Display only the file name with a delete button

@@ -139,15 +139,15 @@ if (isset($_REQUEST["update"])) {
                             <label for="inputEmail5" class="form-label">Status</label> <br />
                             <div class="form-check-inline">
                                 <input class="form-check-input" type="radio" name="radio" id="radio1"
-                                    <?php echo isset($mode) && $data['status'] == 'Enable' ? 'checked' :'' ?>
-                                    class="form-radio text-primary" value="Enable" checked required
+                                    <?php echo isset($mode) && $data['status'] == 'enable' ? 'checked' :'' ?>
+                                    class="form-radio text-primary" value="enable" checked required
                                     <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
                                 <label class="form-check-label" for="radio1">Enable</label>
                             </div>
                             <div class="form-check-inline">
                                 <input class="form-check-input" type="radio" name="radio" id="radio2"
-                                    <?php echo isset($mode) && $data['status'] == 'Disable' ? 'checked' : '' ?>
-                                    class="form-radio text-danger" value="Disable" required
+                                    <?php echo isset($mode) && $data['status'] == 'disable' ? 'checked' : '' ?>
+                                    class="form-radio text-danger" value="disable" required
                                     <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
                                 <label class="form-check-label" for="radio2">Disable</label>
                             </div>
