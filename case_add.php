@@ -1096,6 +1096,8 @@ function deleteDocument(index) {
         document.getElementById('save').disabled = true;
     }
 }
+
+
 function add_city()
 {
 

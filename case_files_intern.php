@@ -4,6 +4,12 @@
 
   $id=isset($_COOKIE["case_id"])?$_COOKIE["case_id"]:"";
 
+  $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.name,c3.case_type FROM `case` c1, company c2,case_type c3 WHERE c1.company_id=c2.id and c1.case_type=c3.id and c1.id=?");
+  $stmt->bind_param('i', $id);
+  $stmt->execute();
+  $data = $stmt->get_result()->fetch_assoc();
+  $stmt->close();
+
  if (isset($_REQUEST["btndelete"])) {
     $c_id = $_REQUEST['delete_id'];
  
@@ -82,32 +88,32 @@ function deletedata(id, case_no) {
 
             <div class="card">
                 <div class="card-body">
+                <h5 class="card-title">Case No : <?php echo $data["case_no"]?> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Company : <?php echo $data["name"]?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Case Type : <?php echo $data["case_type"]?></h5>
 
                     <table class="table datatable">
                         <thead>
                             <tr>
                                 <th scope="col">Sr no.</th>
-                                <th scope="col">Case No</th>
-                                <th scope="col">Case Type</th>
                                 <th scope="col">Case Files</th>
-                                <!-- <th scope="col">Action</th> -->
+                                <th scope="col">Added By</th>
+                                <th scope="col">Date Time</th>
+                                
                             </tr>
                         </thead>
                         <tbody>
                             <?php
                            
-                                $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.case_type,c1.docs from `case` c1,case_type c2 WHERE c1.case_type=c2.id  and  c1.id=?
+                                $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.case_type,c1.docs,c1.id as file_id,'main' as file_type,c1.sr_date as date_time,'admin' as handled_by,'admin' as user_type from `case` c1,case_type c2 WHERE c1.case_type=c2.id  and  c1.id=? and docs!=''
                                 union
-                                SELECT c1.case_no,c2.case_type,m.docs from `case` c1,case_type c2,multiple_doc m WHERE c1.case_type=c2.id and   m.c_id=c1.id and c1.id=?");
+                                SELECT c1.case_no,c2.case_type,m.docs,m.id as file_id ,'sub' as file_type,m.date_time,m.added_by as handled_by,m.user_type from `case` c1,case_type c2,multiple_doc m WHERE c1.case_type=c2.id and   m.c_id=c1.id and c1.id=?");
                                 $stmt->bind_param("ii",$id,$id);
                                 $stmt->execute();
                                 $Resp = $stmt->get_result();
                                 $i = 1;
                                 while ($row = mysqli_fetch_array($Resp)) { ?>
-                            <tr>
+                                <tr>
                                 <th scope="row"><?php echo $i; ?></th>
-                                <td><?php echo $row["case_no"] ?></td>
-                                <td><?php echo $row["case_type"] ?></td>
+                               
                                 <td>
                                     <div style="display: flex; flex-direction: column;">
                                         <!-- Main Document -->
@@ -125,6 +131,23 @@ function deletedata(id, case_no) {
                                         
                                     </div>
                                 </td>
+                                <td><?php
+                                if($row["user_type"]=="intern")
+                                {
+                                    $stmt_user=$obj->con1->prepare("SELECT * FROM `interns` where id=?");
+                                    $stmt_user->bind_param("i",$row["handled_by"]);
+                                    $stmt_user->execute();
+                                    $user=$stmt_user->get_result()->fetch_assoc();
+                                    $stmt_user->close();
+                                    echo $user["name"];
+                                }
+                                else
+                                {
+                                    echo "Admin"; 
+                                }
+                                 
+                                 ?></td>
+                                 <td><?php echo date("d/m/Y",strtotime($row["date_time"])) ?></td>
                             </tr>
                             <?php $i++;
                                 }
