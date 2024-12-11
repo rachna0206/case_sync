@@ -106,6 +106,8 @@ function deletedata(id) {
                                 <td>
                                     <a href="javascript:viewdata('<?php echo $row["case_id"]?>')"><i
                                             class="bx bx-show-alt bx-sm me-2"></i> </a>
+                                            <a href="javascript:file_data('<?php echo $row["case_id"] ?>')"><i
+                                            class="bi bi-file-earmark-text  bx-sm me-2 text-success"></i> </a>
                                 </td>
 
                                 <?php $i++;}?>
@@ -118,6 +120,14 @@ function deletedata(id) {
     </div>
 </section>
 
+<script type="text/javascript">
+    function file_data(id) {
+    eraseCookie("edit_id");
+    eraseCookie("view_id", id, 1);
+    createCookie("case_id", id, 1);
+    window.location = "case_files_advocates.php";
+}
+</script>
 
 <?php
 include "footer.php";

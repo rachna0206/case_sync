@@ -191,35 +191,7 @@ if (isset($_REQUEST["btndelete"])) {
     header("location:case_add.php");
   }
 
-  if (isset($_REQUEST["btn_city"])) {
-
-    $state = $_REQUEST['state_id'];
-    $city_name = $_REQUEST['name'];
-    $status='enable';
-    try {
-        // echo "INSERT INTO `city`(`name`, `status`) VALUES (". $city_name.", ".$status.")";
-        $stmt = $obj->con1->prepare("INSERT INTO `city`(`state_id`,`name`, `status`) VALUES (?,?,?)");
-        $stmt->bind_param("iss",$state, $city_name, $status);
-        $Resp = $stmt->execute();
-        if (!$Resp) {
-            throw new Exception(
-                "Problem in adding! " . strtok($obj->con1->error, "(")
-            );
-        }
-        $stmt->close();
-    } catch (\Exception $e) {
-        setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
-    }
-    if ($Resp) {
-        
-        
-        header("location:case_add.php");
-    } else {
-        
-        header("location:case_add.php"); 
-    }
-}
-
+ 
 
 if (isset($_REQUEST["btn_stage"])) {
 
@@ -314,7 +286,7 @@ if (isset($_REQUEST["btn_company"])) {
     $contact_no = $_REQUEST['contact'];
     $status='enable';
     try {
-        // echo "INSERT INTO `city`(`name`, `status`) VALUES (". $city_name.", ".$status.")";
+        
         $stmt = $obj->con1->prepare("INSERT INTO `company`(`name`,`contact_person`,`contact_no`,`status`) VALUES (?,?,?,?)");
         $stmt->bind_param("ssss",$comp_name, $person,$contact_no, $status);
         $Resp = $stmt->execute();
@@ -925,12 +897,12 @@ if (isset($_REQUEST["btn_handle_by"])) {
 
                     <div class="col-md-12">
                         <label for="title" class="form-label">City Name</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
+                        <input type="text" class="form-control" id="c_name" name="c_name" required>
                     </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" name="btn_city" class="btn btn-primary">Save</button>
+                <button type="button" name="btn_city" class="btn btn-primary" onclick="add_city()">Save</button>
             </div>
             </form>
         </div>
@@ -1123,6 +1095,27 @@ function deleteDocument(index) {
     if ($('#preview_file_div').children().length == 0) {
         document.getElementById('save').disabled = true;
     }
+}
+function add_city()
+{
+
+    var state=$("#state_id").val();
+    var city=$("#c_name").val();
+    $("#addcitymodal").modal("toggle");
+
+    $.ajax({
+        async: true,
+        type: "POST",
+        url: "action.php?action=add_city",
+        data: "state=" + state+"&city="+city,
+        cache: false,
+        success: function(result) {
+            $("#city_id").append(result);
+          
+
+        }
+    });
+
 }
 </script>
 <?php
