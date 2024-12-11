@@ -2,7 +2,7 @@
  include "header.php";
  include "alert.php";
 
- if(isset($_REQUEST["btndelete"]))
+if(isset($_REQUEST["btndelete"]))
 {
   $id = $_REQUEST['delete_id'];
   try
@@ -31,6 +31,18 @@
     header("location:task.php");
   }
 }
+if(isset($_COOKIE["filter_task_date"]) && $_COOKIE["filter_task_date"]!="")
+{
+    $stmt = $obj->con1->prepare("SELECT t.*,c.case_no,date_format(t.alloted_date,'%d-%m-%Y') as adt,CASE WHEN t.action_by = 'intern' THEN i.name WHEN t.action_by = 'advocate' THEN a.name ELSE 'Unknown' END AS alloted_by_name, it.name AS alloted_to_name FROM  task t LEFT JOIN  interns i ON t.alloted_by = i.id AND t.action_by = 'intern' LEFT JOIN  advocate a ON t.alloted_by = a.id AND t.action_by = 'advocate' LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN 
+    interns it ON t.alloted_to = it.id   WHERE t.alloted_date = ? ORDER BY t.id DESC");
+    $stmt->bind_param("s", $_COOKIE["filter_task_date"]);
+    setcookie("filter_task_date", "", time() - 3600, "/");
+}
+else
+{
+    $stmt = $obj->con1->prepare("SELECT t.*,c.case_no,date_format(t.alloted_date,'%d-%m-%Y') as adt,CASE WHEN t.action_by = 'intern' THEN i.name WHEN t.action_by = 'advocate' THEN a.name ELSE 'Unknown' END AS alloted_by_name, it.name AS alloted_to_name FROM  task t LEFT JOIN  interns i ON t.alloted_by = i.id AND t.action_by = 'intern' LEFT JOIN  advocate a ON t.alloted_by = a.id AND t.action_by = 'advocate' LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN 
+    interns it ON t.alloted_to = it.id  ORDER BY t.id DESC");
+}
 ?>
 <script type="text/javascript">
 function add_data() {
@@ -54,8 +66,7 @@ function viewdata(id) {
 function deletedata(id) {
     $('#deleteModal').modal('toggle');
     $('#delete_id').val(id);
-    // You should pass `alloted_to` to this function if you want to display it in the modal
-    // $('#delete_record').html(alloted_to); 
+    
 }
 </script>
 <!-- Basic Modal -->
@@ -95,28 +106,20 @@ function deletedata(id) {
     <div class="row">
         <div class="col-lg-12">
 
-            <div class="card">
-                <div class="card-body">
-                    <div class="card-title">
-                        <form method="GET" class="row g-1 pt-1" action="task.php">
-                            <div class="col-md-12">
-                                <label for="title" class="form-label">Date</label>
-                                <input type="date" name="dtxt" id="dtxt">
-                            </div>
-                            <div class="text-left mt-4">
-                                <input type="submit" class="btn btn-success" name="sb" value="Search"> <input
-                                    type="submit" class="btn btn-success" name="shb" value="Show All">
-                            </div>
-                    </div>
-                </div>
-            </div>
+            
 
             <div class="card">
                 <div class="card-body">
-                    <div class="card-title">
-                        </form>
+                    <div class="card-title row">
+                        <div class="col-md-3">
                         <a href="javascript:add_data()"><button type="button" class="btn btn-success"><i
                                     class="bi bi-plus me-1"></i> Add</button></a>
+                                    </div>
+                                    <div class="col-md-3">   
+                               <label for="title" class="col-form-label">Date</label>
+                                <input type="date" name="dtxt" id="dtxt" onchange="get_data(this.value)" value="<?php echo isset($_COOKIE["filter_task_date"])?$_COOKIE["filter_task_date"]:""?>">
+                                </div>
+                            
                     </div>
                     <table class="table datatable">
                         <thead>
@@ -133,23 +136,9 @@ function deletedata(id) {
                         </thead>
                         <tbody>
                             <?php
-                            if(isset($_REQUEST["sb"]))
-                            {
-                                $d = $_REQUEST["dtxt"];
-                                $stmt = $obj->con1->prepare("SELECT t.*,c.case_no,date_format(t.alloted_date,'%d-%m-%Y') as adt,CASE WHEN t.action_by = 'intern' THEN i.name WHEN t.action_by = 'advocate' THEN a.name ELSE 'Unknown' END AS alloted_by_name, it.name AS alloted_to_name FROM  task t LEFT JOIN  interns i ON t.alloted_by = i.id AND t.action_by = 'intern' LEFT JOIN  advocate a ON t.alloted_by = a.id AND t.action_by = 'advocate' LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN 
-    interns it ON t.alloted_to = it.id   WHERE t.alloted_date = ? ORDER BY t.id DESC");
-                                $stmt->bind_param("s", $d);
-                                $stmt->execute();
+   
+                            $stmt->execute();
                                 $Resp = $stmt->get_result();
-                            }
-                            else
-                            {
-                                $stmt = $obj->con1->prepare("SELECT t.*,c.case_no,date_format(t.alloted_date,'%d-%m-%Y') as adt,CASE WHEN t.action_by = 'intern' THEN i.name WHEN t.action_by = 'advocate' THEN a.name ELSE 'Unknown' END AS alloted_by_name, it.name AS alloted_to_name FROM  task t LEFT JOIN  interns i ON t.alloted_by = i.id AND t.action_by = 'intern' LEFT JOIN  advocate a ON t.alloted_by = a.id AND t.action_by = 'advocate' LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN 
-    interns it ON t.alloted_to = it.id  ORDER BY t.id DESC");
-                               
-                                $stmt->execute();
-                                $Resp = $stmt->get_result();
-                            }
                             $i = 1;   
 
                             while ($row = mysqli_fetch_array($Resp)) { ?>
@@ -169,7 +158,7 @@ function deletedata(id) {
                                     (($row['status'] == 'allotted') ? 'primary' : 
                                     (($row['status'] == 'reassign') ? 'info' : 'danger'))); 
                             ?>">
-                                            <?php echo ucfirst($row["status"]); ?>
+                                            <?php echo ucfirst(str_replace("_","-",$row["status"])); ?>
                                         </span>
                                     </h4>
                                 </td>
@@ -196,6 +185,15 @@ function deletedata(id) {
         </div>
     </div>
 </section>
+<script type="text/javascript">
+
+    function get_data(date)
+    {
+        console.log("date="+date);  
+        createCookie("filter_task_date",date,1);
+        window.location=window.location.href;
+    }
+</script>
 
 <?php
 include "footer.php";
