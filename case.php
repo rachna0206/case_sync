@@ -51,7 +51,7 @@
       $companies[strtolower($row['name'])] = $row['id'];
   }
   
-  // Fetch cities
+  // Fetch cities 
   $cityQuery = "SELECT id, name FROM `city`";
   $cityResult = $obj->select($cityQuery);
   while ($row = mysqli_fetch_assoc($cityResult)) {
