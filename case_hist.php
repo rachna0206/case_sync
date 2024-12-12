@@ -1,19 +1,11 @@
 <?php 
  include "header.php";
  include "alert.php";
+
+
 ?>
 <script type="text/javascript">
-function add_data(id) {
-    eraseCookie("edit_id");
-    eraseCookie("view_id");
-    window.location = "case_hist_view.php";
-}
 
-function editdata(id) {
-    eraseCookie("view_id");
-    createCookie("edit_id", id, 1);
-    window.location = "case_hist_view.php";
-}
 
 function viewdata(id) {
     eraseCookie("edit_id");
@@ -66,6 +58,7 @@ function deletedata(id) {
 
             <div class="card">
                 <div class="card-body">
+                
 
                     <table class="table datatable">
                         <thead>
@@ -83,7 +76,7 @@ function deletedata(id) {
                         <tbody>
                         <?php
                             // $stmt = $obj->con1->prepare("SELECT *, company.name as company_name, case_type.case_type as case_type_name, court.name as cname, city.name as city_name, task.id as task_id FROM `case` inner join `company` on case.company_id = company.id inner join `case_type` on case.case_type = case_type.id inner join `court` on court.id = case.court_name inner join `city` on city.id = case.city_id inner join `task` on task.case_id = case.id ORDER BY case.id DESC");
-                            $stmt = $obj->con1->prepare("SELECT *, date_format(case.sr_date,'%d-%m-%Y') as smndt , case.id as case_id, company.name as company_name, case_type.case_type as case_type_name, court.name as cname, city.name as city_name FROM `case` inner join `company` on case.company_id = company.id inner join `case_type` on case.case_type = case_type.id inner join `court` on court.id = case.court_name inner join `city` on city.id = case.city_id ORDER BY case.id DESC");
+                            $stmt = $obj->con1->prepare("SELECT `case`.*, date_format(case.sr_date,'%d-%m-%Y') as smndt , case.id as case_id, company.name as company_name, case_type.case_type as case_type_name, court.name as cname, city.name as city_name FROM `case` inner join `company` on case.company_id = company.id inner join `case_type` on case.case_type = case_type.id inner join `court` on court.id = case.court_name inner join `city` on city.id = case.city_id ORDER BY case.id DESC");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
@@ -99,13 +92,15 @@ function deletedata(id) {
                                 <td><?php echo $row["smndt"] ?></td>
                                 <td>
                                 <h4><span
-                                        class="badge rounded-pill bg-<?php echo ($row['status']=='Enable')?'success':'danger'?>"><?php echo $row["status"]; ?></span>
+                                        class="badge rounded-pill bg-<?php echo ($row['status']=='pending')?'warning':'primary'?>"><?php echo ucfirst($row["status"]); ?></span>
                                 </h4>
                                 </td>
 
                                 <td>
                                     <a href="javascript:viewdata('<?php echo $row["case_id"]?>')"><i
                                             class="bx bx-show-alt bx-sm me-2"></i> </a>
+                                            <a href="javascript:file_data('<?php echo $row["case_id"] ?>')"><i
+                                            class="bi bi-file-earmark-text  bx-sm me-2 text-success"></i> </a>
                                 </td>
 
                                 <?php $i++;}?>
@@ -118,6 +113,14 @@ function deletedata(id) {
     </div>
 </section>
 
+<script type="text/javascript">
+    function file_data(id) {
+    eraseCookie("edit_id");
+    eraseCookie("view_id", id, 1);
+    createCookie("case_id", id, 1);
+    window.location = "case_files_advocates.php";
+}
+</script>
 
 <?php
 include "footer.php";

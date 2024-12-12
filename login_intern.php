@@ -18,7 +18,7 @@ if(isset($_REQUEST["submit"])){
     $qr->close();
     $row=mysqli_fetch_array($result);
     
-    if($row["email"]==$ui)
+    if(strtolower($row["email"])==strtolower($ui))
     {
       $_SESSION["intern_userlogin"]="true";
       $_SESSION["intern_id"]=$row["id"];

@@ -204,7 +204,6 @@ $app->get('/get_advocate_list', function () use ($app) {
     }
     echoResponse(200, $data);
 });
-
 $app->post('/get_case_stage_list', function () use ($app) {
 
     verifyRequiredParams(array('case_type_id'));
@@ -232,8 +231,7 @@ $app->post('/get_case_stage_list', function () use ($app) {
     }
     echoResponse(200, $data);
 });
-
-$app->post('/get_case_task', function () use ($app) {
+$app->post('/get_case_info', function () use ($app) {
 
     verifyRequiredParams(array('case_no'));
     $case_no = $app->request->post("case_no");
@@ -241,33 +239,7 @@ $app->post('/get_case_task', function () use ($app) {
     $db = new DbOperation();
     $data = array();
     $data["data"] = array();
-    $result = $db->get_case_task($case_no);
-
-    if (mysqli_num_rows($result) > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $temp = array();
-            foreach ($row as $key => $value) {
-                $temp[$key] = $value;
-            }
-            $temp = array_map('utf8_encode', $temp);
-            array_push($data['data'], $temp);
-        }
-        $data['message'] = "Data found.";
-        $data['success'] = true;
-    } else {
-        $data["message"] = "No data found";
-        $data["success"] = false;
-    }
-    echoResponse(200, $data);
-});
-$app->post('/get_task_history', function () use ($app) {
-
-    verifyRequiredParams(array('task_id'));
-    $task_id = $app->request->post("task_id");
-    $db = new DbOperation();
-    $data = array();
-    $data["data"] = array();
-    $result = $db->get_task_history($task_id);
+    $result = $db->get_case_info($case_no);
 
     if (mysqli_num_rows($result) > 0) {
         while ($row = $result->fetch_assoc()) {
@@ -509,13 +481,13 @@ $app->post('/add_case', function () use ($app) {
     $case_img_path = $_FILES["case_image"]["tmp_name"];
     $case_img = preg_replace('/[^A-Za-z0-9.\-]/', '_', $case_img);
 
-    if (file_exists("../../case_image/" . $case_img)) {
+    if (file_exists("../../documents/case/" . $case_img)) {
         $i = 0;
         $ImageFileName1 = $case_img;
         $Arr1 = explode('.', $ImageFileName1);
 
         $ImageFileName1 = $Arr1[0] . $i . "." . $Arr1[1];
-        while (file_exists("../../case_image/" . $ImageFileName1)) {
+        while (file_exists("../../documents/case/" . $ImageFileName1)) {
             $i++;
             $ImageFileName1 = $Arr1[0] . $i . "." . $Arr1[1];
         }
@@ -533,13 +505,13 @@ $app->post('/add_case', function () use ($app) {
 
             $case_docs[$i] = preg_replace('/[^A-Za-z0-9.\-]/', '_', $case_docs[$i]);
 
-            if (file_exists("../../case_image/" . $case_docs[$i])) {
+            if (file_exists("../../documents/case/" . $case_docs[$i])) {
                 $i = 0;
                 $ImageFileName2[$i] = $case_img[$i];
                 $Arr1 = explode('.', $ImageFileName1);
 
                 $ImageFileName2[$i] = $Arr1[0] . $i . "." . $Arr1[1];
-                while (file_exists("../../case_image/" . $ImageFileName1)) {
+                while (file_exists("../../documents/case/" . $ImageFileName1)) {
                     $i++;
                     $ImageFileName2[$i] = $Arr1[0] . $i . "." . $Arr1[1];
                 }
@@ -570,10 +542,10 @@ $app->post('/add_case', function () use ($app) {
         $user_type
     );
     if ($result) {
-        move_uploaded_file($case_img_path, "../../case_image/" . $ImageFileName1);
+        move_uploaded_file($case_img_path, "../../documents/case/" . $ImageFileName1);
         if (isset($_FILES["case_docs"]["name"])) {
             for ($i = 0; $i < sizeof($ImageFileName2); $i++) {
-                move_uploaded_file($case_docs_path[$i], "../../case_image/" . $ImageFileName2[$i]);
+                move_uploaded_file($case_docs_path[$i], "../../documents/case/" . $ImageFileName2[$i]);
             }
         }
         // for($i=0;$i<sizeof($))

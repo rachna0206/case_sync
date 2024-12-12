@@ -168,7 +168,7 @@ if (isset($_REQUEST["btn_case_type"])) {
                                             </option>
                                         <?php } ?>
                                     </select>
-                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
                                         data-bs-target="#addcasetypemodal">
                                         <i class="bi bi-plus"></i>
                                     </button>
@@ -221,14 +221,14 @@ if (isset($_REQUEST["btn_case_type"])) {
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add Case Type</h5>
+                <h5 class="modal-title">Add State</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form method="post">
 
                     <div class="col-md-12">
-                        <label for="title" class="form-label">Case Type</label>
+                        <label for="title" class="form-label">State</label>
                         <input type="text" class="form-control" id="c_type" name="c_type" required>
                     </div>
             </div>
