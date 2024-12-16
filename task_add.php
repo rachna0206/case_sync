@@ -238,7 +238,7 @@ if (isset($_REQUEST["update"])) {
                                         <?php } ?>
                                     </select>
                                     <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                        data-bs-target="#addcitymodal">
+                                        data-bs-target="#addcitysmodal">
                                         <i class="bi bi-plus"></i>
                                     </button>
                                 </div>
@@ -330,7 +330,7 @@ if (isset($_REQUEST["update"])) {
     </div>
 </section>
 
-<div class="modal fade" id="addcitymodal" tabindex="-1">
+<div class="modal fade" id="addcitysmodal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -366,7 +366,7 @@ if (isset($_REQUEST["update"])) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" name="btn_city" class="btn btn-primary">Save</button>
+                <button type="button"  class="btn btn-primary" onclick="add_citys()">Save</button>
             </div>
             </form>
         </div>
@@ -390,7 +390,7 @@ if (isset($_REQUEST["update"])) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" name="btn_case_type" class="btn btn-primary">Save</button>
+                <button type="button"  class="btn btn-primary" onclick="add_casetype()">Save</button>
             </div>
             </form>
         </div>
@@ -430,7 +430,7 @@ if (isset($_REQUEST["update"])) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" name="btn_intern" class="btn btn-primary">Save</button>
+                <button type="button"  class="btn btn-primary"  onclick="add_alloted_to()">Save</button>
             </div>
             </form>
         </div>
@@ -443,6 +443,68 @@ function go_back() {
     eraseCookie("view_id");
     window.location = "task.php";
 }
+
+
+function add_casetype(){
+    var c_type = document.getElementById("c_type").value;
+    $("#addcasetypemodal").modal("toggle");
+
+    $.ajax({
+        async: true,
+        type: "POST",
+        url: "action.php?action=add_casetype",
+        data: "c_type=" + c_type,
+        cache: false,
+        success: function(result) {
+            $("#case_type").append(result);
+          
+
+        }
+    });
+
+}
+
+function add_citys(){
+    var state_id = document.getElementById("state_id").value;
+    var name =document.getElementById("name").value;
+    $("#addcitysmodal").modal("toggle");
+       $.ajax({
+    async: true,
+        type: "POST",
+        url: "action.php?action=add_citys",
+        data: "state_id=" + state_id+"&name="+name,
+        cache: false,
+        success: function(result) {
+            $("#city").append(result);
+        }
+    });
+
+
+}
+
+function add_alloted_to(){
+    
+    var int_name =document.getElementById("int_name").value;
+    var contact =document.getElementById("contact").value;
+    var email =document.getElementById("email").value;
+    var password =document.getElementById("password").value;
+    var date =document.getElementById("date").value;
+    
+    $("#addintrnmodal").modal("toggle");
+       $.ajax({
+    async: true,
+        type: "POST",
+        url: "action.php?action=add_alloted_to",
+        data: "int_name=" + int_name +"&contact="+contact +"&email="+email +"&password="+password +"&date="+date,
+        cache: false,
+        success: function(result) {
+            $("#alloted_to").append(result);
+        }
+    });
+
+
+}
+
 </script>
 <?php
 include "footer.php";

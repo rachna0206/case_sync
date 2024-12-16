@@ -206,7 +206,7 @@ if (isset($_REQUEST["btn_case_type"])) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" name="btn_case_type" class="btn btn-primary">Save</button>
+                <button type="button"  class="btn btn-primary" onclick="add_casetype()">Save</button>
             </div>
             </form>
         </div>
@@ -219,6 +219,32 @@ function go_back() {
     eraseCookie("view_id");
     window.location = "court.php";
 }
+
+
+
+function add_casetype(){
+    var c_type = document.getElementById("c_type").value;
+    $("#addcasetypemodal").modal("toggle");
+
+    $.ajax({
+        async: true,
+        type: "POST",
+        url: "action.php?action=add_casetype",
+        data: "c_type=" + c_type,
+        cache: false,
+        success: function(result) {
+            $("#case_type").append(result);
+          
+
+        }
+    });
+
+}
+
+
+
+
+
 </script>
 <?php
 include "footer.php";

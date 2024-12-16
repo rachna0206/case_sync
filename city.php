@@ -69,7 +69,6 @@ function deletedata(id) {
                 <input type="hidden" name="delete_id" id="delete_id">
                 <div class="modal-body">
                     Are you sure you want to delete this record?
-                    Are you sure you want to delete this record?
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

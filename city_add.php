@@ -229,12 +229,12 @@ if (isset($_REQUEST["btn_case_type"])) {
 
                     <div class="col-md-12">
                         <label for="title" class="form-label">State</label>
-                        <input type="text" class="form-control" id="c_type" name="c_type" required>
+                        <input type="text" class="form-control" id="state" name="state" required>
                     </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" name="btn_case_type" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-primary" onclick="add_state()">Save</button>
             </div>
             </form>
         </div>
@@ -246,6 +246,25 @@ function go_back() {
     eraseCookie("edit_id");
     eraseCookie("view_id");
     window.location = "city.php";
+}
+
+function add_state(){
+    var state = document.getElementById("state").value;
+    $("#addcasetypemodal").modal("toggle");
+
+    $.ajax({
+        async: true,
+        type: "POST",
+        url: "action.php?action=add_state",
+        data: "state=" + state,
+        cache: false,
+        success: function(result) {
+            $("#state_id").append(result);
+          
+
+        }
+    });
+
 }
 
 </script>

@@ -304,22 +304,19 @@ function addmuldocs(id) {
                             <tr>
                                 <th scope="col">Sr no.</th>
                                 <th scope="col">Case No</th>
-                                <th scope="col">Case Year</th>
-                                <th scope="col">Case Type</th>
-                                <th scope="col">Company</th>
-                                <th scope="col">Handled By</th>
-                                <th scope="col">Court</th>
-                                <th scope="col">City</th>
-                                <th scope="col">Summon Date</th>
-                                <th scope="col">Next Date</th>
+                                <th scope="col">Complainant</th>
+                                <th scope="col">Respondent</th>
+                                <th scope="col">Complainant Advocate</th>
+                                <th scope="col">Respondent Advocate</th>
+                                <th scope="col">Date of Filing</th>
+                                <th scope="col">Date of Next Hearing</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
-                            $stmt = $obj->con1->prepare("SELECT c1.*,c1.id as case_id,c2.name as company_name, c3.case_type as case_type_name, c4.name as cname, c5.name as city_name, a1.name as adv_name FROM `case` c1,company c2,case_type c3,court c4,city c5,advocate a1 WHERE c1.company_id=c2.id and c1.case_type = c3.id and  c1.court_name=c4.id and c1.city_id=c5.id and c1.handle_by = a1.id ORDER BY c1.id DESC");
-                            // $stmt = $obj->con1->prepare("SELECT t1.name, t2.* FROM `company` t1, `case` t2 where t1.id = t2.company_id ORDER BY t2.id DESC");
+                            $stmt = $obj->con1->prepare("SELECT c1.*,c1.id AS case_id,c2.name AS company_name,c3.case_type AS case_type_name, c4.name AS court_name, c5.name AS city_name, a1.name AS advocate_name FROM `case` c1 LEFT JOIN company c2 ON c1.company_id = c2.id LEFT JOIN case_type c3 ON c1.case_type = c3.id LEFT JOIN court c4 ON c1.court_name = c4.id LEFT JOIN city c5 ON c1.city_id = c5.id LEFT JOIN advocate a1 ON c1.handle_by = a1.id ORDER BY c1.id DESC");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
@@ -337,21 +334,18 @@ function addmuldocs(id) {
                                     $class="secondary";
                                 }
                                 
+                                
                                 ?>
                             <tr>
 
                                 <th scope="row"><?php echo $i; ?></th>
-                                <td ><?php echo $row["case_no"] ?></td>
-
-                                <td ><?php echo $row["year"] ?></td>
-                                <td ><?php echo $row["case_type_name"] ?></td>
-                                <td ><?php echo $row["company_name"] ?></td>
-                                <td><?php echo $row["adv_name"] ?></td>
-                                
-                                <td><?php echo $row["cname"] ?></td>
-                                <td><?php echo $row["city_name"] ?></td>
-                                <td><?php echo date("d/m/Y",strtotime($row["sr_date"])) ?></td>
-                                <td><?php echo  ($row["next_date"]!="")?date("d/m/Y",strtotime($row["next_date"])):"-" ?></td>
+                                <td><?php echo $row["case_no"]; ?></td>
+                                <td><?php echo $row["applicant"]; ?></td>
+                                <td><?php echo $row["company_name"]; ?></td>
+                                <td><?php echo $row["complainant_advocate"]; ?></td>
+                                <td><?php echo $row["advocate_name"]; ?></td>
+                                <td><?php echo date("d/m/Y", strtotime($row["date_of_filing"])); ?></td>
+                                <td><?php echo ($row["next_date"] != "") ? date("d/m/Y", strtotime($row["next_date"])) : "-"; ?></td>
                                 <td>
                                 <h4><span
                                         class="badge rounded-pill bg-<?php echo $class?>"><?php echo ucfirst($row["status"]); ?></span>
