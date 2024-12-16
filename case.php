@@ -86,8 +86,8 @@
           $next_date = trim($allDataInSheet[$i]["G"]);
   
           // Map text values to IDs
-          $company_id = $companies[$companyName] ?? null;
-          $handle_by = $advocates[$handleByName] ?? null;
+          $company_id = isset($companies[$companyName]) ? $companies[$companyName]: null;
+          $handle_by = isset($advocates[$handleByName]) ? $advocates[$handleByName]: null;
   
           if ($case_no != "" && $company_id && $handle_by) {
               $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ?");
