@@ -74,7 +74,7 @@ class PHPExcel_Cell_DefaultValueBinder implements PHPExcel_Cell_IValueBinder
 	 */
 	public static function dataTypeForValue($pValue = null) {
 		// Match the value against a few data types
-		echo "pvalue=".$pValue;
+		
 		if (is_null($pValue)) {
 			return PHPExcel_Cell_DataType::TYPE_NULL;
 
