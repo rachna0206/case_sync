@@ -2,6 +2,8 @@
 include "header.php";
 include "alert.php";
 
+
+
 if (isset($_REQUEST["btndelete"])) {
     $c_id = $_REQUEST['delete_id'];
 
@@ -64,13 +66,11 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
         $date_of_filing = date("Y-m-d",strtotime(trim($allDataInSheet[$i]["G"])));
         $next_date = date("Y-m-d",strtotime(trim($allDataInSheet[$i]["H"])));
 
-
-
-
         if ($case_no != "" && $company_id && $handle_by) {
            
-            $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ?");
-            $stmt_dmd_ck->bind_param("s", $case_no);
+           // $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and case_type=? and `year`=? and city_id=?");
+           $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and city_id=? ");
+            $stmt_dmd_ck->bind_param("sii", $case_no,$handle_by,$city);
             $stmt_dmd_ck->execute();
             $dmd_result = $stmt_dmd_ck->get_result()->num_rows;
             $stmt_dmd_ck->close();
@@ -96,11 +96,13 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
     }
 
     $msges = $msg1 . $msg2 . $msg3 . $msg4;
-    echo "msg=".$msges;
-    setcookie("excelmsg", $msges, time()+3600, "/");
+    
+    $_SESSION["excel_msg"]=$msges;
+   
     header("location:case.php");
 }
 ?>
+
 <script type="text/javascript">
     function add_data() {
         eraseCookie("edit_id");
