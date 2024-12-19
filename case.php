@@ -301,7 +301,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                     </thead>
                     <tbody>
                         <?php
-                        $stmt = $obj->con1->prepare("SELECT c1.*,c1.id AS case_id,c2.name AS company_name,c3.case_type AS case_type_name, c4.name AS court_name, c5.name AS city_name, a1.name AS advocate_name FROM `case` c1 LEFT JOIN company c2 ON c1.company_id = c2.id LEFT JOIN case_type c3 ON c1.case_type = c3.id LEFT JOIN court c4 ON c1.court_name = c4.id LEFT JOIN city c5 ON c1.city_id = c5.id LEFT JOIN advocate a1 ON c1.handle_by = a1.id ORDER BY c1.id DESC");
+                        $stmt = $obj->con1->prepare("SELECT c1.*,c1.id AS case_id,c2.name AS company_name,c3.case_type AS case_type_name, c4.name AS court_name, c5.name AS city_name, a1.name AS advocate_name,DATE_FORMAT(`c1`.date_of_filing, '%d-%m-%Y') AS date_filing,DATE_FORMAT(`c1`.next_date, '%d-%m-%Y') AS nxt_date FROM `case` c1 LEFT JOIN company c2 ON c1.company_id = c2.id LEFT JOIN case_type c3 ON c1.case_type = c3.id LEFT JOIN court c4 ON c1.court_name = c4.id LEFT JOIN city c5 ON c1.city_id = c5.id LEFT JOIN advocate a1 ON c1.handle_by = a1.id ORDER BY c1.id DESC");
                         $stmt->execute();
                         $Resp = $stmt->get_result();
                         $i = 1;
@@ -325,8 +325,8 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                                 <td><?php echo $row["company_name"]; ?></td>
                                 <td><?php echo $row["complainant_advocate"]; ?></td>
                                 <td><?php echo $row["advocate_name"]; ?></td>
-                                <td><?php echo date("d/m/Y", strtotime($row["date_of_filing"])); ?></td>
-                                <td><?php echo ($row["next_date"] != "") ? date("d/m/Y", strtotime($row["next_date"])) : "-"; ?></td>
+                                <td><?php echo $row["date_filing"] ?></td>
+                                <td><?php echo $row["nxt_date"] ?></td>
                                 <td>
                                     <h4><span
                                             class="badge rounded-pill bg-<?php echo $class ?>"><?php echo ucfirst($row["status"]); ?></span>
