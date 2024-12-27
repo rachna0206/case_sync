@@ -326,7 +326,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                                 <td><?php echo $row["complainant_advocate"]; ?></td>
                                 <td><?php echo $row["advocate_name"]; ?></td>
                                 <td><?php echo $row["date_filing"] ?></td>
-                                <td><?php echo $row["nxt_date"] ?></td>
+                                <td><?php echo $row["next_date"] ?></td>
                                 <td>
                                     <h4><span
                                             class="badge rounded-pill bg-<?php echo $class ?>"><?php echo ucfirst($row["status"]); ?></span>

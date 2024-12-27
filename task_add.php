@@ -194,29 +194,34 @@ if (isset($_REQUEST["update"])) {
                             <div class="col-md-6">
                                 <label for="case_type" class="form-label">Case Type</label>
                                 <div class="d-flex">
-                                    <select class="form-control me-2" id="case_type" name="case_type"
-                                        <?= isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                                        <option value="">Select Case Type</option>
-                                        <?php
-                                        $comp = "SELECT * FROM `case_type` WHERE status='enable'";
-                                        $result = $obj->select($comp);
-                                        $selectedcourtId = isset($data['case_type']) ? $data['case_type'] : '';
+                                    <select class="form-select" id="case_type" name="case_type"
+                                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required
+                                        onchange="get_caseno(this.value)">
 
-                                        while ($row = mysqli_fetch_array($result)) {
-                                            $selected = ($row["id"] == $selectedcourtId) ? 'selected' : '';
-                                        ?>
+                                        <option value="">Select a Case Type</option>
+                                        <?php 
+                                     if($mode=='view'){
+                                        
+                                     }else{
+                                    $comp = "SELECT * FROM `case_type` where status='enable'";
+                                    $result = $obj->select($comp);
+                                    $selectedcourtId = isset($data['case_type']) ? $data['case_type'] : '';
+
+                                    while ($row = mysqli_fetch_array($result)) { 
+                                        $selected = ($row["id"] == $selectedcourtId) ? 'selected' : '';
+                                    ?>
                                         <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
                                             <?= htmlspecialchars($row["case_type"]) ?>
                                         </option>
-                                        <?php } ?>
+                                        <?php } }?>
                                     </select>
-                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
                                         data-bs-target="#addcasetypemodal">
                                         <i class="bi bi-plus"></i>
                                     </button>
                                 </div>
                             </div>
-
+                          
                             <!-- City Dropdown and Button -->
                             <div class="col-md-6">
                                 <label for="city" class="form-label">City</label>
@@ -247,23 +252,31 @@ if (isset($_REQUEST["update"])) {
 
 
                         <div class="col-md-12">
-                            <label for="case_id" class="form-label">Case Number</label>
+                            <label for="case_no" class="form-label">Case Number</label>
 
-                            <select class="form-control" id="case_id" name="case_id"
+                            <select class="form-control" id="case_no" name="case_no"
                                 <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
                                 <option value="">Select a Case</option>
-                                <?php
-                                $task = "SELECT * FROM `case`";
-                                $result = $obj->select($task);
-                                $selectedCaseId = isset($data['case_id']) ? $data['case_id'] : '';
-
-                                while ($row = mysqli_fetch_array($result)) {
-                                    $selected = ($row["id"] == $selectedCaseId) ? 'selected' : '';
+                                <?php 
+                                    if(isset($mode))
+                                    {
+                                        $task = "SELECT * FROM `case` where case_type='".$data["case_type"]."' and lower(`status`)='enable'";
+                                        $result = $obj->select($task);
+                                        $selectedCaseId = isset($data['case_id']) ? $data['case_id'] : '';
+                                        while ($row = mysqli_fetch_array($result)) {
+                                            $selected = ($row["id"] == $selectedCaseId) ? 'selected' : '';
+                                        ?>
+                                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                            <?= htmlspecialchars($row["case_no"]) ?>
+                                        </option>
+                                        <?php 
+                                        }
+                                    }
+                            
                                 ?>
-                                <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                <!-- <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
                                     <?= htmlspecialchars($row["case_no"]) ?>
-                                </option>
-                                <?php } ?>
+                                </option> -->
                             </select>
                         </div>
                         <div class="col-md-12">
@@ -480,6 +493,18 @@ function add_citys(){
     });
 
 
+}
+function get_caseno(case_type) {
+    $.ajax({
+        async: true,
+        type: "POST",
+        url: "action.php?action=get_caseno",
+        data: "case_type=" + case_type,
+        cache: false,
+        success: function(result) {
+            $("#case_no").html(result);
+        }
+    });
 }
 
 function add_alloted_to(){
