@@ -11,15 +11,6 @@ class DbOperation
         $this->con = $db->connect();
     }
 
-    public function loginIntern($user_id, $password)
-    {
-        $stmt_login = $this->con->prepare("SELECT * FROM `interns` WHERE `email`=? AND BINARY `password`=? AND status = 'enable' ");
-        $stmt_login->bind_param("ss", $user_id, $password);
-        $stmt_login->execute();
-        $result = $stmt_login->get_result();
-        $stmt_login->close();
-        return $result;
-    }
 
     public function loginAdvocate($user_id, $password)
     {
@@ -144,7 +135,7 @@ class DbOperation
     }
     public function get_case_history()
     {
-        $stmt = $this->con->prepare("SELECT a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id;");
+        $stmt = $this->con->prepare("SELECT a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by' from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id;");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -158,9 +149,18 @@ class DbOperation
         $stmt->close();
         return $result;
     }
+    public function get_case_info($case_id)
+    {
+        $stmt = $this->con->prepare("SELECT c.id,c.case_no,c.year , t.case_type , st.stage , cmp.name , ad.name , c.docs , c.applicant , c.opp_name , crt.name , ct.name , c.next_date , c.next_stage , c.sr_date   from `case` as c join case_type as t on t.id = c.case_type join stage as st on st.id = c.stage join company as cmp on cmp.id = c.company_id join advocate as ad on ad.id = c.handle_by join court as crt on crt.id = c.court_name join city as ct on ct.id = c.city_id where c.id = ?;");
+        $stmt->bind_param("i", $case_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
     public function get_case_stage_list($case_stage)
     {
-        $stmt = $this->con->prepare("SELECT * from stage where case_type_id = ?");
+        $stmt = $this->con->prepare("SELECT * from stage where case_type_id = ? AND `status`='enable'  order by stage");
         $stmt->bind_param("s", $case_stage);
         $stmt->execute();
         $result = $stmt->get_result();

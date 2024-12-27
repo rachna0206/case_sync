@@ -97,7 +97,3 @@
 [21-Aug-2024 19:40:52 Asia/Kolkata] PHP Fatal error:  Call to a member function bind_param() on boolean in /home/pragmanxt/public_html/rowan_decor/services/admin/include/DbOperation.php on line 238
 [21-Aug-2024 19:43:44 Asia/Kolkata] PHP Fatal error:  Call to a member function bind_param() on boolean in /home/pragmanxt/public_html/rowan_decor/services/admin/include/DbOperation.php on line 238
 [23-Aug-2024 10:16:23 UTC] PHP Deprecated:  Automatically populating $HTTP_RAW_POST_DATA is deprecated and will be removed in a future version. To avoid this warning set 'always_populate_raw_post_data' to '-1' in php.ini and use the php://input stream instead. in Unknown on line 0
-[27-Sep-2024 18:56:13 Asia/Kolkata] PHP Fatal error:  Call to a member function bind_param() on boolean in /home/pragmanxt/public_html/case_sync/services/include/DbOperation.php on line 154
-[27-Sep-2024 18:56:39 Asia/Kolkata] PHP Fatal error:  Call to a member function bind_param() on boolean in /home/pragmanxt/public_html/case_sync/services/include/DbOperation.php on line 154
-[27-Sep-2024 18:58:10 Asia/Kolkata] PHP Fatal error:  Call to a member function bind_param() on boolean in /home/pragmanxt/public_html/case_sync/services/include/DbOperation.php on line 154
-[27-Sep-2024 18:58:37 Asia/Kolkata] PHP Fatal error:  Call to a member function bind_param() on boolean in /home/pragmanxt/public_html/case_sync/services/include/DbOperation.php on line 154

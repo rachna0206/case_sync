@@ -13,41 +13,7 @@ date_default_timezone_set("Asia/Kolkata");
 $app = new \Slim\Slim();
 
 
-/*
- * login
- * Parameters: {"user_id":"","password":""}
- * Method: POST
- */
-$app->post('/login_intern', function () use ($app) {
 
-    verifyRequiredParams(array('data'));
-
-    $data_request = json_decode($app->request->post('data'));
-    $user_id = $data_request->user_id;
-    $password = $data_request->password;
-
-    $db = new DbOperation();
-    $data = array();
-    $data["data"] = array();
-
-    $result = $db->loginIntern($user_id, $password);
-    if (mysqli_num_rows($result) > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $temp = array();
-            foreach ($row as $key => $value) {
-                $temp[$key] = $value;
-            }
-            $temp = array_map('utf8_encode', $temp);
-            array_push($data['data'], $temp);
-        }
-        $data['message'] = "Logged in Successfully";
-        $data['success'] = true;
-    } else {
-        $data['message'] = "Incorrect Id or Password";
-        $data['success'] = false;
-    }
-    echoResponse(200, $data);
-});
 
 
 $app->post('/login_advocate', function () use ($app) {
@@ -107,7 +73,6 @@ $app->post('/advocate_registration', function () use ($app) {
     echoResponse(200, $data);
 });
 $app->post('/add_company', function () use ($app) {
-
 
     verifyRequiredParams(array('data'));
     $data_request = json_decode($app->request->post('data'));
@@ -207,8 +172,8 @@ $app->get('/get_advocate_list', function () use ($app) {
 
 $app->post('/get_case_stage_list', function () use ($app) {
 
-    verifyRequiredParams(array('case_type_id'));
-    $case_stage = $app->request->post("case_type_id");
+    verifyRequiredParams(array('case_stage'));
+    $case_stage = $app->request->post("case_stage");
     // echo $stage . "\n";
     $db = new DbOperation();
     $data = array();
@@ -268,6 +233,32 @@ $app->post('/get_task_history', function () use ($app) {
     $data = array();
     $data["data"] = array();
     $result = $db->get_task_history($task_id);
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Data found.";
+        $data['success'] = true;
+    } else {
+        $data["message"] = "No data found";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+$app->post('/get_case_info', function () use ($app) {
+
+    verifyRequiredParams(array('case_id'));
+    $case_id = $app->request->post("case_id");
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+    $result = $db->get_case_info($case_id);
 
     if (mysqli_num_rows($result) > 0) {
         while ($row = $result->fetch_assoc()) {
