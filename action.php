@@ -16,7 +16,7 @@ if (isset($_REQUEST['action'])) {
         $stmt_stage->execute();
         $res_stage = $stmt_stage->get_result();
         $stmt_stage->close();
-        $html_stage = "<option>--Select Stage--</option>";
+        $html_stage = "<option> Select Stage </option>";
         while ($stages = mysqli_fetch_array($res_stage)) {
 
             $html_stage .= '<option value="' . $stages['id'] . '" >' . $stages["stage"] . '</option>';
@@ -27,7 +27,7 @@ if (isset($_REQUEST['action'])) {
         $stmt_court->execute();
         $res_court = $stmt_court->get_result();
         $stmt_court->close();
-        $html_court = "<option>--Select Court--</option>";
+        $html_court = "<option> Select Court </option>";
         while ($Court = mysqli_fetch_array($res_court)) {
 
             $html_court .= '<option value="' . $Court['id'] . '" >' . $Court["name"] . '</option>';
@@ -56,7 +56,23 @@ if (isset($_REQUEST['action'])) {
        
     }
 
+    if ($_REQUEST['action'] == "get_caseno") {
+        $case_type = $_REQUEST["case_type"];
     
+        $stmt_caseno = $obj->con1->prepare("SELECT * FROM `case` WHERE case_type=? AND lower(`status`)='enable'");
+        $stmt_caseno->bind_param('i', $case_type);
+        $stmt_caseno->execute();
+        $res_caseno = $stmt_caseno->get_result();
+        $stmt_caseno->close();
+    
+        $html_caseno = "<option value=''>Select a Case</option>";
+        while ($casenos = mysqli_fetch_array($res_caseno)) {
+            $html_caseno .= '<option value="' . htmlspecialchars($casenos['id']) . '">' . htmlspecialchars($casenos["case_no"]) . '</option>';
+        }
+    
+        echo $html_caseno;
+        exit; 
+    }
     if ($_REQUEST['action'] == "add_state") {
         $state = $_REQUEST['state'];
         $status = 'enable';

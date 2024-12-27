@@ -21,8 +21,11 @@ if (isset($_REQUEST["save"])) {
     $applicant = $_REQUEST['applicant'];
     $opp_name = $_REQUEST['opp_name'];
     $court_name = $_REQUEST['court_name'];
+    $complainant_advocate =$_REQUEST['complainant_advocate'];
     $city_id = $_REQUEST['city_id'];
     $sr_date = $_REQUEST['sr_date'];
+    $date_of_filing = $_REQUEST['date_of_filing'];
+    $next_date = $_REQUEST['next_date'];
     $status = $_REQUEST['radio'];
     $stage = $_REQUEST['stage'];
 
@@ -50,8 +53,8 @@ if (isset($_REQUEST["save"])) {
 
     try {
         //echo("INSERT INTO `case`(case_no, year, case_type, company_id, handle_by, docs, applicant, opp_name, court_name, city_id, sr_date, status) VALUES ($case_no, $case_year, $case_type, $company_id, $handle_by, $DocFileName, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status)");
-        $stmt = $obj->con1->prepare("INSERT INTO `case`(case_no, year, case_type, company_id, handle_by, docs, applicant, opp_name, court_name, city_id, sr_date, `status`,stage) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
-        $stmt->bind_param("sisiissssissi", $case_no, $case_year, $case_type, $company_id, $handle_by, $DocFileName, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status,$stage);
+        $stmt = $obj->con1->prepare("INSERT INTO `case`(`case_no`, `year`, `case_type`, `company_id`, `handle_by`, `docs`, `applicant`, `opp_name`, `court_name`, `city_id`,`complainant_advocate`, `sr_date`,`date_of_filing`,`next_date`, `status`,`stage`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        $stmt->bind_param("sisiissssisssssi", $case_no, $case_year, $case_type, $company_id, $handle_by, $DocFileName, $applicant, $opp_name, $court_name, $city_id, $complainant_advocate , $sr_date,$date_of_filing, $next_date, $status,$stage);
         $Resp = $stmt->execute();
         $insert_doc_id = mysqli_insert_id($obj->con1);
 
@@ -119,12 +122,15 @@ if (isset($_REQUEST["update"])) {
     $court_name = $_REQUEST['court_name'];
     $city_id = $_REQUEST['city_id'];
     $sr_date = $_REQUEST['sr_date'];
+    $date_of_filing = $_REQUEST['date_of_filing'];
+    $complainant_advocate =$_REQUEST['complainant_advocate'];
     $status = $_REQUEST['radio'];
      $multi_docs  = $_FILES['docs']['name'];
      $multi_docs  = str_replace(' ', '_', $multi_docs );
      $multi_docs_path = $_FILES['docs']['tmp_name'];
     $old_img = $_REQUEST['old_img'];
     $stage = $_REQUEST['stage'];
+    $next_date = $_REQUEST['next_date'];
 
 
     if ($multi_docs  != "") {
@@ -149,9 +155,10 @@ if (isset($_REQUEST["update"])) {
     }
 
     try {
+       
         // Prepare update statement
-        $stmt = $obj->con1->prepare("UPDATE `case` SET case_no=?, year=?, case_type=?, company_id=?, handle_by=?, docs=?, applicant=?, opp_name=?, court_name=?, city_id=?, sr_date=?, `status`=?,stage=? WHERE id=?");
-        $stmt->bind_param("ssssssssssssii", $case_no, $case_year, $case_type, $company_id, $handle_by, $DocFileName, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status,$stage,$e_id);
+        $stmt = $obj->con1->prepare("UPDATE `case` SET `case_no`=?, `year`=?, `case_type`=?, `company_id`=?, `handle_by`=?, `docs`=?, `applicant`=?, `opp_name`=?, `court_name`=?, `city_id`=?, `complainant_advocate`=?,`sr_date`=?,`date_of_filing`=? ,`next_date`=?,`status`=?,`stage`=? WHERE id=?");
+        $stmt->bind_param("sisiissssisssssii", $case_no, $case_year, $case_type, $company_id, $handle_by, $DocFileName, $applicant, $opp_name, $court_name, $city_id,$complainant_advocate, $sr_date, $date_of_filing, $next_date ,$status,$stage,$e_id);
         $Resp = $stmt->execute();
             if (!$Resp) {
             throw new Exception("Problem in updating! " . strtok($obj->con1->error, "("));
@@ -368,7 +375,7 @@ if (isset($_REQUEST["btn_handle_by"])) {
                                 <label for="case_no" class="form-label">Case Number</label>
                                 <input type="text" class="form-control" id="case_no" name="case_no"
                                     value="<?php echo (isset($mode)) ? $data['case_no'] : '' ?>"
-                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
+                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?> required>
                             </div>
 
                             <div class="col-md-6">
@@ -376,7 +383,7 @@ if (isset($_REQUEST["btn_handle_by"])) {
                                 <input type="text" class="form-control" id="year" name="year"
                                     value="<?php echo (isset($mode)) ? $data['year'] : '' ?>"
                                     onkeypress="return event.charCode >= 48 && event.charCode <= 57" maxlength="4"
-                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
+                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?> required>
                             </div>
                         </div>
 
@@ -384,10 +391,10 @@ if (isset($_REQUEST["btn_handle_by"])) {
                             <div class="col-md-4">
                                 <label for="case_type" class="form-label">Case Type</label>
                                 <div class="d-flex">
-                                <select class="form-select" id="case_type" name="case_type"
-                                    <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>
-                                    onchange="get_stage(this.value)">
-                            
+                                    <select class="form-select" id="case_type" name="case_type"
+                                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>required
+                                        onchange="get_stage(this.value)">
+
                                         <option value="">Select a Case Type</option>
                                         <?php 
                                     $comp = "SELECT * FROM `case_type` where status='Enable'";
@@ -401,21 +408,21 @@ if (isset($_REQUEST["btn_handle_by"])) {
                                             <?= htmlspecialchars($row["case_type"]) ?>
                                         </option>
                                         <?php } ?>
-                                </select>
-                                <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
-                                    data-bs-target="#addcasetypemodal">
-                                    <i class="bi bi-plus"></i>
-                                </button>
+                                    </select>
+                                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                        data-bs-target="#addcasetypemodal">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="stage" class="form-label">Stage</label>
-                            <div class="d-flex">
-                            <select class="form-select" id="stage" name="stage"
-                                <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
-                            
-                                    <option value="">Select Stage</option>
-                                    <?php 
+                            <div class="col-md-4">
+                                <label for="stage" class="form-label">Stage</label>
+                                <div class="d-flex">
+                                    <select class="form-select" id="stage" name="stage"
+                                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
+
+                                        <option value="">Select Stage</option>
+                                        <?php 
                                     if(isset($mode))
                                     {
                                         $comp = "SELECT * FROM `stage` where case_type_id='".$data["case_type"]."' and lower(`status`)='enable'";
@@ -430,28 +437,28 @@ if (isset($_REQUEST["btn_handle_by"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                        
                                     ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>"
-                                        <?= (isset($mode) && $row["id"]== $data["stage"])?"selected":"" ?>>
-                                        <?= htmlspecialchars($row["stage"]) ?>
-                                    </option>
-                                    <?php }
+                                        <option value="<?= htmlspecialchars($row["id"]) ?>"
+                                            <?= (isset($mode) && $row["id"]== $data["stage"])?"selected":"" ?>>
+                                            <?= htmlspecialchars($row["stage"]) ?>
+                                        </option>
+                                        <?php }
                                      
                                     ?>
-                            </select>
-                            <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
-                                data-bs-target="#addstagemodal">
-                                <i class="bi bi-plus"></i>
-                            </button>
-                        </div>
+                                    </select>
+                                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                        data-bs-target="#addstagemodal">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
 
-                </div>
-                <div class="col-md-4">
-                    <label for="court_name" class="form-label">Court</label>
-                    <div class="d-flex">
-                    <select class="form-select" id="court_name" name="court_name"
-                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                        <option value="">Select Court</option>
-                        <?php 
+                            </div>
+                            <div class="col-md-4">
+                                <label for="court_name" class="form-label">Court</label>
+                                <div class="d-flex">
+                                    <select class="form-select" id="court_name" name="court_name"
+                                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>required>
+                                        <option value="">Select Court</option>
+                                        <?php 
                                     if(isset($mode))
                                     {
                                         $comp = "SELECT * FROM `court` where case_type='".$data["case_type"]."' and lower(`status`)='enable'";
@@ -466,82 +473,81 @@ if (isset($_REQUEST["btn_handle_by"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                         $selected = ($row["id"] == $selectedcourtId) ? 'selected' : '';
                                     ?>
-                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                            <?= htmlspecialchars($row["name"]) ?>
-                        </option>
-                        <?php } 
+                                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                            <?= htmlspecialchars($row["name"]) ?>
+                                        </option>
+                                        <?php } 
                                     
                                    ?>
-                    </select>
-                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
-                                data-bs-target="#addcourtmodal">
-                                <i class="bi bi-plus"></i>
-                            </button>
+                                    </select>
+                                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                        data-bs-target="#addcourtmodal">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+
+
+
                         </div>
-                </div>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label for="docs" class="form-label">Documents</label>
+                                <input type="file" class="form-control" id="docs" name="docs"
+                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>
+                                    onchange="readURL(this)">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div id="preview_file_div" class="text-danger"></div>
+                            <input type="hidden" name="old_file" id="old_file"
+                                value="<?php echo (isset($mode) && $mode == 'edit') ? htmlspecialchars($data["docs"]) : '' ?>" />
+                        </div>
+                        <?php if (isset($mode) && $mode == 'edit' && !empty($data['docs'])): ?>
+                        <div>
+                            <div style="display: flex; align-items: center;">
+                                <span><?php echo htmlspecialchars($data['docs']); ?></span>
+                                <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDelete()">
+                                    <i class="bi bi-x-circle"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (isset($mode) && $mode == 'view' && !empty($data['docs'])): ?>
+                        <div>
+
+                            <a href="documents/case/<?php echo htmlspecialchars($data['docs']); ?>"
+                                class="btn btn-primary" download>
+                                <i class="bi bi-download"></i> Download <?php echo htmlspecialchars($data['docs']); ?>
+                            </a>
+                        </div>
+                        <?php endif; ?>
 
 
 
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="applicant" class="form-label">Applicant / Appellant / Complainant</label>
+                                <input type="text" class="form-control" id="applicant" name="applicant"
+                                    value="<?php echo (isset($mode)) ? $data['applicant'] : '' ?>"
+                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
+                        </div>
 
-            </div>
-            <div class="row g-3">
-                <div class="col-md-12">
-                    <label for="docs" class="form-label">Documents</label>
-                    <input type="file" class="form-control" id="docs" name="docs"
-                        <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?> onchange="readURL(this)">
-                </div>
-            </div>
-
-            <div>
-
-
-                <div id="preview_file_div" class="text-danger"></div>
-                <input type="hidden" name="old_file" id="old_file"
-                    value="<?php echo (isset($mode) && $mode == 'edit') ? htmlspecialchars($data["docs"]) : '' ?>" />
-            </div>
-            <?php if (isset($mode) && $mode == 'edit' && !empty($data['docs'])): ?>
-            <div>
-                <div style="display: flex; align-items: center;">
-                    <span><?php echo htmlspecialchars($data['docs']); ?></span>
-                    <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDelete()">
-                        <i class="bi bi-x-circle"></i> Delete
-                    </button>
-                </div>
-            </div>
-            <?php endif; ?>
-            <?php if (isset($mode) && $mode == 'view' && !empty($data['docs'])): ?>
-            <div>
-
-                <a href="documents/case/<?php echo htmlspecialchars($data['docs']); ?>" class="btn btn-primary"
-                    download>
-                    <i class="bi bi-download"></i> Download <?php echo htmlspecialchars($data['docs']); ?>
-                </a>
-            </div>
-            <?php endif; ?>
-
-
-
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label for="applicant" class="form-label">Applicant / Appellant / Complainant</label>
-                    <input type="text" class="form-control" id="applicant" name="applicant"
-                        value="<?php echo (isset($mode)) ? $data['applicant'] : '' ?>"
-                        <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
-                </div>
-
-                <div class="col-md-4">
-                    <label for="opp_name" class="form-label">Opponent / Respondent / Accused</label>
-                    <input type="text" class="form-control" id="opp_name" name="opp_name"
-                        value="<?php echo (isset($mode)) ? $data['opp_name'] : '' ?>"
-                        <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
-                </div>
-                <div class="col-md-4">
-                    <label for="company_id" class="form-label">Company</label>
-                    <div class="d-flex">
-                    <select class="form-select" id="company_id" name="company_id"
-                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                        <option value="">Select a Company</option>
-                        <?php 
+                            <div class="col-md-4">
+                                <label for="opp_name" class="form-label">Opponent / Respondent / Accused</label>
+                                <input type="text" class="form-control" id="opp_name" name="opp_name"
+                                    value="<?php echo (isset($mode)) ? $data['opp_name'] : '' ?>"
+                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="company_id" class="form-label">Company</label>
+                                <div class="d-flex">
+                                    <select class="form-select" id="company_id" name="company_id"
+                                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
+                                        <option value="">Select a Company</option>
+                                        <?php 
                                     $comp = "SELECT * FROM `company` where status='Enable'";
                                     $result = $obj->select($comp);
                                     $selectedCompanyId = isset($data['company_id']) ? $data['company_id'] : '';
@@ -549,31 +555,37 @@ if (isset($_REQUEST["btn_handle_by"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                         $selected = ($row["id"] == $selectedCompanyId) ? 'selected' : '';
                                     ?>
-                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                            <?= htmlspecialchars($row["name"]) ?>
-                        </option>
-                        <?php } ?>
-                    </select>
-                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
-                                data-bs-target="#addcompanymodal">
-                                <i class="bi bi-plus"></i>
-                            </button>
+                                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                            <?= htmlspecialchars($row["name"]) ?>
+                                        </option>
+                                        <?php } ?>
+                                    </select>
+                                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                        data-bs-target="#addcompanymodal">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+
+
+
                         </div>
-                </div>
 
-
-
-
-            </div>
-
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label for="handle_by" class="form-label">Handled By</label>
-                    <div class="d-flex">
-                    <select class="form-select" id="handle_by" name="handle_by"
-                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                        <option value="">Select an Advocate</option>
-                        <?php 
+                        <div class="row g-3">
+                        <div class="col-md-4">
+                                <label for="complainant_advocate" class="form-label">Complainant Advocate</label>
+                                <input type="text" class="form-control" id="complainant_advocate" name="complainant_advocate"
+                                    value="<?php echo (isset($mode)) ? $data['complainant_advocate'] : '' ?>"
+                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="handle_by" class="form-label">Handled By</label>
+                                <div class="d-flex">
+                                    <select class="form-select" id="handle_by" name="handle_by"
+                                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
+                                        <option value="">Select an Advocate</option>
+                                        <?php 
                                     $comp = "SELECT * FROM `advocate` where status='Enable'";
                                     $result = $obj->select($comp);
                                     $selectedAdvocateId = isset($data['handle_by']) ? $data['handle_by'] : '';
@@ -581,26 +593,26 @@ if (isset($_REQUEST["btn_handle_by"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                         $selected = ($row["id"] == $selectedAdvocateId) ? 'selected' : '';
                                     ?>
-                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                            <?= htmlspecialchars($row["name"]) ?>
-                        </option>
-                        <?php } ?>
-                    </select>
-                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
-                                data-bs-target="#addhandlebymodal">
-                                <i class="bi bi-plus"></i>
-                            </button>
-                        </div>
-                </div>
+                                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                            <?= htmlspecialchars($row["name"]) ?>
+                                        </option>
+                                        <?php } ?>
+                                    </select>
+                                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                        data-bs-target="#addhandlebymodal">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
 
 
-                <div class="col-md-4">
-                    <label for="city_id" class="form-label">City Name</label>
-                    <div class="d-flex">
-                    <select class="form-select" id="city_id" name="city_id"
-                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                        <option value="">Select a City</option>
-                        <?php 
+                            <div class="col-md-4">
+                                <label for="city_id" class="form-label">City Name</label>
+                                <div class="d-flex">
+                                    <select class="form-select" id="city_id" name="city_id"
+                                        <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
+                                        <option value="">Select a City</option>
+                                        <?php 
                                     $comp = "SELECT * FROM `city`";
                                     $result = $obj->select($comp);
                                     $selectedCompanyId = isset($data['city_id']) ? $data['city_id'] : ''; 
@@ -608,58 +620,73 @@ if (isset($_REQUEST["btn_handle_by"])) {
                                     while ($row = mysqli_fetch_array($result)) { 
                                         $selected = ($row["id"] == $selectedCompanyId) ? 'selected' : '';
                                     ?>
-                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                            <?= htmlspecialchars($row["name"]) ?>
-                        </option>
-                        <?php } ?>
-                    </select>
-                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
-                                data-bs-target="#addcitymodal">
-                                <i class="bi bi-plus"></i>
-                            </button>
+                                        <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                            <?= htmlspecialchars($row["name"]) ?>
+                                        </option>
+                                        <?php } ?>
+                                    </select>
+                                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                        data-bs-target="#addcitymodal">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                           
                         </div>
-                </div>
+                        <div class="row g-3">
+                        <div class="col-md-4">
+                                <label for="date_of_filing" class="form-label">Date Of Filling</label>
+                                <input type="date" class="form-control" id="date_of_filing" name="date_of_filing"
+                                    value="<?php echo (isset($mode) && isset($data['date_of_filing']) && !empty($data['date_of_filing'])) ? date('Y-m-d', strtotime($data['date_of_filing'])) : date('Y-m-d'); ?>"
+                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="sr_date" class="form-label">Summon Date</label>
+                                <input type="date" class="form-control" id="sr_date" name="sr_date"
+                                    value="<?php echo (isset($mode) && isset($data['sr_date']) && !empty($data['sr_date'])) ? date('Y-m-d', strtotime($data['sr_date'])) : date('Y-m-d'); ?>"
+                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="next_date" class="form-label">Date of Next Hearing</label>
+                                <input type="date" class="form-control" id="next_date" name="next_date"
+                                    value="<?php echo (isset($mode) && isset($data['next_date']) && !empty($data['next_date'])) ? date('Y-m-d', strtotime($data['next_date'])) : date('Y-m-d'); ?>"
+                                    <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
+                            </div>
+                           
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="status" class="form-label">Status</label> <br />
+                                <div class="form-check-inline">
+                                    <input class="form-check-input" type="radio" name="radio" id="radio1"
+                                        <?php echo (!isset($mode) || (isset($mode)  && $data['status'])) == 'pending' ? 'checked' : '' ?>
+                                        class="form-radio text-primary" value="pending" required
+                                        <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
+                                    <label class="form-check-label" for="radio1">Pending</label>
+                                </div>
+                                <div class="form-check-inline">
+                                    <input class="form-check-input" type="radio" name="radio" id="radio2"
+                                        <?php echo isset($mode) && $data['status'] == 'disposed' ? 'checked' : '' ?>
+                                        class="form-radio text-danger" value="disposed" required
+                                        <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
+                                    <label class="form-check-label" for="radio2">Disposed</label>
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="col-md-4">
-                    <label for="sr_date" class="form-label">Summon Date</label>
-                    <input type="date" class="form-control" id="sr_date" name="sr_date"
-                        value="<?php echo (isset($mode) && isset($data['sr_date']) && !empty($data['sr_date'])) ? date('Y-m-d', strtotime($data['sr_date'])) : date('Y-m-d'); ?>"
-                        <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
+                        <div class="text-left mt-4">
+                            <button type="submit"
+                                name="<?php echo isset($mode) && $mode == 'edit' ? 'update' : 'save' ?>" id="save"
+                                class="btn btn-success <?php echo isset($mode) && $mode == 'view' ? 'd-none' : '' ?>">
+                                <?php echo isset($mode) && $mode == 'edit' ? 'Update' : 'Save' ?>
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="javascript: go_back();">
+                                Close</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label for="status" class="form-label">Status</label> <br />
-                    <div class="form-check-inline">
-                        <input class="form-check-input" type="radio" name="radio" id="radio1"
-                            <?php echo (!isset($mode) || (isset($mode)  && $data['status'])) == 'pending' ? 'checked' : '' ?>
-                            class="form-radio text-primary" value="pending" required
-                            <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
-                        <label class="form-check-label" for="radio1">Pending</label>
-                    </div>
-                    <div class="form-check-inline">
-                        <input class="form-check-input" type="radio" name="radio" id="radio2"
-                            <?php echo isset($mode) && $data['status'] == 'disposed' ? 'checked' : '' ?>
-                            class="form-radio text-danger" value="disposed" required
-                            <?php echo isset($mode) && $mode == 'view' ? 'disabled' : '' ?> />
-                        <label class="form-check-label" for="radio2">Disposed</label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-left mt-4">
-                <button type="submit" name="<?php echo isset($mode) && $mode == 'edit' ? 'update' : 'save' ?>" id="save"
-                    class="btn btn-success <?php echo isset($mode) && $mode == 'view' ? 'd-none' : '' ?>">
-                    <?php echo isset($mode) && $mode == 'edit' ? 'Update' : 'Save' ?>
-                </button>
-                <button type="button" class="btn btn-danger" onclick="javascript: go_back();">
-                    Close</button>
-            </div>
-            </form>
         </div>
-    </div>
-    </div>
     </div>
 </section>
 
@@ -702,7 +729,7 @@ if (isset($_REQUEST["btn_handle_by"])) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button"  class="btn btn-primary" onclick="add_casetype()">Save</button>
+                <button type="button" class="btn btn-primary" onclick="add_casetype()">Save</button>
             </div>
             </form>
         </div>
@@ -745,7 +772,7 @@ if (isset($_REQUEST["btn_handle_by"])) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button"  class="btn btn-primary" onclick="add_stage()">Save</button>
+                <button type="button" class="btn btn-primary" onclick="add_stage()">Save</button>
             </div>
             </form>
         </div>
@@ -822,7 +849,7 @@ if (isset($_REQUEST["btn_handle_by"])) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary"  onclick="add_company()" >Save</button>
+                <button type="button" class="btn btn-primary" onclick="add_company()">Save</button>
             </div>
             </form>
         </div>
@@ -858,7 +885,7 @@ if (isset($_REQUEST["btn_handle_by"])) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button"  class="btn btn-primary"onclick="add_advocate()">Save</button>
+                <button type="button" class="btn btn-primary" onclick="add_advocate()">Save</button>
             </div>
             </form>
         </div>
@@ -1098,22 +1125,21 @@ function deleteDocument(index) {
 }
 
 
-function add_city()
-{
+function add_city() {
 
-    var state=$("#state_id").val();
-    var city=$("#c_name").val();
+    var state = $("#state_id").val();
+    var city = $("#c_name").val();
     $("#addcitymodal").modal("toggle");
 
     $.ajax({
         async: true,
         type: "POST",
         url: "action.php?action=add_city",
-        data: "state=" + state+"&city="+city,
+        data: "state=" + state + "&city=" + city,
         cache: false,
         success: function(result) {
             $("#city_id").append(result);
-          
+
 
         }
     });
@@ -1121,7 +1147,7 @@ function add_city()
 }
 
 
-function add_casetype(){
+function add_casetype() {
     var c_type = document.getElementById("c_type").value;
     $("#addcasetypemodal").modal("toggle");
 
@@ -1133,7 +1159,7 @@ function add_casetype(){
         cache: false,
         success: function(result) {
             $("#case_type").append(result);
-          
+
 
         }
     });
@@ -1141,12 +1167,12 @@ function add_casetype(){
 }
 
 
-function add_stage(){
-    
-   var case_type_id = document.getElementById("case_type_id").value;
-   var stage = document.getElementById("stage_m").value;
-   $("#addstagemodal").modal("toggle");
-       $.ajax({
+function add_stage() {
+
+    var case_type_id = document.getElementById("case_type_id").value;
+    var stage = document.getElementById("stage_m").value;
+    $("#addstagemodal").modal("toggle");
+    $.ajax({
         async: true,
         type: "POST",
         url: "action.php?action=add_stage",
@@ -1162,41 +1188,42 @@ function add_stage(){
 }
 
 
-function add_court(){
-    
+function add_court() {
+
     var case_type = document.getElementById("case_type").value;
     var court = document.getElementById("court").value;
     $("#addcourtmodal").modal("toggle");
-        $.ajax({
-         async: true,
-         type: "POST",
-         url: "action.php?action=add_court",
-         data: "case_type=" + case_type + "&court=" + court,
-         cache: false,
-         success: function(result) {
-             $("#court_name").append(result);
-         }
-     });
- 
- 
- 
- }
- 
+    $.ajax({
+        async: true,
+        type: "POST",
+        url: "action.php?action=add_court",
+        data: "case_type=" + case_type + "&court=" + court,
+        cache: false,
+        success: function(result) {
+            $("#court_name").append(result);
+        }
+    });
 
-function add_advocate(){
-    
-    var adv_name =document.getElementById("adv_name").value;
-    var adv_contact =document.getElementById("adv_contact").value;
-    var adv_email =document.getElementById("adv_email").value;
-    var adv_password =document.getElementById("adv_password").value;
+
+
+}
+
+
+function add_advocate() {
+
+    var adv_name = document.getElementById("adv_name").value;
+    var adv_contact = document.getElementById("adv_contact").value;
+    var adv_email = document.getElementById("adv_email").value;
+    var adv_password = document.getElementById("adv_password").value;
     //var date =document.getElementById("date").value;
-    
+
     $("#addhandlebymodal").modal("toggle");
-       $.ajax({
-    async: true,
+    $.ajax({
+        async: true,
         type: "POST",
         url: "action.php?action=add_advocate",
-        data: "adv_name=" + adv_name +"&adv_contact="+adv_contact +"&adv_email="+adv_email +"&adv_password="+adv_password ,
+        data: "adv_name=" + adv_name + "&adv_contact=" + adv_contact + "&adv_email=" + adv_email +
+            "&adv_password=" + adv_password,
         cache: false,
         success: function(result) {
             $("#handle_by").append(result);
@@ -1207,19 +1234,19 @@ function add_advocate(){
 }
 
 
-function add_company(){
-    
-    var comp_name =document.getElementById("comp_name").value;
-    var person =document.getElementById("person").value;
-    var contact =document.getElementById("contact").value;
-    
-    
+function add_company() {
+
+    var comp_name = document.getElementById("comp_name").value;
+    var person = document.getElementById("person").value;
+    var contact = document.getElementById("contact").value;
+
+
     $("#addcompanymodal").modal("toggle");
-       $.ajax({
-    async: true,
+    $.ajax({
+        async: true,
         type: "POST",
         url: "action.php?action=add_company",
-        data: "comp_name=" + comp_name +"&person="+person +"&contact="+contact  ,
+        data: "comp_name=" + comp_name + "&person=" + person + "&contact=" + contact,
         cache: false,
         success: function(result) {
             $("#company_id").append(result);
@@ -1228,12 +1255,6 @@ function add_company(){
 
 
 }
-
-
-
-
-
-
 </script>
 <?php
 include "footer.php";
