@@ -42,6 +42,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
     $company_id = $_REQUEST["company_id"];
     $handle_by = $_REQUEST["handle_by"];
     $city = $_REQUEST["city_id"];
+    $case_type=$_REQUEST["case_type"];
     set_include_path(get_include_path() . PATH_SEPARATOR . 'Classes/');
     include 'Classes/PHPExcel/IOFactory.php';
     $inputFileName = $x_file;
@@ -54,21 +55,28 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
 
     $worksheet = $objPHPExcel->getActiveSheet();
     $allDataInSheet = $worksheet->toArray(null, true, true, true);
-     $arrayCount = count($allDataInSheet);
+    $arrayCount = count($allDataInSheet);
 
     $msg1 = $msg2 = $msg3 = $msg4 = "";
+    $added = $not_added =  $already_exists = $null = 0;
+
 
     for ($i = 2; $i <= $arrayCount; $i++) {
         $case_no = trim($allDataInSheet[$i]["B"]);
         $applicant = trim($allDataInSheet[$i]["C"]);
-        $respondent = strtolower(trim($allDataInSheet[$i]["D"])); // Company name$complainant_advocate = trim($allDataInSheet[$i]["E"]);
+        $respondent = strtolower(trim($allDataInSheet[$i]["D"])); // Company name
+        $complainant_advocate = trim($allDataInSheet[$i]["E"]);
         $respondent_advocate = strtolower(trim($allDataInSheet[$i]["F"])); // Advocate name
-        $date_of_filing = date("Y-m-d",strtotime(trim($allDataInSheet[$i]["G"])));
-        $next_date = date("Y-m-d",strtotime(trim($allDataInSheet[$i]["H"])));
+        $date_of_filing =normalizeDate($allDataInSheet[$i]["G"]);
+        $next_date =normalizeDate( $allDataInSheet[$i]["H"]);
+        $stage=0;
+        $year= trim($allDataInSheet[$i]["K"]);
+      
 
         if ($case_no != "" && $company_id && $handle_by) {
            
            // $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and case_type=? and `year`=? and city_id=?");
+          // echo "SELECT * FROM `case` WHERE case_no = $case_no and handle_by=$handle_by and city_id=$city ";
            $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and city_id=? ");
             $stmt_dmd_ck->bind_param("sii", $case_no,$handle_by,$city);
             $stmt_dmd_ck->execute();
@@ -77,29 +85,47 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
 
             if ($dmd_result > 0) {
                 $msg1 .= '<div style="font-family:serif;font-size:18px;color:rgb(214, 13, 42);padding:0px 0 0 0;margin:10px 0px 0px 0px;"> Record no. ' . $i . ": " . $case_no . " already exists in the database.</div>";
+                $already_exists++;
             } else {
 
-               
-                $stmt = $obj->con1->prepare("INSERT INTO `case`(`case_no`, `applicant`,`opp_name`, `company_id`, `complainant_advocate`,`respondent_advocate`, `handle_by`, `date_of_filing`, `next_date`) VALUES (?,?,?,?,?,?,?,?,?)");
-                $stmt->bind_param("sssississ", $case_no, $applicant,$respondent, $company_id, $complainant_advocate,$respondent_advocate, $handle_by, $date_of_filing, $next_date);
+               echo "<br>INSERT INTO `case`(`case_no`,`year`,`case_type`,`stage`,`company_id`, `complainant_advocate`,`respondent_advocate`, `date_of_filing`, `handle_by` , `applicant`,`opp_name`,`city_id`, `next_date`) VALUES ('$case_no', '$year','$case_type',$stage,$company_id, '$complainant_advocate','$respondent_advocate',  $date_of_filing,$handle_by,'$applicant','$respondent', $city, $next_date)";
+                $stmt = $obj->con1->prepare("INSERT INTO `case`(`case_no`,`year`,`case_type`,`stage`,`company_id`, `complainant_advocate`,`respondent_advocate`, `date_of_filing`, `handle_by` , `applicant`,`opp_name`,`city_id`, `next_date`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                $stmt->bind_param("siiiisssissis", $case_no, $year,$case_type,$stage,$company_id, $complainant_advocate,$respondent_advocate,  $date_of_filing,$handle_by,$applicant,$respondent, $city, $next_date);
                 $Resp = $stmt->execute();
                 $stmt->close();
                 if ($Resp) {
                     $msg2 .= '<div style="font-family:serif;font-size:18px;padding:0px 0 0 0;margin:10px 0px 0px 0px;">Record no. ' . $i . ": " . ' Added Successfully in the database.</div>';
+                    $added++;
                 } else {
                     $msg3 .= '<div style="font-family:serif;font-size:18px;color:rgb(214, 13, 42);padding:0px 0 0 0;margin:10px 0px 0px 0px;">Record no. ' . $i . ": " . ' Record not added in the database.</div>';
+                    $not_added++;
                 }
             }
         } else {
             $msg4 .= '<div style="font-family:serif;font-size:18px;color:rgb(214, 13, 42);padding:0px 0 0 0;margin:10px 0px 0px 0px;"> Record no. ' . $i . ": Missing or invalid dropdown values.</div>";
+            $null++;
         }
     }
 
-    $msges = $msg1 . $msg2 . $msg3 . $msg4;
+    //$msges = $msg1 . $msg2 . $msg3 . $msg4;
+    $add_str = ($added > 0) ? $added . " records added successfully.<br>" : "No records added.<br>";
+    $not_str = ($not_added > 0) ? $not_added . " records not added in the databse.<br>" : "";
+    $already_str = ($already_exists > 0) ? $already_exists . " client already exists in the database.<br>" : "";
+    $null_str = ($null > 0) ? $null . " records are null." : "";
+    $msges = "<div style='font-family:serif;font-size:18px;padding:0px 0 0 0;margin:10px 0px 0px 0px;'>" . $add_str . $not_str . $already_str . $null_str . "</div>";
+    $_SESSION["excel_msg"] = $msges;
     
-    $_SESSION["excel_msg"]=$msges;
-   
+ 
     header("location:case.php");
+}
+
+function normalizeDate($date) {
+    if (strpos($date, '-') !== false) {
+        return date('Y-m-d', strtotime(str_replace('-', '/', $date))); // Convert DD-MM-YYYY to YYYY-MM-DD
+    } elseif (strpos($date, '/') !== false) {
+        return date('Y-m-d', strtotime($date)); // Convert MM/DD/YYYY to YYYY-MM-DD
+    }
+    return null; // Invalid format
 }
 ?>
 
@@ -151,7 +177,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
             <!-- Modal Body -->
             <form method="post" enctype="multipart/form-data">
                 <div class="modal-body">
-                    <div class="col-md-12">
+                    <div class="col-md-12 mb-3">
                         <label for="handle_by" class="form-label">Handled By</label>
                         <select class="form-select" id="handle_by" name="handle_by"
                             <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
@@ -171,7 +197,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                         </select>
                     </div>
 
-                    <div class="col-md-12">
+                    <div class="col-md-12 mb-3">
                         <label for="company_id" class="form-label">Company</label>
                         <select class="form-select" id="company_id" name="company_id"
                             <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
@@ -190,7 +216,27 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                             <?php } ?>
                         </select>
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-12 mb-3">
+                        <label for="city_id" class="form-label">Case Type</label>
+
+                        <select class="form-select" id="case_type" name="case_type"
+                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                            <option value="">Select Case Type</option>
+                            <?php
+                            $case_type = "SELECT * FROM `case_type` where `status`='enable'";
+                            $result_case_type = $obj->select($case_type);
+                          
+
+                            while ($row_case_type = mysqli_fetch_array($result_case_type)) {
+                               
+                            ?>
+                                <option value="<?= htmlspecialchars($row_case_type["id"]) ?>" >
+                                    <?= htmlspecialchars($row_case_type["case_type"]) ?>
+                                </option>
+                            <?php } ?>
+                        </select>
+                    </div>
+                    <div class="col-md-12 mb-3">
                         <label for="city_id" class="form-label">City Name</label>
 
                         <select class="form-select" id="city_id" name="city_id"
