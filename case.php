@@ -42,7 +42,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
     $company_id = $_REQUEST["company_id"];
     $handle_by = $_REQUEST["handle_by"];
     $city = $_REQUEST["city_id"];
-    $case_type=$_REQUEST["case_type"];
+    $case_type = $_REQUEST["case_type"];
     set_include_path(get_include_path() . PATH_SEPARATOR . 'Classes/');
     include 'Classes/PHPExcel/IOFactory.php';
     $inputFileName = $x_file;
@@ -67,18 +67,18 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
         $respondent = strtolower(trim($allDataInSheet[$i]["D"])); // Company name
         $complainant_advocate = trim($allDataInSheet[$i]["E"]);
         $respondent_advocate = strtolower(trim($allDataInSheet[$i]["F"])); // Advocate name
-        $date_of_filing =normalizeDate($allDataInSheet[$i]["G"]);
-        $next_date =normalizeDate( $allDataInSheet[$i]["H"]);
-        $stage=0;
-        $year= trim($allDataInSheet[$i]["K"]);
-      
+        $date_of_filing = normalizeDate($allDataInSheet[$i]["G"]);
+        $next_date = normalizeDate($allDataInSheet[$i]["H"]);
+        $stage = 0;
+        $year = trim($allDataInSheet[$i]["K"]);
+
 
         if ($case_no != "" && $company_id && $handle_by) {
-           
-           // $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and case_type=? and `year`=? and city_id=?");
-          // echo "SELECT * FROM `case` WHERE case_no = $case_no and handle_by=$handle_by and city_id=$city ";
-           $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and city_id=? ");
-            $stmt_dmd_ck->bind_param("sii", $case_no,$handle_by,$city);
+
+            // $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and case_type=? and `year`=? and city_id=?");
+            // echo "SELECT * FROM `case` WHERE case_no = $case_no and handle_by=$handle_by and city_id=$city ";
+            $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and city_id=? ");
+            $stmt_dmd_ck->bind_param("sii", $case_no, $handle_by, $city);
             $stmt_dmd_ck->execute();
             $dmd_result = $stmt_dmd_ck->get_result()->num_rows;
             $stmt_dmd_ck->close();
@@ -88,9 +88,9 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                 $already_exists++;
             } else {
 
-               echo "<br>INSERT INTO `case`(`case_no`,`year`,`case_type`,`stage`,`company_id`, `complainant_advocate`,`respondent_advocate`, `date_of_filing`, `handle_by` , `applicant`,`opp_name`,`city_id`, `next_date`) VALUES ('$case_no', '$year','$case_type',$stage,$company_id, '$complainant_advocate','$respondent_advocate',  $date_of_filing,$handle_by,'$applicant','$respondent', $city, $next_date)";
+                echo "<br>INSERT INTO `case`(`case_no`,`year`,`case_type`,`stage`,`company_id`, `complainant_advocate`,`respondent_advocate`, `date_of_filing`, `handle_by` , `applicant`,`opp_name`,`city_id`, `next_date`) VALUES ('$case_no', '$year','$case_type',$stage,$company_id, '$complainant_advocate','$respondent_advocate',  $date_of_filing,$handle_by,'$applicant','$respondent', $city, $next_date)";
                 $stmt = $obj->con1->prepare("INSERT INTO `case`(`case_no`,`year`,`case_type`,`stage`,`company_id`, `complainant_advocate`,`respondent_advocate`, `date_of_filing`, `handle_by` , `applicant`,`opp_name`,`city_id`, `next_date`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
-                $stmt->bind_param("siiiisssissis", $case_no, $year,$case_type,$stage,$company_id, $complainant_advocate,$respondent_advocate,  $date_of_filing,$handle_by,$applicant,$respondent, $city, $next_date);
+                $stmt->bind_param("siiiisssissis", $case_no, $year, $case_type, $stage, $company_id, $complainant_advocate, $respondent_advocate,  $date_of_filing, $handle_by, $applicant, $respondent, $city, $next_date);
                 $Resp = $stmt->execute();
                 $stmt->close();
                 if ($Resp) {
@@ -114,12 +114,13 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
     $null_str = ($null > 0) ? $null . " records are null." : "";
     $msges = "<div style='font-family:serif;font-size:18px;padding:0px 0 0 0;margin:10px 0px 0px 0px;'>" . $add_str . $not_str . $already_str . $null_str . "</div>";
     $_SESSION["excel_msg"] = $msges;
-    
- 
+
+
     header("location:case.php");
 }
 
-function normalizeDate($date) {
+function normalizeDate($date)
+{
     if (strpos($date, '-') !== false) {
         return date('Y-m-d', strtotime(str_replace('-', '/', $date))); // Convert DD-MM-YYYY to YYYY-MM-DD
     } elseif (strpos($date, '/') !== false) {
@@ -225,12 +226,12 @@ function normalizeDate($date) {
                             <?php
                             $case_type = "SELECT * FROM `case_type` where `status`='enable'";
                             $result_case_type = $obj->select($case_type);
-                          
+
 
                             while ($row_case_type = mysqli_fetch_array($result_case_type)) {
-                               
+
                             ?>
-                                <option value="<?= htmlspecialchars($row_case_type["id"]) ?>" >
+                                <option value="<?= htmlspecialchars($row_case_type["id"]) ?>">
                                     <?= htmlspecialchars($row_case_type["case_type"]) ?>
                                 </option>
                             <?php } ?>
@@ -339,7 +340,6 @@ function normalizeDate($date) {
                             <th scope="col">Respondent</th>
                             <th scope="col">Complainant Advocate</th>
                             <th scope="col">Respondent Advocate</th>
-                            <th scope="col">Date of Filing</th>
                             <th scope="col">Date of Next Hearing</th>
                             <th scope="col">Status</th>
                             <th scope="col">Action</th>
@@ -347,7 +347,7 @@ function normalizeDate($date) {
                     </thead>
                     <tbody>
                         <?php
-                        $stmt = $obj->con1->prepare("SELECT c1.*,c1.id AS case_id,c2.name AS company_name,c3.case_type AS case_type_name, c4.name AS court_name, c5.name AS city_name, a1.name AS advocate_name,DATE_FORMAT(`c1`.date_of_filing, '%d-%m-%Y') AS date_filing,DATE_FORMAT(`c1`.next_date, '%d-%m-%Y') AS nxt_date FROM `case` c1 LEFT JOIN company c2 ON c1.company_id = c2.id LEFT JOIN case_type c3 ON c1.case_type = c3.id LEFT JOIN court c4 ON c1.court_name = c4.id LEFT JOIN city c5 ON c1.city_id = c5.id LEFT JOIN advocate a1 ON c1.handle_by = a1.id ORDER BY c1.id DESC");
+                        $stmt = $obj->con1->prepare("SELECT c1.*,c1.id AS case_id,c2.name AS company_name,c3.case_type AS case_type_name, c4.name AS court_name, c5.name AS city_name, a1.name AS advocate_name,DATE_FORMAT(`c1`.next_date, '%d-%m-%Y') AS nxt_date FROM `case` c1 LEFT JOIN company c2 ON c1.company_id = c2.id LEFT JOIN case_type c3 ON c1.case_type = c3.id LEFT JOIN court c4 ON c1.court_name = c4.id LEFT JOIN city c5 ON c1.city_id = c5.id LEFT JOIN advocate a1 ON c1.handle_by = a1.id ORDER BY c1.id DESC");
                         $stmt->execute();
                         $Resp = $stmt->get_result();
                         $i = 1;
@@ -370,9 +370,8 @@ function normalizeDate($date) {
                                 <td><?php echo $row["applicant"]; ?></td>
                                 <td><?php echo $row["company_name"]; ?></td>
                                 <td><?php echo $row["complainant_advocate"]; ?></td>
-                                <td><?php echo $row["advocate_name"]; ?></td>
-                                <td><?php echo $row["date_filing"] ?></td>
-                                <td><?php echo $row["next_date"] ?></td>
+                                <td><?php echo $row["respondent_advocate"]; ?></td>
+                                <td><?php echo $row["nxt_date"] ?></td>
                                 <td>
                                     <h4><span
                                             class="badge rounded-pill bg-<?php echo $class ?>"><?php echo ucfirst($row["status"]); ?></span>

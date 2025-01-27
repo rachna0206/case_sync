@@ -80,6 +80,97 @@ if (!isset($_SESSION["userlogin_CS"])) {
       createCookie(name, "", -1);
     }
 
+    $(document).ready(function() {
+      get_notification();
+    });
+
+
+    setInterval(get_notification, 3000);
+
+
+    function get_notification() {
+      $.ajax({
+        async: true,
+        url: 'notification.php?action=get_notification',
+        type: 'POST',
+        data: "",
+
+        success: function (data) {
+          // console.log(data);
+
+          var resp = data.split("@@@@");
+          $('#noti_list').html('');
+          $('#noti_list').append(resp[0]);
+
+          $('#noti_count').html('');
+          $('#count').html('');
+          if (resp[1] > 0) {
+
+
+            $('#noti_count').append(resp[1]);
+            $('#count').html(resp[1]);
+
+            playSound();
+            //notification_orpel.WAV
+          }
+        }
+      });
+    }
+
+    function playSound() {
+
+      $.ajax({
+        async: true,
+        url: '<?php echo $path ?>notification.php?action=get_Playnotification',
+        type: 'POST',
+        data: "",
+
+        success: function (data) {
+          // console.log(data);
+
+          var resp = data.split("@@@@");
+
+          if (resp[0] > 0) {
+
+            var mp3Source = '<source src="notification_doc_sync.mp3" type="audio/mpeg">';
+            document.getElementById("sound").innerHTML = '<audio autoplay="autoplay">' + mp3Source + '</audio>';
+            removeplaysound(resp[1]);
+          }
+        }
+
+      });
+
+    }
+
+    function removeplaysound(ids) {
+
+      $.ajax({
+        async: true,
+        type: "GET",
+        url: "<?php echo $path ?>notification.php?action=removeplaysound",
+        data: "id=" + ids,
+        async: true,
+        cache: false,
+        timeout: 50000,
+
+      });
+
+    }
+
+    function read_all() {
+      $.ajax({
+        async: true,
+        type: "POST",
+        url: "<?php echo $path ?>notification.php?action=read_all",
+        data: "",
+
+        cache: false,
+        timeout: 50000,
+
+      });
+    }
+
+
   </script>
 </head>
 
@@ -108,6 +199,21 @@ if (!isset($_SESSION["userlogin_CS"])) {
           </a>
         </li><!-- End Search Icon-->
 
+        <li class="nav-item dropdown">
+
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-bell"></i>
+            <span class="badge bg-primary badge-number" id="noti_count"></span>
+          </a><!-- End Notification Icon -->
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
+           
+            <div id="noti_list">
+
+            </div>
+          </ul><!-- End Notification Dropdown Items -->
+
+        </li><!-- End Notification Nav -->
 
 
 
@@ -248,3 +354,4 @@ if (!isset($_SESSION["userlogin_CS"])) {
   </aside><!-- End Sidebar-->
 
   <main id="main" class="main min-vh-100">
+  <div id="sound"></div>

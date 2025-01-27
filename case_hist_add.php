@@ -25,6 +25,15 @@ if (isset($_REQUEST["save"])) {
     $status = $_REQUEST['radio'];
     $next_stage = $_REQUEST['next_stage'];
 
+   
+    $receiver_type = "advocate";
+    $sender_type = "intern";
+    $noti_type = "task_completed";
+    $noti_msg = "Task has been completed";
+    $noti_status = 1;
+    $play_status = 1;
+
+
     //get case data
     
     $stmt_case = $obj->con1->prepare("select * from `case` where case_no=?");
@@ -89,6 +98,28 @@ if (isset($_REQUEST["save"])) {
     }
 
     if ($Resp && $updateResp) {
+
+        if ($status == "completed")
+        {
+
+        $stmt_task = $obj->con1->prepare("select * from `task` where id=?");
+        $stmt_task->bind_param("i", $tid);
+        $stmt_task->execute();
+        $Resp_task = $stmt_task->get_result()->fetch_assoc();
+        $stmt_task->close();
+
+
+
+        //add into notification tbl
+
+       // echo "INSERT INTO `notification` (`task_id`, `type`, `sender_id`,`receiver_id`, `msg`, `sender_type`,`receiver_type`, `status`, `playstatus`) VALUES ('$tid','$noti_type', '".$_SESSION["intern_id"]."','".$Resp_task["alloted_by"]."', '$noti_msg', '$sender_type','$receiver_type', '$noti_status', '$play_status')";
+
+        $stmt_noti = $obj->con1->prepare("INSERT INTO `notification` (`task_id`, `type`, `sender_id`,`receiver_id`, `msg`, `sender_type`,`receiver_type`, `status`, `playstatus`) VALUES (?, ?, ?, ?, ?, ?, ?,?, ?)");
+
+        $stmt_noti->bind_param("isiisssii", $tid,$noti_type, $_SESSION["intern_id"],$Resp_task["alloted_by"], $noti_msg, $sender_type,$receiver_type, $noti_status, $play_status);
+        $Resp_noti = $stmt_noti->execute();
+        $stmt_noti->close();
+        }
         setcookie("msg", "data", time() + 3600, "/");
         header("location:task_intern.php");
     } else {

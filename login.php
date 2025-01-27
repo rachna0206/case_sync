@@ -24,6 +24,7 @@ if(isset($_REQUEST["submit"])){
       $_SESSION["id"]=$row["id"];
       $_SESSION["userid"]=$ui;
       $_SESSION["username"]=$row["name"];
+      $_SESSION["user_type"] = "advocate";
      
     header("location:index.php");
     }

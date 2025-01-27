@@ -181,7 +181,7 @@ function generateUniqueFileName($directory, $filename)
                                 class="btn btn-success <?php echo isset($mode) && $mode == 'view' ? 'd-none' : '' ?>">
                                 <?php echo isset($mode) && $mode == 'edit' ? 'Update' : 'Save' ?>
                             </button>
-                            <button type="button" class="btn btn-danger" onclick="window.location='case_add.php'">
+                            <button type="button" class="btn btn-danger" onclick="window.location='case.php'">
                                 Close</button>
                         </div>
                     </form><!-- End Multi Columns Form -->
@@ -201,7 +201,7 @@ function generateUniqueFileName($directory, $filename)
                 var filename = input.files[i].name;
                 var extn = filename.split(".").pop().toLowerCase();
 
-                if (["pdf", "doc", "docx","xlsx","jpg","png","jpeg","bmp","txt"].includes(extn)) {
+                if (["pdf", "doc", "docx", "xlsx", "jpg", "png", "jpeg", "bmp", "txt"].includes(extn)) {
                     document.getElementById('save').disabled = false; // Enable save button if valid file
 
                     // Display file name with a delete "X" button
@@ -219,7 +219,7 @@ function generateUniqueFileName($directory, $filename)
 
     function deleteFile(index) {
         $('#file_' + index).remove(); // Remove the corresponding file preview
-        
+
     }
 </script>
 
