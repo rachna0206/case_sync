@@ -68,14 +68,14 @@ class DbOperation
 
     public function get_case_counter()
     {
-        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.applicant, a.opp_name, a.sr_date, b.name as court_name,c.case_type, d.name as city_name, e.name as handle_by,DATEDIFF(CURRENT_DATE, a.sr_date) as case_counter FROM `case` a JOIN `court` b ON a.court_name = b.id JOIN `case_type` c ON a.case_type = c.id JOIN `city` d ON a.city_id = d.id JOIN `advocate` e ON a.handle_by = e.id WHERE DATEDIFF(CURRENT_DATE, a.sr_date) < 10;");
+        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.applicant, a.opp_name, a.sr_date, b.name as court_name,c.case_type, d.name as city_name, e.name as handle_by,DATEDIFF(CURRENT_DATE, a.sr_date) as case_counter FROM `case` a JOIN `court` b ON a.court_name = b.id JOIN `case_type` c ON a.case_type = c.id JOIN `city` d ON a.city_id = d.id JOIN `advocate` e ON a.handle_by = e.id WHERE DATEDIFF(CURRENT_DATE, a.sr_date) < 1");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
 
-        $stmt = $this->con->prepare("SELECT n1.*,a1.name FROM `notification` n1,advocate a1 where n1.sender_id=a1.id and n1.status='1' and  n1.receiver_type='advocate'  order by n1.id desc");
+        $stmt = $this->con->prepare("SELECT n1.*, a1.name FROM `notification` n1, advocate a1 WHERE n1.sender_id = a1.id AND n1.status = '1' AND n1.receiver_type = 'advocate'  ORDER BY n1.id DESc");
         $stmt->execute();
-        $task_count = $stmt->get_result()->fetch_assoc()["count"];
+        $notification = $stmt->get_result();
         $stmt->close();
 
         $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM `case` a WHERE a.id NOT IN (SELECT DISTINCT(case_id) FROM task)");
@@ -113,8 +113,10 @@ class DbOperation
         $task_count = $stmt->get_result()->fetch_assoc()["count"];
         $stmt->close();
 
-        return [$result, $unassigned_count, $assigned_count, $history_count, $advocate_count, $intern_count, $company_count, $task_count];
+        return [$result,$notification, $unassigned_count, $assigned_count, $history_count, $advocate_count, $intern_count, $company_count, $task_count];
+
     }
+
 
     public function addNewIntern($name, $contact, $email, $password, $start_date)
     {

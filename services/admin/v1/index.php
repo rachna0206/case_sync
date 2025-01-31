@@ -368,7 +368,6 @@ $app->post('/get_case_counter', function () use ($app) {
 
     echoResponse(200, $data);
 });
-
 $app->post('/get_case_info', function () use ($app) {
 
     verifyRequiredParams(array('case_id'));
