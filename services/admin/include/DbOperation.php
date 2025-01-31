@@ -11,7 +11,6 @@ class DbOperation
         $this->con = $db->connect();
     }
 
-
     public function loginAdvocate($user_id, $password)
     {
         $stmt_login = $this->con->prepare("SELECT * FROM `advocate` WHERE `email`=? AND BINARY `password`=? AND status = 'enable'");
@@ -66,14 +65,57 @@ class DbOperation
         return $result;
 
     }
+
     public function get_case_counter()
     {
-        $stmt = $this->con->prepare("SELECT a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by',DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id where DATEDIFF(CURRENT_DATE , a.sr_date) < 10;");
+        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.applicant, a.opp_name, a.sr_date, b.name as court_name,c.case_type, d.name as city_name, e.name as handle_by,DATEDIFF(CURRENT_DATE, a.sr_date) as case_counter FROM `case` a JOIN `court` b ON a.court_name = b.id JOIN `case_type` c ON a.case_type = c.id JOIN `city` d ON a.city_id = d.id JOIN `advocate` e ON a.handle_by = e.id WHERE DATEDIFF(CURRENT_DATE, a.sr_date) < 10;");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
-        return $result;
+
+        $stmt = $this->con->prepare("SELECT n1.*,a1.name FROM `notification` n1,advocate a1 where n1.sender_id=a1.id and n1.status='1' and  n1.receiver_type='advocate'  order by n1.id desc");
+        $stmt->execute();
+        $task_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM `case` a WHERE a.id NOT IN (SELECT DISTINCT(case_id) FROM task)");
+        $stmt->execute();
+        $unassigned_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM `case` a WHERE a.id IN (SELECT DISTINCT(case_id) FROM task)");
+        $stmt->execute();
+        $assigned_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM `case`");
+        $stmt->execute();
+        $history_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM advocate");
+        $stmt->execute();
+        $advocate_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM interns");
+        $stmt->execute();
+        $intern_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM company");
+        $stmt->execute();
+        $company_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM task t JOIN `case` c ON c.id = t.case_id");
+        $stmt->execute();
+        $task_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        return [$result, $unassigned_count, $assigned_count, $history_count, $advocate_count, $intern_count, $company_count, $task_count];
     }
+
     public function addNewIntern($name, $contact, $email, $password, $start_date)
     {
         $stmt = $this->con->prepare("SELECT contact from interns where contact = ? ");
@@ -109,15 +151,7 @@ class DbOperation
     }
     public function get_case_type_list()
     {
-        $stmt = $this->con->prepare("SELECT `id`,`case_type` FROM `case_type` where `status`='enable'");
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
-        return $result;
-    }
-    public function get_court_list()
-    {
-        $stmt = $this->con->prepare("SELECT `id`,`name` FROM `court` where `status`='enable'");
+        $stmt = $this->con->prepare("SELECT `id`,`case_type` FROM `case_type` where `status`='enable' order by id desc");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -125,7 +159,7 @@ class DbOperation
     }
     public function get_city_list()
     {
-        $stmt = $this->con->prepare("SELECT `id`,`name` FROM `city` where `status`='enable'");
+        $stmt = $this->con->prepare("SELECT `id`,`name` FROM `city` where `status`='enable' order by id desc");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -154,7 +188,7 @@ class DbOperation
     }
     public function get_case_history()
     {
-        $stmt = $this->con->prepare("SELECT a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by',a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date,DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id;");
+        $stmt = $this->con->prepare("SELECT a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by',a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date,DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id order by a.id desc;");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -162,7 +196,7 @@ class DbOperation
     }
     public function get_advocate_list()
     {
-        $stmt = $this->con->prepare("select *  from advocate"); // updated by jay 25-01
+        $stmt = $this->con->prepare("SELECT *  from advocate order by id desc"); // updated by jay 25-01
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -260,18 +294,9 @@ class DbOperation
         return $result;
 
     }
-    public function get_stage_list($case_stage)
-    {
-        $stmt = $this->con->prepare("SELECT * from stage where case_type_id = ? AND `status`='enable'  order by stage");
-        $stmt->bind_param("s", $case_stage);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
-        return $result;
-    }
     public function get_unassigned_case_list()
     {
-        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.year, a.sr_date, b.name as court_name, a.applicant, a.opp_name, c.case_type, d.name as city_name,a.handle_by,a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date, DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id where a.id  not in (select DISTINCT(case_id) from task);");
+        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.year, a.sr_date, b.name as court_name, a.applicant, a.opp_name, c.case_type, d.name as city_name,a.handle_by,a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date, DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id where a.id  not in (select DISTINCT(case_id) from task) order by a.id desc;");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -315,7 +340,7 @@ class DbOperation
 
     public function get_case_task($case_no)
     {
-        $stmt = $this->con->prepare("SELECT t.id,t.case_id,t.alloted_to as alloted_to_id , t.instruction,t.alloted_by as alloted_by_id ,t.action_by,t.alloted_date,t.expected_end_date,t.status,t.reassign_status,t.remark, c.case_no as 'case_num',i.name as alloted_to,ad.name as alloted_by from task as t join `case` as c on c.id = t.case_id join interns as i on i.id = t.alloted_to join advocate as ad on ad.id = t.alloted_by where t.case_id = ?;");
+        $stmt = $this->con->prepare("SELECT t.id,t.case_id,t.alloted_to as alloted_to_id , t.instruction,t.alloted_by as alloted_by_id ,t.action_by,t.alloted_date,t.expected_end_date,t.status,t.reassign_status,t.remark, c.case_no as 'case_num',i.name as alloted_to,ad.name as alloted_by from task as t join `case` as c on c.id = t.case_id join interns as i on i.id = t.alloted_to join advocate as ad on ad.id = t.alloted_by where t.case_id = ? order by t.id desc");
         $stmt->bind_param("s", $case_no);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -335,26 +360,26 @@ class DbOperation
     public function stage_court_list($case_id)
     {
         //getting list of stage based on the case type id
-        $stmt = $this->con->prepare("SELECT * from stage where case_type_id = ?");
-        $stmt->bind_param('i',$case_id);
+        $stmt = $this->con->prepare("SELECT * from stage where case_type_id = ? and status = 'enable' order by id desc");
+        $stmt->bind_param('i', $case_id);
         $stmt->execute();
         $result1 = $stmt->get_result();
         $stmt->close();
 
         //getting list of court based on the case type id
-        $stmt = $this->con->prepare("SELECT * from court where case_type = ?");
+        $stmt = $this->con->prepare("SELECT * from court where case_type = ? and status = 'enable' order by id desc");
         $stmt->bind_param('i', $case_id);
         $stmt->execute();
         $result2 = $stmt->get_result();
         $stmt->close();
 
         //returning both the query response in an array
-        return [$result1,$result2];
+        return [$result1, $result2];
     }
 
     public function get_task_history($task_no)
     {
-        $stmt = $this->con->prepare("SELECT * from case_hist where task_id = ?");
+        $stmt = $this->con->prepare("SELECT * from case_hist where task_id = ? order by id desc");
         $stmt->bind_param("s", $task_no);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -363,7 +388,7 @@ class DbOperation
     }
     public function get_assigned_case_list()
     {
-        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.year, a.sr_date, b.name as court_name, a.applicant, a.opp_name, c.case_type, d.name as city_name,ad.name as advocate_name,a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date, DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as ad on ad.id = a.handle_by where a.id in (select DISTINCT(case_id) from task);");
+        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.year, a.sr_date, b.name as court_name, a.applicant, a.opp_name, c.case_type, d.name as city_name,ad.name as advocate_name,a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date, DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as ad on ad.id = a.handle_by where a.id in (select DISTINCT(case_id) from task) order by a.id desc;");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -371,7 +396,7 @@ class DbOperation
     }
     public function get_interns_list()
     {
-        $stmt = $this->con->prepare("SELECT * FROM `interns`"); // updated by jay 25-01
+        $stmt = $this->con->prepare("SELECT * FROM `interns` order by id desc"); // updated by jay 25-01
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -397,24 +422,12 @@ class DbOperation
     }
     public function get_company_list()
     {
-        $stmt = $this->con->prepare("SELECT * from `company`");
+        $stmt = $this->con->prepare("SELECT * from `company` order by id desc");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
         return $result;
     }
-
-    public function getCaseId($case_no)
-    {
-        // echo "select id from `case` where case_no = $case_no";
-        $stmt = $this->con->prepare("select id from `case` where case_no = ?");
-        $stmt->bind_param('s', $case_no);
-        $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        // echo $result["id"];
-        // print_r($result);
-        return $result["id"];
-    }
 }
+
 ?>

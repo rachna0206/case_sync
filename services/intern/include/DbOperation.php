@@ -22,7 +22,7 @@ class DbOperation
     }
     public function intern_task_list($intern_id)
     {
-        $stmt = $this->con->prepare("SELECT t.id as task_id,c.id as case_id,c.stage as stage_id,c.case_no,t.instruction,i.name as alloted_to,a.name as alloted_by,t.alloted_date,t.expected_end_date,t.status,st.stage  from task as t join `case` as c on t.case_id = c.id join interns as i on i.id = t.alloted_to join advocate as a on a.id = t.alloted_by join stage as st on st.id = c.stage where i.id = ?;");
+        $stmt = $this->con->prepare("SELECT t.id as task_id,c.id as case_id,c.stage as stage_id,c.case_no,t.instruction,i.name as alloted_to,a.name as alloted_by,t.alloted_date,t.expected_end_date,t.status,st.stage  from task as t join `case` as c on t.case_id = c.id join interns as i on i.id = t.alloted_to join advocate as a on a.id = t.alloted_by join stage as st on st.id = c.stage where i.id = ? order by t.id desc;");
 
         //  $stmt = $this->con->prepare("SELECT t.*,c.case_no,date_format(t.alloted_date,'%d-%m-%Y') as adt,CASE WHEN t.action_by = 'intern' THEN i.name WHEN t.action_by = 'advocate' THEN a.name ELSE 'Unknown' END AS alloted_by_name, it.name AS alloted_to_name FROM  task t LEFT JOIN  interns i ON t.alloted_by = i.id AND t.action_by = 'intern' LEFT JOIN  advocate a ON t.alloted_by = a.id AND t.action_by = 'advocate' LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN 
         // interns it ON t.alloted_to = it.id where  t.alloted_to =? ORDER BY t.id DESC"); 
@@ -152,7 +152,7 @@ class DbOperation
     }
     public function get_interns_list()
     {
-        $stmt = $this->con->prepare("SELECT id,name,contact,date_time , email FROM `interns` where `status` = 'enable'");
+        $stmt = $this->con->prepare("SELECT id,name,contact, date_format(date_time,'%Y-%m-%d') , email FROM `interns` where `status` = 'enable' order by id desc;");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -161,7 +161,7 @@ class DbOperation
 
     public function get_advocate_list()
     {
-        $stmt = $this->con->prepare("select id,name , contact , email from advocate where status = 'enable'");
+        $stmt = $this->con->prepare("SELECT id,name , contact , email from advocate where status = 'enable' order by id desc");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -180,7 +180,7 @@ class DbOperation
 
     public function task_info($task_id)
     {
-        $stmt = $this->con->prepare("SELECT ch.id,s.stage,ch.remarks as stage,ch.date_time as remark_date , ch.nextdate , ch.status FROM `case_hist` as ch join task as t on t.id = ch.task_id join stage as s on s.id = ch.stage where t.id = ?;");
+        $stmt = $this->con->prepare("SELECT ch.id,s.stage,ch.remarks as stage,ch.date_time as remark_date , ch.nextdate , ch.status FROM `case_hist` as ch join task as t on t.id = ch.task_id join stage as s on s.id = ch.stage where t.id = ? order by ch.id desc; ");
         $stmt->bind_param("s", $task_id);
         $stmt->execute();
         $result = $stmt->get_result();

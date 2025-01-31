@@ -205,34 +205,6 @@ $app->get('/get_advocate_list', function () use ($app) {
     echoResponse(200, $data);
 });
 
-$app->post('/get_stage_list', function () use ($app) {
-
-    verifyRequiredParams(array('case_stage'));
-    $case_stage = $app->request->post("case_stage");
-    // echo $stage . "\n";
-    $db = new DbOperation();
-    $data = array();
-    $data["data"] = array();
-    $result = $db->get_stage_list($case_stage);
-
-    if (mysqli_num_rows($result) > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $temp = array();
-            foreach ($row as $key => $value) {
-                $temp[$key] = $value;
-            }
-            $temp = array_map('utf8_encode', $temp);
-            array_push($data['data'], $temp);
-        }
-        $data['message'] = "Data found.";
-        $data['success'] = true;
-    } else {
-        $data["message"] = "No data found";
-        $data["success"] = false;
-    }
-    echoResponse(200, $data);
-});
-
 $app->post('/stage_court_list', function () use ($app) {
 
     verifyRequiredParams(array('case_type_id'));
@@ -363,29 +335,40 @@ $app->post('/get_task_history', function () use ($app) {
     echoResponse(200, $data);
 });
 $app->post('/get_case_counter', function () use ($app) {
-
     $db = new DbOperation();
     $data = array();
     $data["data"] = array();
     $result = $db->get_case_counter();
+    $data['counters'] = array();
+    $data['notification'] = array();
+    $resp = ['unassigned_count', 'assigned_count', 'history_count', 'advocate_count', 'intern_count', 'company_count', 'task_count'];
 
-    if (mysqli_num_rows($result) > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $temp = array();
-            foreach ($row as $key => $value) {
-                $temp[$key] = $value;
-            }
-            $temp = array_map('utf8_encode', $temp);
+    if (mysqli_num_rows($result[0]) > 0) {
+        while ($row = $result[0]->fetch_assoc()) {
+            $temp = array_map('utf8_encode', $row);
             array_push($data['data'], $temp);
         }
-        $data['message'] = "Data found.";
-        $data['success'] = true;
-    } else {
-        $data["message"] = "No data found";
-        $data["success"] = false;
     }
+
+    if (mysqli_num_rows($result[1]) > 0) {
+        while ($row = $result[0]->fetch_assoc()) {
+            $temp = array_map('utf8_encode', $row);
+            array_push($data['notification'], $temp);
+        }
+    }
+
+    foreach ($resp as $i => $counter) {
+        $temp = array($counter => $result[$i + 2]);
+        $temp = array_map('utf8_encode', $temp);
+        array_push($data['counters'], $temp);
+    }
+
+    $data['message'] = mysqli_num_rows($result[0]) > 0 ? "Data found." : "No data found";
+    $data['success'] = mysqli_num_rows($result[0]) > 0;
+
     echoResponse(200, $data);
 });
+
 $app->post('/get_case_info', function () use ($app) {
 
     verifyRequiredParams(array('case_id'));
@@ -440,30 +423,6 @@ $app->get('/get_company_list', function () use ($app) {
     echoResponse(200, $data);
 });
 
-
-$app->get('/get_court_list', function () use ($app) {
-    $db = new DbOperation();
-    $data = array();
-    $data["data"] = array();
-    $result = $db->get_court_list();
-
-    if (mysqli_num_rows($result) > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $temp = array();
-            foreach ($row as $key => $value) {
-                $temp[$key] = $value;
-            }
-            $temp = array_map('utf8_encode', $temp);
-            array_push($data['data'], $temp);
-        }
-        $data['message'] = "Data found.";
-        $data['success'] = true;
-    } else {
-        $data["message"] = "No data found";
-        $data["success"] = false;
-    }
-    echoResponse(200, $data);
-});
 
 $app->get('/get_city_list', function () use ($app) {
     $db = new DbOperation();
