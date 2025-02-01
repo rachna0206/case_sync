@@ -346,7 +346,7 @@ $app->post('/case_history_documents', function () use ($app) {
             $temp = array();
             foreach ($row as $key => $value) {
                 if ($key == 'docs') {
-                    $temp[$key] = 'https://pragmanxt.com/case_sync_pro/documents/case' . $value;
+                    $temp[$key] = 'https://pragmanxt.com/case_sync_pro/documents/case/' . $value;
                 } else {
                     $temp[$key] = $value;
                 }
