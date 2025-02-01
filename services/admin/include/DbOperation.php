@@ -188,6 +188,25 @@ class DbOperation
         }
         return $result;
     }
+
+    public function stage_list($case_id)
+    {
+        $stmt = $this->con->prepare("SELECT * FROM `stage` WHERE status = 'enable' AND `case_type_id` = (select case_type from `case` where id = ?) ;");
+        $stmt->bind_param("i", $case_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
+    public function next_stage($case_id, $next_stage, $next_date)
+    {
+        // echo "UPDATE `case` set next_date = $next_date , stage = $next_stage where id = $case_id";
+        $stmt = $this->con->prepare("UPDATE `case` set next_date = ? , stage = ? where id = ?");
+        $stmt->bind_param("sii", $next_date, $next_stage, $case_id);
+        $result = $stmt->execute();
+        $stmt->close();
+        return $result;
+    }
     public function get_case_history()
     {
         $stmt = $this->con->prepare("SELECT a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by',a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date,DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id order by a.id desc;");

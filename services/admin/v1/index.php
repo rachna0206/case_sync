@@ -308,6 +308,62 @@ $app->post('/get_case_documents', function () use ($app) {
     }
     echoResponse(200, $data);
 });
+
+
+$app->post('/stage_list', function () use ($app) {
+
+    verifyRequiredParams(array('case_id'));
+    $case_id = $app->request->post('case_id');
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->stage_list($case_id);
+    // print(mysqli_num_rows($result));
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Stage list found";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "Error in fetching stage list or no stage exist for this.";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+});
+
+
+$app->post('/next_stage', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $case_id = $data_json->case_id;
+    $next_stage = $data_json->next_stage;
+    $next_date = $data_json->next_date;
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->next_stage($case_id, $next_stage, $next_date);
+    if ($result) {
+        $data['message'] = "Stage updated successfully";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "Error in updating stage and next date";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+});
+
+
 $app->post('/get_task_history', function () use ($app) {
 
     verifyRequiredParams(array('task_id'));

@@ -96,7 +96,7 @@ class DbOperation
         $task_count = $stmt->get_result()->fetch_assoc()["count"];
         $stmt->close();
 
-        return [$result , $case_count,$task_count];
+        return [$result, $case_count, $task_count];
     }
 
     public function case_history_view($case_id)
@@ -171,6 +171,24 @@ class DbOperation
         $stmt->bind_param("i", $case_id);
         $stmt->execute();
         $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
+    public function stage_list($case_id)
+    {
+        $stmt = $this->con->prepare("SELECT * FROM `stage` WHERE status = 'enable' AND `case_type_id` = (select case_type from `case` where id = ?) ;");
+        $stmt->bind_param("i", $case_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
+    public function next_stage($case_id, $next_stage, $next_date)
+    {
+        // echo "UPDATE `case` set next_date = $next_date , stage = $next_stage where id = $case_id";
+        $stmt = $this->con->prepare("UPDATE `case` set next_date = ? , stage = ? where id = ?");
+        $stmt->bind_param("sii", $next_date, $next_stage, $case_id);
+        $result = $stmt->execute();
         $stmt->close();
         return $result;
     }
