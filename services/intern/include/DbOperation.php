@@ -78,14 +78,25 @@ class DbOperation
 
     public function notification($intern_id)
     {
-
         $stmt = $this->con->prepare("SELECT n1.*,i1.name FROM `notification` n1,interns i1 where n1.sender_id=i1.id and n1.status='1' and n1.receiver_type='intern'   and n1.receiver_id=? order by n1.id desc");
-        $stmt->bind_param('i',$intern_id);
+        $stmt->bind_param('i', $intern_id);
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
-        return $result;
 
+        $stmt = $this->con->prepare("SELECT count(*) as count FROM  `case` INNER JOIN `company` ON `case`.company_id = company.id INNER JOIN `case_type` ON `case`.case_type = case_type.id INNER JOIN `court` ON court.id = `case`.court_name INNER JOIN `city` ON city.id = `case`.city_id WHERE `case`.id IN (SELECT DISTINCT case_id FROM `task` WHERE alloted_to = ?) ORDER BY `case`.id DESC;");
+        $stmt->bind_param('i', $intern_id);
+        $stmt->execute();
+        $case_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        $stmt = $this->con->prepare("SELECT count(*) as count  from task as t join `case` as c on t.case_id = c.id join interns as i on i.id = t.alloted_to join advocate as a on a.id = t.alloted_by join stage as st on st.id = c.stage where i.id = ? order by t.id desc;");
+        $stmt->bind_param('i', $intern_id);
+        $stmt->execute();
+        $task_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        return [$result , $case_count,$task_count];
     }
 
     public function case_history_view($case_id)

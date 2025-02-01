@@ -84,33 +84,37 @@ $app->post('/intern_task_list', function () use ($app) {
 
 $app->post('/notification', function () use ($app) {
 
-
-    // verifyRequiredParams('intern_id');
     verifyRequiredParams(array('intern_id'));
-
 
     $intern_id = $app->request->post('intern_id');
 
     $db = new DbOperation();
+
     $data = array();
     $data["data"] = array();
+    $data['counters'] = array();
+    $resp = ['case_count', 'task_count'];
 
     $result = $db->notification($intern_id);
-    if (mysqli_num_rows($result) > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $temp = array();
-            foreach ($row as $key => $value) {
-                $temp[$key] = $value;
-            }
-            $temp = array_map('utf8_encode', $temp);
-            array_push($data['data'], $temp);
+
+    while ($row = $result[0]->fetch_assoc()) {
+        $temp = array();
+        foreach ($row as $key => $value) {
+            $temp[$key] = $value;
         }
-        $data['message'] = "Intern Task List Found";
-        $data['success'] = true;
-    } else {
-        $data['message'] = "No Tasks Found";
-        $data['success'] = false;
+        $temp = array_map('utf8_encode', $temp);
+        array_push($data['data'], $temp);
     }
+
+    foreach ($resp as $i => $counter) {
+        $temp = array($counter => $result[$i + 1]);
+        $temp = array_map('utf8_encode', $temp);
+        array_push($data['counters'], $temp);
+    }
+
+    $data['message'] = mysqli_num_rows($result[0]) > 0 ? "Data found." : "No data found";
+    $data['success'] = mysqli_num_rows($result[0]) > 0;
+
     echoResponse(200, $data);
 
 });
