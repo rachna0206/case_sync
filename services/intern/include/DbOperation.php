@@ -76,6 +76,18 @@ class DbOperation
         return $result;
     }
 
+    public function notification($intern_id)
+    {
+
+        $stmt = $this->con->prepare("SELECT n1.*,i1.name FROM `notification` n1,interns i1 where n1.sender_id=i1.id and n1.status='1' and n1.receiver_type='intern'   and n1.receiver_id=? order by n1.id desc");
+        $stmt->bind_param('i',$intern_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+
+    }
+
     public function case_history_view($case_id)
     {
         $stmt = $this->con->prepare("SELECT `case_hist`.*, `case_hist`.dos AS fdos, `case_hist`.date_time AS fdt, interns.name AS intern_name, stage.stage AS stage_name, `case`.case_no, advocate.name AS advocate_name FROM `case_hist` INNER JOIN `task` ON task.id = `case_hist`.task_id INNER JOIN `case` ON `case`.id = task.case_id INNER JOIN `stage` ON `case_hist`.stage = stage.id INNER JOIN `interns` ON task.alloted_to = interns.id INNER JOIN advocate ON advocate.id = task.alloted_by WHERE task.case_id=? ORDER BY `case_hist`.id DESC");

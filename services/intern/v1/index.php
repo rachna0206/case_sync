@@ -12,12 +12,12 @@ date_default_timezone_set("Asia/Kolkata");
 
 $app = new \Slim\Slim();
 
-
 /*
  * login
  * Parameters: {"user_id":"","password":""}
  * Method: POST
  */
+
 $app->post('/login_intern', function () use ($app) {
 
     verifyRequiredParams(array('data'));
@@ -63,6 +63,39 @@ $app->post('/intern_task_list', function () use ($app) {
     $data["data"] = array();
 
     $result = $db->intern_task_list($intern_id);
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Intern Task List Found";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "No Tasks Found";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+
+});
+
+$app->post('/notification', function () use ($app) {
+
+
+    // verifyRequiredParams('intern_id');
+    verifyRequiredParams(array('intern_id'));
+
+
+    $intern_id = $app->request->post('intern_id');
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->notification($intern_id);
     if (mysqli_num_rows($result) > 0) {
         while ($row = $result->fetch_assoc()) {
             $temp = array();
