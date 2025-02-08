@@ -390,38 +390,117 @@ $app->post('/get_task_history', function () use ($app) {
     }
     echoResponse(200, $data);
 });
+
+$app->post('/notifications', function () use ($app) {
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+    $result = $db->notifications();
+    $data['counters'] = array();
+    $resp = ['unassigned_count', 'assigned_count', 'history_count', 'advocate_count', 'intern_count', 'company_count', 'task_count', 'todays_case_count', 'counters_count','new_case_counter'];
+
+    if (mysqli_num_rows($result[0]) > 0) {
+        while ($row = $result[0]->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+    }
+    $temp = array();
+
+    foreach ($resp as $i => $counter) {
+        $temp[$counter] = $result[$i + 1];
+        $temp = array_map('utf8_encode', $temp);
+    }
+    array_push($data['counters'], $temp);
+
+    $data['message'] = mysqli_num_rows($result[0]) > 0 ? "Data found." : "No data found";
+    //$data['success'] = mysqli_num_rows($result[0]) > 0;
+    $data['success'] = true;
+
+    echoResponse(200, $data);
+});
+
+$app->post('/add_task_remark', function () use ($app) {
+
+
+    // verifyRequiredParams('intern_id');
+    verifyRequiredParams(array('data'));
+    $data_request = json_decode($app->request->post('data'));
+    $task_id = $data_request->task_id;
+    $remark = $data_request->remark;
+    $stage_id = $data_request->stage_id;
+    $remark_date = $data_request->remark_date;
+    $case_id = $data_request->case_id;
+    $intern_id = $data_request->intern_id;
+    $status = $data_request->status;
+    $ImageFileName1 = "";
+
+    if (isset($_FILES["task_image"]["name"]) && $_FILES["task_image"]["name"] != null) {
+        $task_img = $_FILES["task_image"]["name"];
+        $task_img_path = $_FILES["task_image"]["tmp_name"];
+        $task_img = preg_replace('/[^A-Za-z0-9.\-]/', '_', $task_img);
+
+        if (file_exists("../../../documents/case/" . $task_img)) {
+            $i = 0;
+            $ImageFileName1 = $task_img;
+            $Arr1 = explode('.', $ImageFileName1);
+
+            $ImageFileName1 = $Arr1[0] . $i . "." . $Arr1[1];
+            while (file_exists("../../../documents/case/" . $ImageFileName1)) {
+                $i++;
+                $ImageFileName1 = $Arr1[0] . $i . "." . $Arr1[1];
+            }
+        } else {
+            $ImageFileName1 = $task_img;
+        }
+    }
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->add_task_remark($task_id, $remark, $remark_date, $stage_id, $ImageFileName1, $case_id, $intern_id, $status);
+    if ($result) {
+        if (isset($_FILES["task_image"]["name"]) && $_FILES["task_image"]["name"] != null) {
+            move_uploaded_file($task_img_path, "../../../documents/case/" . $ImageFileName1);
+        }
+        $data['message'] = "remark added";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "problem in adding remark";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+
+});
+
+
 $app->post('/get_case_counter', function () use ($app) {
+
     $db = new DbOperation();
     $data = array();
     $data["data"] = array();
     $result = $db->get_case_counter();
-    $data['counters'] = array();
-    $data['notification'] = array();
-    $resp = ['unassigned_count', 'assigned_count', 'history_count', 'advocate_count', 'intern_count', 'company_count', 'task_count'];
 
-    if (mysqli_num_rows($result[0]) > 0) {
-        while ($row = $result[0]->fetch_assoc()) {
-            $temp = array_map('utf8_encode', $row);
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
             array_push($data['data'], $temp);
         }
+        $data['message'] = "Data found.";
+        $data['success'] = true;
+    } else {
+        $data["message"] = "No data found";
+        $data["success"] = false;
     }
-
-    if (mysqli_num_rows($result[1]) > 0) {
-        while ($row = $result[0]->fetch_assoc()) {
-            $temp = array_map('utf8_encode', $row);
-            array_push($data['notification'], $temp);
-        }
-    }
-
-    foreach ($resp as $i => $counter) {
-        $temp = array($counter => $result[$i + 2]);
-        $temp = array_map('utf8_encode', $temp);
-        array_push($data['counters'], $temp);
-    }
-
-    $data['message'] = mysqli_num_rows($result[0]) > 0 ? "Data found." : "No data found";
-    $data['success'] = mysqli_num_rows($result[0]) > 0;
-
     echoResponse(200, $data);
 });
 $app->post('/get_case_info', function () use ($app) {
@@ -526,7 +605,48 @@ $app->get('/get_case_history', function () use ($app) {
     }
     echoResponse(200, $data);
 });
+$app->post('/read_notification', function () use ($app) {
 
+    // verifyRequiredParams($app->request->post('not_id'));
+    $not_id = $app->request->post('not_id');
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+    $result = $db->read_notification($not_id);
+
+    if ($result) {
+        $data['message'] = "Notification read";
+        $data['success'] = true;
+    } else {
+        $data["message"] = "Error in reading notification";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+$app->post('/get_todays_case', function () use ($app) {
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+    $result = $db->get_todays_case();
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Data found.";
+        $data['success'] = true;
+    } else {
+        $data["message"] = "No data found";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
 
 // $app->post('/get_task_list', function () use ($app) {
 //     verifyRequiredParams(array('data'));
@@ -862,7 +982,7 @@ $app->post('/edit_intern', function () use ($app) {
     $status = $data_json->status;
 
     $db = new DbOperation();
-    $result = $db->edit_intern($intern_id, $name, $contact, $email, $password, $status);
+    $result = $db->edit_intern($intern_id, $name, $contact, $email, $status, $password);
     $data = array();
     if ($result) {
         $data["response"] = "data edited successfully";
@@ -887,7 +1007,7 @@ $app->post('/edit_advocate', function () use ($app) {
     $status = $data_json->status;
 
     $db = new DbOperation();
-    $result = $db->edit_advocate($advocate_id, $name, $contact, $email, $password, $status);
+    $result = $db->edit_advocate($advocate_id, $name, $contact, $email, $status, $password);
     $data = array();
     if ($result) {
         $data["response"] = "data edited successfully";

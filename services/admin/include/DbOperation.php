@@ -68,11 +68,35 @@ class DbOperation
 
     public function get_case_counter()
     {
-        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.applicant, a.opp_name, a.sr_date, b.name as court_name,c.case_type, d.name as city_name, e.name as handle_by,DATEDIFF(CURRENT_DATE, a.sr_date) as case_counter FROM `case` a JOIN `court` b ON a.court_name = b.id JOIN `case_type` c ON a.case_type = c.id JOIN `city` d ON a.city_id = d.id JOIN `advocate` e ON a.handle_by = e.id WHERE DATEDIFF(CURRENT_DATE, a.sr_date) < 10");
+
+        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.applicant, a.opp_name, a.sr_date, b.name as court_name,c.case_type, d.name as city_name, e.name as handle_by,DATEDIFF(CURRENT_DATE,DATE_ADD(a.sr_date, INTERVAL 45 DAY)) as case_counter FROM `case` a JOIN `court` b ON a.court_name = b.id JOIN `case_type` c ON a.case_type = c.id JOIN `city` d ON a.city_id = d.id JOIN `advocate` e ON a.handle_by = e.id WHERE DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE);");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
+        return $result;
+    }
 
+    public function read_notification($not_id)
+    {
+        $stmt = $this->con->prepare("UPDATE `notification` SET `status`=0,playstatus=0 where id=?");
+        $stmt->bind_param('i', $not_id);
+        $result = $stmt->execute();
+
+        $stmt->close();
+        return $result;
+    }
+
+    public function get_todays_case()
+    {
+        $stmt = $this->con->prepare("SELECT a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by',a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date,DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id where a.next_date = CURRENT_DATE order by a.id desc;");
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
+
+    public function notifications()
+    {
         $stmt = $this->con->prepare("SELECT n1.*, a1.name FROM `notification` n1, advocate a1 WHERE n1.sender_id = a1.id AND n1.status = '1' AND n1.receiver_type = 'advocate'  ORDER BY n1.id DESc");
         $stmt->execute();
         $notification = $stmt->get_result();
@@ -113,8 +137,22 @@ class DbOperation
         $task_count = $stmt->get_result()->fetch_assoc()["count"];
         $stmt->close();
 
-        return [$result,$notification, $unassigned_count, $assigned_count, $history_count, $advocate_count, $intern_count, $company_count, $task_count];
+        $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM `case` as c where c.next_date = CURRENT_DATE;");
+        $stmt->execute();
+        $todays_case_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
 
+        $stmt = $this->con->prepare("SELECT count(*) as count FROM `case` a JOIN `court` b ON a.court_name = b.id JOIN `case_type` c ON a.case_type = c.id JOIN `city` d ON a.city_id = d.id JOIN `advocate` e ON a.handle_by = e.id WHERE DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE);");
+        $stmt->execute();
+        $counters_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        $stmt = $this->con->prepare("SELECT count(*) as count from `case` where date_of_creation = CURRENT_DATE();");
+        $stmt->execute();
+        $new_case_counter = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        return [$notification, $unassigned_count, $assigned_count, $history_count, $advocate_count, $intern_count, $company_count, $task_count, $todays_case_count, $counters_count, $new_case_counter];
     }
 
 
@@ -324,19 +362,19 @@ class DbOperation
         return $result;
     }
 
-    public function edit_intern($intern_id, $name, $contact, $email, $status) // updated by jay 25-01
+    public function edit_intern($intern_id, $name, $contact, $email, $status, $password) // updated by jay 25-01
     {
-        $stmt = $this->con->prepare("UPDATE `interns` set `name`=?,`contact`=?,`email`=?,`status`=? where `id`=?");
-        $stmt->bind_param('ssssi', $name, $contact, $email, $status, $intern_id);
+        $stmt = $this->con->prepare("UPDATE `interns` set `name`=?,`contact`=?,`email`=?,`status`=?,`password`=? where `id`=?");
+        $stmt->bind_param('sssssi', $name, $contact, $email, $status, $password, $intern_id);
         $result = $stmt->execute();
         $stmt->close();
         return $result;
     }
 
-    public function edit_advocate($advocate_id, $name, $contact, $email, $status) // updated by jay 25-01
+    public function edit_advocate($advocate_id, $name, $contact, $email, $status, $password) // updated by jay 25-01
     {
-        $stmt = $this->con->prepare("UPDATE `advocate` set `name`=?,`contact`=?,`email`=?,`status`=? where `id`=?");
-        $stmt->bind_param('ssssi', $name, $contact, $email, $status, $advocate_id);
+        $stmt = $this->con->prepare("UPDATE `advocate` set `name`=?,`contact`=?,`email`=?,`status`=?,`password` = ? where `id`=?");
+        $stmt->bind_param('sssssi', $name, $contact, $email, $status, $password, $advocate_id);
         $result = $stmt->execute();
         $stmt->close();
         return $result;
@@ -351,12 +389,36 @@ class DbOperation
     }
     public function get_case_documents($case_no)
     {
-        $stmt = $this->con->prepare("SELECT c1.case_no,c2.case_type,c1.docs,c1.id as file_id,'main' as file_type,c1.sr_date as date_time,'admin' as handled_by,'admin' as user_type from `case` c1,case_type c2 WHERE c1.case_type=c2.id  and  c1.id=? and docs!='' union SELECT c1.case_no,c2.case_type,m.docs,m.id as file_id ,'sub' as file_type,m.date_time,m.added_by as handled_by,m.user_type from `case` c1,case_type c2,multiple_doc m WHERE c1.case_type=c2.id and   m.c_id=c1.id and c1.id=?");
+        $stmt = $this->con->prepare("SELECT c1.case_no, c2.case_type, c1.docs, c1.id AS file_id, 'main' AS file_type, c1.sr_date AS date_time, 'admin' AS handled_by, 'admin' AS user_type FROM `case` c1 JOIN case_type c2 ON c1.case_type = c2.id WHERE c1.id = ? AND docs != '' UNION SELECT c1.case_no, c2.case_type, m.docs, m.id AS file_id, 'sub' AS file_type, m.date_time, CASE WHEN m.user_type = 'intern' THEN i.name WHEN m.user_type = 'advocate' THEN a.name END AS handled_by, m.user_type FROM `case` c1 JOIN case_type c2 ON c1.case_type = c2.id JOIN multiple_doc m ON m.c_id = c1.id LEFT JOIN interns i ON m.added_by = i.id AND m.user_type = 'intern' LEFT JOIN advocate a ON m.added_by = a.id AND m.user_type = 'advocate' WHERE c1.id = ?;");
         $stmt->bind_param('ii', $case_no, $case_no);
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
         return $result;
+    }
+    public function add_task_remark($task_id, $remark, $remark_date, $stage_id, $ImageFileName1, $case_id, $intern_id, $status)
+    {
+        $stmt = $this->con->prepare("INSERT INTO case_hist(`task_id`, `stage`, `remarks`, `dos`, `status`) VALUES (?,?,?,?,?)");
+        $stmt->bind_param("issss", $task_id, $stage_id, $remark, $remark_date, $status);
+        $result = $stmt->execute();
+        $stmt->close();
+        $Resp_img = true;
+        if ($ImageFileName1 != "") {
+            $user_type = "intern";
+            $stmt_image = $this->con->prepare("INSERT INTO `multiple_doc`(`c_id`, `docs`,`added_by`,`user_type`) VALUES (?, ?,?,?)");
+            $stmt_image->bind_param("isis", $case_id, $ImageFileName1, $intern_id, $user_type);
+            $Resp_img = $stmt_image->execute();
+            $stmt_image->close();
+        }
+
+        $stmt = $this->con->prepare("UPDATE `task` set `status`=? where id=?");
+        $stmt->bind_param("si", $status, $task_id);
+        $result = $stmt->execute();
+        $stmt->close();
+
+
+        return $result && $Resp_img;
+        // return $result;
     }
 
     public function get_case_task($case_no)

@@ -54,15 +54,17 @@ $app->post('/intern_task_list', function () use ($app) {
 
     // verifyRequiredParams('intern_id');
     verifyRequiredParams(array('intern_id'));
-
+    // verifyRequiredParams(array(''));
 
     $intern_id = $app->request->post('intern_id');
+    $case_id = "";
+    $case_id = $app->request->post('case_id');
 
     $db = new DbOperation();
     $data = array();
     $data["data"] = array();
 
-    $result = $db->intern_task_list($intern_id);
+    $result = $db->intern_task_list($intern_id,$case_id);
     if (mysqli_num_rows($result) > 0) {
         while ($row = $result->fetch_assoc()) {
             $temp = array();
@@ -82,6 +84,25 @@ $app->post('/intern_task_list', function () use ($app) {
 
 });
 
+$app->post('/read_notification', function () use ($app) {
+
+    // verifyRequiredParams($app->request->post('not_id'));
+    $not_id = $app->request->post('not_id');
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+    $result = $db->read_notification($not_id);
+
+    if ($result) {
+        $data['message'] = "Notification read";
+        $data['success'] = true;
+    } else {
+        $data["message"] = "Error in reading notification";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
 $app->post('/notification', function () use ($app) {
 
     verifyRequiredParams(array('intern_id'));
@@ -93,7 +114,7 @@ $app->post('/notification', function () use ($app) {
     $data = array();
     $data["data"] = array();
     $data['counters'] = array();
-    $resp = ['case_count', 'task_count'];
+    $resp = ['case_count', 'task_count', "todays_case_count", "counters_count"];
 
     $result = $db->notification($intern_id);
 
@@ -113,13 +134,93 @@ $app->post('/notification', function () use ($app) {
     }
 
     $data['message'] = mysqli_num_rows($result[0]) > 0 ? "Data found." : "No data found";
-    $data['success'] = mysqli_num_rows($result[0]) > 0;
+    //$data['success'] = mysqli_num_rows($result[0]) > 0;
+    $data['success'] = true;
 
     echoResponse(200, $data);
 
 });
 
 
+$app->post('/get_case_info', function () use ($app) {
+
+    verifyRequiredParams(array('case_id'));
+    $case_id = $app->request->post("case_id");
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+    $result = $db->get_case_info($case_id);
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                if ($key == 'docs') {
+                    $temp[$key] = "https://pragmanxt.com/case_sync_pro/documents/case/" . $value;
+                } else {
+                    $temp[$key] = $value;
+                }
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Data found.";
+        $data['success'] = true;
+    } else {
+        $data["message"] = "No data found";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+$app->post('/get_todays_case', function () use ($app) {
+    $intern_id = $app->request->post('intern_id');
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+    $result = $db->get_todays_case($intern_id);
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Data found.";
+        $data['success'] = true;
+    } else {
+        $data["message"] = "No data found";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+$app->post('/get_case_counter', function () use ($app) {
+
+    $intern_id = $app->request->post('intern_id');
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+    $result = $db->get_case_counter($intern_id);
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Data found.";
+        $data['success'] = true;
+    } else {
+        $data["message"] = "No data found";
+        $data["success"] = true;
+    }
+    echoResponse(200, $data);
+});
 $app->post('/task_remark_list', function () use ($app) {
 
     verifyRequiredParams(array('task_id'));

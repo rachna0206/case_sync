@@ -20,12 +20,34 @@ class DbOperation
         $stmt_login->close();
         return $result;
     }
-    public function intern_task_list($intern_id)
-    {
-        $stmt = $this->con->prepare("SELECT t.id as task_id,c.id as case_id,c.stage as stage_id,c.case_no,t.instruction,i.name as alloted_to,a.name as alloted_by,t.alloted_date,t.expected_end_date,t.status,st.stage  from task as t join `case` as c on t.case_id = c.id join interns as i on i.id = t.alloted_to join advocate as a on a.id = t.alloted_by join stage as st on st.id = c.stage where i.id = ? order by t.id desc;");
 
-        //  $stmt = $this->con->prepare("SELECT t.*,c.case_no,date_format(t.alloted_date,'%d-%m-%Y') as adt,CASE WHEN t.action_by = 'intern' THEN i.name WHEN t.action_by = 'advocate' THEN a.name ELSE 'Unknown' END AS alloted_by_name, it.name AS alloted_to_name FROM  task t LEFT JOIN  interns i ON t.alloted_by = i.id AND t.action_by = 'intern' LEFT JOIN  advocate a ON t.alloted_by = a.id AND t.action_by = 'advocate' LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN 
-        // interns it ON t.alloted_to = it.id where  t.alloted_to =? ORDER BY t.id DESC"); 
+    public function get_todays_case($intern_id)
+    {
+        $stmt = $this->con->prepare("SELECT distinct a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by',a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date,DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id join task as t on a.id = t.case_id where a.next_date = CURRENT_DATE AND t.alloted_to = ? order by a.id desc;");
+        $stmt->bind_param('i', $intern_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
+    public function get_case_counter($intern_id)
+    {
+
+        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.applicant, a.opp_name, a.sr_date, b.name as court_name,c.case_type, d.name as city_name, e.name as handle_by,DATEDIFF(CURRENT_DATE,DATE_ADD(a.sr_date, INTERVAL 45 DAY)) as case_counter FROM `case` a JOIN `court` b ON a.court_name = b.id JOIN `case_type` c ON a.case_type = c.id JOIN `city` d ON a.city_id = d.id JOIN `advocate` e ON a.handle_by = e.id join task as t on t.case_id = a.id  WHERE t.alloted_to = ? AND DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE);");
+        $stmt->bind_param('i', $intern_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
+
+    public function intern_task_list($intern_id, $case_id)
+    {
+        $qr = "";
+        if ($case_id != '') {
+            $qr = "AND t.case_id = '" . $case_id . "' ";
+        }
+        $stmt = $this->con->prepare("SELECT t.id as task_id,c.id as case_id,c.stage as stage_id,c.case_no,t.instruction,i.name as alloted_to,a.name as alloted_by,t.alloted_date,t.expected_end_date,t.status,st.stage  from task as t join `case` as c on t.case_id = c.id join interns as i on i.id = t.alloted_to join advocate as a on a.id = t.alloted_by join stage as st on st.id = c.stage where i.id = ? " . $qr . " order by t.id desc;");
         $stmt->bind_param("s", $intern_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -58,7 +80,7 @@ class DbOperation
     }
     public function task_remark_list($task_id)
     {
-        $stmt = $this->con->prepare("SELECT `case_hist`.*,st.stage from `task` inner join `case_hist` on task.id = case_hist.task_id  join stage as st on st.id = `case_hist`.`stage`WHERE task.id = ? ORDER BY task.id DESC");
+        $stmt = $this->con->prepare("SELECT `case_hist`.*,st.stage from `task` inner join `case_hist` on task.id = case_hist.task_id  join stage as st on st.id = `case_hist`.`stage`WHERE task.id = ? ORDER BY case_hist.id DESC");
         $stmt->bind_param("s", $task_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -68,7 +90,6 @@ class DbOperation
     public function intern_case_history($intern_id) // added by jay 22-01-2025
     {
         $stmt = $this->con->prepare("SELECT `case`.`id`,`case`.`case_no`, `case`.sr_date AS summon_date, company.name AS company_name, case_type.case_type AS case_type_name, court.name AS court_name, city.name AS city_name,`case`.`status` FROM  `case` INNER JOIN `company` ON `case`.company_id = company.id INNER JOIN `case_type` ON `case`.case_type = case_type.id INNER JOIN `court` ON court.id = `case`.court_name INNER JOIN `city` ON city.id = `case`.city_id WHERE `case`.id IN (SELECT DISTINCT case_id FROM `task` WHERE alloted_to = ?) ORDER BY `case`.id DESC;");
-        // $stmt = $this->con->prepare("SELECT a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by',a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date,DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id where a.handle_by = ? order by a.id desc;");
         $stmt->bind_param("i", $intern_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -78,7 +99,7 @@ class DbOperation
 
     public function notification($intern_id)
     {
-        $stmt = $this->con->prepare("SELECT n1.*,i1.name FROM `notification` n1,interns i1 where n1.sender_id=i1.id and n1.status='1' and n1.receiver_type='intern'   and n1.receiver_id=? order by n1.id desc");
+        $stmt = $this->con->prepare("SELECT n.*,i1.name , c.case_no FROM `notification` n join interns i1 join task as t on t.id = n.task_id join `case` as c on c.id = t.case_id where n.sender_id=i1.id and n.status='1' and n.receiver_type='intern' and n.receiver_id=? order by n.id desc;");
         $stmt->bind_param('i', $intern_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -96,7 +117,37 @@ class DbOperation
         $task_count = $stmt->get_result()->fetch_assoc()["count"];
         $stmt->close();
 
-        return [$result, $case_count, $task_count];
+        $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM `case` as c join task as t on t.case_id = c.id where t.alloted_to = ? AND c.next_date = CURRENT_DATE;");
+        $stmt->bind_param('i', $intern_id);
+        $stmt->execute();
+        $todays_case_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+
+        $stmt = $this->con->prepare("SELECT count(*) as count FROM `case` a JOIN `court` b ON a.court_name = b.id JOIN `case_type` c ON a.case_type = c.id JOIN `city` d ON a.city_id = d.id JOIN `advocate` e ON a.handle_by = e.id join task as t on t.case_id = a.id  WHERE t.alloted_to = ? AND  DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE);");
+        $stmt->bind_param('i', $intern_id);
+        $stmt->execute();
+        $counters_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+        return [$result, $case_count, $task_count, $todays_case_count, $counters_count];
+    }
+
+    public function get_case_info($case_id)
+    {
+        $stmt = $this->con->prepare("SELECT c.id,c.case_no,c.year , t.case_type , st.stage as stage_name, cmp.name as company_name, ad.name as advocate_name, c.docs , c.applicant , c.opp_name , crt.name as court_name , ct.name as city_name, c.next_date , st2.stage as next_stage , c.sr_date ,c.complainant_advocate,c.respondent_advocate,c.date_of_filing,c.next_date, DATEDIFF(DATE_ADD(c.sr_date, INTERVAL 45 DAY),CURRENT_DATE) as case_counter from `case` as c join case_type as t on t.id = c.case_type join stage as st on st.id = c.stage left join stage as st2 on st2.id = c.next_stage join company as cmp on cmp.id = c.company_id join advocate as ad on ad.id = c.handle_by join court as crt on crt.id = c.court_name join city as ct on ct.id = c.city_id where c.id = ?;");
+        $stmt->bind_param("i", $case_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
+    public function read_notification($not_id)
+    {
+        $stmt = $this->con->prepare("UPDATE `notification` SET `status`=0,playstatus=0 where id=?");
+        $stmt->bind_param('i', $not_id);
+        $result = $stmt->execute();
+
+        $stmt->close();
+        return $result;
     }
 
     public function case_history_view($case_id)
@@ -110,7 +161,7 @@ class DbOperation
     }
     public function case_history_documents($case_id)
     {
-        $stmt = $this->con->prepare("SELECT c1.case_no,c2.case_type,c1.docs,c1.id as file_id,'main' as file_type,c1.sr_date as date_time,'admin' as handled_by,'admin' as user_type from `case` c1,case_type c2 WHERE c1.case_type=c2.id  and  c1.id=? and docs!='' union SELECT c1.case_no,c2.case_type,m.docs,m.id as file_id ,'sub' as file_type,m.date_time,m.added_by as handled_by,m.user_type from `case` c1,case_type c2,multiple_doc m WHERE c1.case_type=c2.id and   m.c_id=c1.id and c1.id=?");
+        $stmt = $this->con->prepare("SELECT c1.case_no, c2.case_type, c1.docs, c1.id AS file_id, 'main' AS file_type, c1.sr_date AS date_time, 'admin' AS handled_by, 'admin' AS user_type FROM `case` c1 JOIN case_type c2 ON c1.case_type = c2.id WHERE c1.id = ? AND docs != '' UNION SELECT c1.case_no, c2.case_type, m.docs, m.id AS file_id, 'sub' AS file_type, m.date_time, CASE WHEN m.user_type = 'intern' THEN i.name WHEN m.user_type = 'advocate' THEN a.name END AS handled_by, m.user_type FROM `case` c1 JOIN case_type c2 ON c1.case_type = c2.id JOIN multiple_doc m ON m.c_id = c1.id LEFT JOIN interns i ON m.added_by = i.id AND m.user_type = 'intern' LEFT JOIN advocate a ON m.added_by = a.id AND m.user_type = 'advocate' WHERE c1.id = ?;");
         $stmt->bind_param("ii", $case_id, $case_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -176,7 +227,7 @@ class DbOperation
     }
     public function stage_list($case_id)
     {
-        $stmt = $this->con->prepare("SELECT * FROM `stage` WHERE status = 'enable' AND `case_type_id` = (select case_type from `case` where id = ?) ;");
+        $stmt = $this->con->prepare("SELECT * FROM `stage` WHERE status = 'enable' AND `case_type_id` = (select case_type from `case` where id = ?);");
         $stmt->bind_param("i", $case_id);
         $stmt->execute();
         $result = $stmt->get_result();
