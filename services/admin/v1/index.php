@@ -397,7 +397,7 @@ $app->post('/notifications', function () use ($app) {
     $data["data"] = array();
     $result = $db->notifications();
     $data['counters'] = array();
-    $resp = ['unassigned_count', 'assigned_count', 'history_count', 'advocate_count', 'intern_count', 'company_count', 'task_count', 'todays_case_count', 'counters_count','new_case_counter'];
+    $resp = ['unassigned_count', 'assigned_count', 'history_count', 'advocate_count', 'intern_count', 'company_count', 'task_count', 'todays_case_count', 'counters_count', 'new_case_counter'];
 
     if (mysqli_num_rows($result[0]) > 0) {
         while ($row = $result[0]->fetch_assoc()) {
@@ -478,7 +478,33 @@ $app->post('/add_task_remark', function () use ($app) {
 
 });
 
+$app->post('/get_task_info', function () use ($app) {
 
+    verifyRequiredParams(array('task_id'));
+    $task_id = $app->request->post('task_id');
+
+    $db = new DbOperation();
+    $data = array();
+
+    $result = $db->get_task_info($task_id);
+
+    if (mysqli_num_rows($result) > 0) {
+        $data["data"] = array();
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+    } else {
+        $data["message"] = "no data found";
+        $data["result"] = false;
+    }
+    echoResponse(200,$data);
+
+});
 $app->post('/get_case_counter', function () use ($app) {
 
     $db = new DbOperation();
