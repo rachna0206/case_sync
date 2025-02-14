@@ -62,33 +62,36 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
 
 
     for ($i = 2; $i <= $arrayCount; $i++) {
+
         $case_no = trim($allDataInSheet[$i]["B"]);
         $applicant = trim($allDataInSheet[$i]["C"]);
         $respondent = strtolower(trim($allDataInSheet[$i]["D"])); // Company name
         $complainant_advocate = trim($allDataInSheet[$i]["E"]);
         $respondent_advocate = strtolower(trim($allDataInSheet[$i]["F"])); // Advocate name
-        $date_of_filing = normalizeDate($allDataInSheet[$i]["G"]);
-        $next_date = normalizeDate($allDataInSheet[$i]["H"]);
-        $stage = 0;
+        $date_of_filing = $allDataInSheet[$i]["G"];
+        $next_date = $allDataInSheet[$i]["H"];
+        $stage=0;
         $year = trim($allDataInSheet[$i]["K"]);
+       // $date_of_filing=date("Y-m-d",strtotime($date_of_filing));
+       // $next_date=date("Y-m-d",strtotime($next_date));
 
 
-        if ($case_no != "" && $company_id && $handle_by) {
+       if ($case_no != "" && $company_id && $handle_by) {
 
-            // $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and case_type=? and `year`=? and city_id=?");
-            // echo "SELECT * FROM `case` WHERE case_no = $case_no and handle_by=$handle_by and city_id=$city ";
-            $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and city_id=? ");
-            $stmt_dmd_ck->bind_param("sii", $case_no, $handle_by, $city);
-            $stmt_dmd_ck->execute();
-            $dmd_result = $stmt_dmd_ck->get_result()->num_rows;
-            $stmt_dmd_ck->close();
+        // $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and case_type=? and `year`=? and city_id=?");
+     
+        $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and city_id=? ");
+        $stmt_dmd_ck->bind_param("sii", $case_no, $handle_by, $city);
+        $stmt_dmd_ck->execute();
+        $dmd_result = $stmt_dmd_ck->get_result()->num_rows;
+        $stmt_dmd_ck->close();
 
-            if ($dmd_result > 0) {
-                $msg1 .= '<div style="font-family:serif;font-size:18px;color:rgb(214, 13, 42);padding:0px 0 0 0;margin:10px 0px 0px 0px;"> Record no. ' . $i . ": " . $case_no . " already exists in the database.</div>";
-                $already_exists++;
-            } else {
+        if ($dmd_result > 0) {
+            $msg1 .= '<div style="font-family:serif;font-size:18px;color:rgb(214, 13, 42);padding:0px 0 0 0;margin:10px 0px 0px 0px;"> Record no. ' . $i . ": " . $case_no . " already exists in the database.</div>";
+            $already_exists++;
+        } else {
 
-                echo "<br>INSERT INTO `case`(`case_no`,`year`,`case_type`,`stage`,`company_id`, `complainant_advocate`,`respondent_advocate`, `date_of_filing`, `handle_by` , `applicant`,`opp_name`,`city_id`, `next_date`) VALUES ('$case_no', '$year','$case_type',$stage,$company_id, '$complainant_advocate','$respondent_advocate',  $date_of_filing,$handle_by,'$applicant','$respondent', $city, $next_date)";
+                //echo "<br>INSERT INTO `case`(`case_no`,`year`,`case_type`,`stage`,`company_id`, `complainant_advocate`,`respondent_advocate`, `date_of_filing`, `handle_by` , `applicant`,`opp_name`,`city_id`, `next_date`) VALUES ('$case_no', '$year','$case_type',$stage,$company_id, '$complainant_advocate','$respondent_advocate',  $date_of_filing,$handle_by,'$applicant','$respondent', $city, $next_date)";
                 $stmt = $obj->con1->prepare("INSERT INTO `case`(`case_no`,`year`,`case_type`,`stage`,`company_id`, `complainant_advocate`,`respondent_advocate`, `date_of_filing`, `handle_by` , `applicant`,`opp_name`,`city_id`, `next_date`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
                 $stmt->bind_param("siiiisssissis", $case_no, $year, $case_type, $stage, $company_id, $complainant_advocate, $respondent_advocate,  $date_of_filing, $handle_by, $applicant, $respondent, $city, $next_date);
                 $Resp = $stmt->execute();
@@ -334,13 +337,13 @@ function normalizeDate($date)
                 <table class="table datatable">
                     <thead>
                         <tr>
-                            <th scope="col">Sr no.</th>
-                            <th scope="col">Case No</th>
+                            <th scope="col">Sr. no.</th>
+                            <th scope="col">Case No.</th>
                             <th scope="col">Complainant</th>
                             <th scope="col">Respondent</th>
-                            <th scope="col">Complainant Advocate</th>
-                            <th scope="col">Respondent Advocate</th>
-                            <th scope="col">Date of Next Hearing</th>
+                            <th scope="col">Complainant Adv.</th>
+                            <th scope="col">Respondent Adv.</th>
+                            <th scope="col">City</th>
                             <th scope="col">Status</th>
                             <th scope="col">Action</th>
                         </tr>
@@ -353,7 +356,7 @@ function normalizeDate($date)
                         $i = 1;
                         while ($row = mysqli_fetch_array($Resp)) {
 
-                            if ($row['status'] == 'dispossed') {
+                            if ($row['status'] == 'disposed') {
                                 $class = "success";
                             } else if ($row['status'] == 'pending') {
                                 $class = "warning";
@@ -368,10 +371,10 @@ function normalizeDate($date)
                                 <th scope="row"><?php echo $i; ?></th>
                                 <td><?php echo $row["case_no"]; ?></td>
                                 <td><?php echo $row["applicant"]; ?></td>
-                                <td><?php echo $row["company_name"]; ?></td>
+                                <td><?php echo $row["opp_name"]; ?></td>
                                 <td><?php echo $row["complainant_advocate"]; ?></td>
                                 <td><?php echo $row["respondent_advocate"]; ?></td>
-                                <td><?php echo $row["nxt_date"] ?></td>
+                                <td><?php echo $row["city_name"] ?></td>
                                 <td>
                                     <h4><span
                                             class="badge rounded-pill bg-<?php echo $class ?>"><?php echo ucfirst($row["status"]); ?></span>

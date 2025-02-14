@@ -113,7 +113,7 @@ function deletedata(id,stage) {
                         </thead>
                         <tbody>
                             <?php
-                            $stmt = $obj->con1->prepare("SELECT stage.*, case_type.case_type as cs_ty_id FROM `stage` inner join `case_type` on stage.case_type_id = case_type.id ORDER BY `id` DESC");
+                            $stmt = $obj->con1->prepare("SELECT stage.*, case_type.case_type as cs_ty_id FROM `stage` inner join `case_type` on stage.case_type_id = case_type.id and stage.id!=0 ORDER BY `id` DESC");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
