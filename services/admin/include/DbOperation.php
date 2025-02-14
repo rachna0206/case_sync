@@ -217,7 +217,7 @@ class DbOperation
     }
     public function add_case($case_no, $year, $company_id, $docs, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $multiple_images, $added_by, $user_type, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date)
     {
-        $status = "enable";
+        $status = "pending";
         // echo "INSERT INTO `case` (`case_no`, `year`, `case_type`, `stage`, `company_id`, `handle_by`, `docs`, `applicant`, `opp_name`, `court_name`, `city_id`, `sr_date`, `status`, `complainant_advocate`, `respondent_advocate`, `date_of_filing`,`next_date`) VALUES ($case_no, $year, $case_type, $stage, $company_id, $handle_by, $docs, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date)";
         $stmt = $this->con->prepare("INSERT INTO `case` (`case_no`, `year`, `case_type`, `stage`, `company_id`, `handle_by`, `docs`, `applicant`, `opp_name`, `court_name`, `city_id`, `sr_date`, `status`, `complainant_advocate`, `respondent_advocate`, `date_of_filing`,`next_date`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param("siiiiisssiissssss", $case_no, $year, $case_type, $stage, $company_id, $handle_by, $docs, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date);
@@ -472,7 +472,7 @@ class DbOperation
 
     public function get_task_history($task_no)
     {
-        $stmt = $this->con->prepare("SELECT * from case_hist where task_id = ? order by id desc");
+        $stmt = $this->con->prepare("SELECT ch.* , s.stage from case_hist as ch join stage as s on ch.stage = s.id where task_id = ? order by id desc;");
         $stmt->bind_param("s", $task_no);
         $stmt->execute();
         $result = $stmt->get_result();
