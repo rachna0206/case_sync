@@ -218,7 +218,6 @@ class DbOperation
     public function add_case($case_no, $year, $company_id, $docs, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $multiple_images, $added_by, $user_type, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date)
     {
         $status = "pending";
-        // echo "INSERT INTO `case` (`case_no`, `year`, `case_type`, `stage`, `company_id`, `handle_by`, `docs`, `applicant`, `opp_name`, `court_name`, `city_id`, `sr_date`, `status`, `complainant_advocate`, `respondent_advocate`, `date_of_filing`,`next_date`) VALUES ($case_no, $year, $case_type, $stage, $company_id, $handle_by, $docs, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date)";
         $stmt = $this->con->prepare("INSERT INTO `case` (`case_no`, `year`, `case_type`, `stage`, `company_id`, `handle_by`, `docs`, `applicant`, `opp_name`, `court_name`, `city_id`, `sr_date`, `status`, `complainant_advocate`, `respondent_advocate`, `date_of_filing`,`next_date`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param("siiiiisssiissssss", $case_no, $year, $case_type, $stage, $company_id, $handle_by, $docs, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date);
         $result = $stmt->execute();
@@ -234,6 +233,16 @@ class DbOperation
                 $stmt->close();
             }
         }
+        return $result;
+    }
+
+    public function edit_case($case_id, $case_no, $year, $company_id, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $added_by, $user_type, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date)
+    {
+        $status = 'pending';
+        $stmt = $this->con->prepare("UPDATE `case` SET `case_no`=?,`year`=?,`case_type`=?,`stage`=?,`company_id`=?,`complainant_advocate`=?,`respondent_advocate`=?,`date_of_filing`=?,`handle_by`=?,`applicant`=?,`opp_name`=?,`court_name`=?,`city_id`=?,`next_date`=?,`sr_date`=?,`status`=? WHERE `id`=?");
+        $stmt->bind_param("siiiiisssiissssss", $case_no, $year, $case_type, $stage, $company_id, $complainant_advocate, $respondent_advocate, $date_of_filing, $handle_by, $applicant, $opp_name, $court_name, $city_id, $next_date, $sr_date, $status, $case_id);
+        $result = $stmt->execute();
+        $stmt->close();
         return $result;
     }
 
@@ -308,7 +317,6 @@ class DbOperation
     }
     public function delete_advocate($advocate_id)
     {
-
         $stmt = $this->con->prepare("SELECT count(*) as count from `task` where alloted_by  = ?");
         $stmt->bind_param('i', $advocate_id);
         $stmt->execute();
@@ -318,7 +326,6 @@ class DbOperation
         if ($result['count'] > 0) {
             return false;
         }
-
         $stmt = $this->con->prepare("DELETE from `advocate` where id = ?");
         $stmt->bind_param('i', $advocate_id);
         $result = $stmt->execute();
