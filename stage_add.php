@@ -135,7 +135,7 @@ if (isset($_REQUEST["btn_case_type"])) {
                                     <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
                                     <option value="">Select a Case Type</option>
                                     <?php 
-                                    $comp = "SELECT * FROM `case_type` where status='Enable'";
+                                    $comp = "SELECT * FROM `case_type` where status='enable' and id!=0";
                                     $result = $obj->select($comp);
                                     $selectedCompanyId = isset($data['case_type_id']) ? $data['case_type_id'] : ''; // Adjust this if necessary
 

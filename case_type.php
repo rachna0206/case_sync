@@ -110,7 +110,7 @@ function deletedata(id,case_type) {
                         </thead>
                         <tbody>
                             <?php
-                            $stmt = $obj->con1->prepare("SELECT * FROM `case_type`");
+                            $stmt = $obj->con1->prepare("SELECT * FROM `case_type` where id!=0");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;

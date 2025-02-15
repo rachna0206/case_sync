@@ -217,7 +217,7 @@ if (isset($_REQUEST["update"])) {
                                         <?= isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
                                         <option value="">Select Case Type</option>
                                         <?php
-                                        $comp = "SELECT * FROM `case_type` WHERE status='enable'";
+                                        $comp = "SELECT * FROM `case_type` WHERE status='enable' and id!=0";
                                         $result = $obj->select($comp);
                                         $selectedcourtId = isset($data['case_type']) ? $data['case_type'] : '';
 

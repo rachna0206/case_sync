@@ -661,7 +661,7 @@ if (isset($_REQUEST["btn_handle_by"])) {
                             <div class="col-md-4">
                                 <label for="sr_date" class="form-label">Date of next hearing</label>
                                 <input type="date" class="form-control" id="next_date" name="next_date"
-                                    value="<?php echo (isset($mode) && isset($data['next_date']) && !empty($data['next_date'])) ? date('Y-m-d', strtotime($data['next_date'])) : date('Y-m-d'); ?>"
+                                    value="<?php echo (isset($mode) && isset($data['next_date']) && !empty($data['next_date'])) ? date('Y-m-d', strtotime($data['next_date'])) :"" ?>"
                                     <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
                             </div>
                         </div>

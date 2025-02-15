@@ -112,7 +112,7 @@ function deletedata(id,name) {
                         </thead>
                         <tbody>
                             <?php
-                            $stmt = $obj->con1->prepare("SELECT c2.case_type as type, c1.* FROM `court` c1 JOIN `case_type` c2 ON c1.case_type = c2.id ORDER BY c1.id DESC;");
+                            $stmt = $obj->con1->prepare("SELECT c2.case_type as type, c1.* FROM `court` c1 JOIN `case_type` c2 ON c1.case_type = c2.id and c1.id!=0 ORDER BY c1.id DESC;");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;

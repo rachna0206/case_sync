@@ -43,7 +43,7 @@ if (isset($_COOKIE["msg"])) {
 
 if (isset($_SESSION["excel_msg"])) {
 ?>
-  <div class="modal fade" id="excelModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal fade" id="excelalertModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -62,7 +62,7 @@ if (isset($_SESSION["excel_msg"])) {
   <script>
     // Automatically show the modal after page load
     document.addEventListener("DOMContentLoaded", function () {
-      var myModal = new bootstrap.Modal(document.getElementById('excelModal'));
+      var myModal = new bootstrap.Modal(document.getElementById('excelalertModal'));
       myModal.show();
     });
   </script>
