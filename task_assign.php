@@ -12,7 +12,6 @@ if (isset($_REQUEST["save"])) {
     $alloted_date = $_REQUEST["rmk_date"];
     $new_status = "reassign";
     $old_status="re_alloted";
-    $action_by="intern";
 
     // Fetching the instruction from the task table based on case_id
     $stmt = $obj->con1->prepare("SELECT * FROM `task` WHERE `case_id` = ?");
@@ -31,9 +30,9 @@ if (isset($_REQUEST["save"])) {
 
     try {
         // Prepare insert statement
-        $stmt = $obj->con1->prepare("INSERT INTO task(`case_id`, `alloted_to`, `instruction`, `alloted_by`,`action_by`, `alloted_date`, `status`, `remark`) VALUES (?, ?, ?, ?, ?, ?, ?,?)");
+        $stmt = $obj->con1->prepare("INSERT INTO task(`case_id`, `alloted_to`, `instruction`, `alloted_by`, `alloted_date`, `status`, `remark`) VALUES (?, ?, ?, ?, ?, ?,?)");
         // Bind parameters
-        $stmt->bind_param("iisissss", $cno, $intern, $instruction, $alloted_by,$action_by, $alloted_date, $new_status, $remark);
+        $stmt->bind_param("iisisss", $cno, $intern, $instruction, $alloted_by, $alloted_date, $new_status, $remark);
         
         // Execute and check response
         if (!$stmt->execute()) {
@@ -137,7 +136,7 @@ if (isset($_REQUEST["update"])) {
                                     $signedInInternId = $_SESSION['intern_id'];
 
                                     // Update the query to exclude the signed-in intern
-                                    $intern = "SELECT * FROM `interns` WHERE id != ?";
+                                    $intern = "SELECT * FROM `staff` WHERE id != ? AND `type` = 'intern'";
                                     $stmt = $obj->con1->prepare($intern);
                                     $stmt->bind_param("i", $signedInInternId);
                                     $stmt->execute();

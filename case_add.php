@@ -11,7 +11,6 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
     $stmt->close();
 }
 
-
 if (isset($_REQUEST["save"])) {
     $case_no = $_REQUEST['case_no'];
     $case_year = $_REQUEST['year'];
@@ -95,9 +94,9 @@ if (isset($_REQUEST["save"])) {
             $doc_array = array("pdf", "doc", "docx");
             $extn = strtolower(pathinfo($SubDocName, PATHINFO_EXTENSION));
             $file_type = in_array($extn, $doc_array) ? "document" : "invalid";
-
-            $stmt_docs = $obj->con1->prepare("INSERT INTO `multiple_doc`(`c_id`, `docs`) VALUES (?,?)");
-            $stmt_docs->bind_param("is", $insert_doc_id, $SubDocName);
+            $added_by = $_SESSION[""] ;
+            $stmt_docs = $obj->con1->prepare("INSERT INTO `multiple_doc`(`c_id`, `docs`,`added_by`) VALUES (?,?,?)");
+            $stmt_docs->bind_param("is", $insert_doc_id, $SubDocName,$added_by);
             $Resp = $stmt_docs->execute();
             $stmt_docs->close();
         }
@@ -330,10 +329,11 @@ if (isset($_REQUEST["btn_handle_by"])) {
     $adv_email = $_REQUEST['adv_email'];
     $adv_password = $_REQUEST['adv_password'];
     $status = 'enable';
+    $type = 'admin';
     try {
         // echo "INSERT INTO `city`(`name`, `status`) VALUES (". $city_name.", ".$status.")";
-        $stmt = $obj->con1->prepare("INSERT INTO `advocate`(`name`,`contact`,`email`,`password`,`status`) VALUES (?,?,?,?,?)");
-        $stmt->bind_param("sssss", $adv_name, $adv_contact, $adv_email, $adv_password, $status);
+        $stmt = $obj->con1->prepare("INSERT INTO `staff`(`name`,`contact`,`email`,`password`,`status`,`type`) VALUES (?,?,?,?,?,?)");
+        $stmt->bind_param("ssssss", $adv_name, $adv_contact, $adv_email, $adv_password, $status,$type);
         $Resp = $stmt->execute();
         if (!$Resp) {
             throw new Exception(
@@ -530,8 +530,6 @@ if (isset($_REQUEST["btn_handle_by"])) {
                             </div>
                         <?php endif; ?>
 
-
-
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="applicant" class="form-label">Applicant / Appellant / Complainant</label>
@@ -597,7 +595,7 @@ if (isset($_REQUEST["btn_handle_by"])) {
                                         <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
                                         <option value="">Select an Advocate</option>
                                         <?php
-                                        $comp = "SELECT * FROM `advocate` where status='Enable'";
+                                        $comp = "SELECT * FROM `staff` where status='enable' AND `type` = 'admin' ;";
                                         $result = $obj->select($comp);
                                         $selectedAdvocateId = isset($data['handle_by']) ? $data['handle_by'] : '';
 

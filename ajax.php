@@ -2,7 +2,7 @@
 include "header.php";
 include "alert.php";
 
-$con = mysqli_connect("localhost", "root", "", "pragmanx_case_sync");
+$con = mysqli_connect("localhost", "root", "", "pragmanx_case_sync_new");
 
 
 if (isset($_REQUEST["cs_ty_id"])) {

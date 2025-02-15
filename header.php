@@ -3,11 +3,12 @@ ob_start();
 include "db_connect.php";
 $obj = new DB_Connect();
 date_default_timezone_set('Asia/Kolkata');
- 
+
 session_start();
+$path = "";
 
 if (!isset($_SESSION["userlogin_CS"])) {
-  header("location:login.php"); 
+  header("location:login.php");
 }
 
 ?>
@@ -80,7 +81,7 @@ if (!isset($_SESSION["userlogin_CS"])) {
       createCookie(name, "", -1);
     }
 
-    $(document).ready(function() {
+    $(document).ready(function () {
       get_notification();
     });
 
@@ -207,7 +208,7 @@ if (!isset($_SESSION["userlogin_CS"])) {
           </a><!-- End Notification Icon -->
 
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
-           
+
             <div id="noti_list">
 
             </div>
@@ -251,52 +252,56 @@ if (!isset($_SESSION["userlogin_CS"])) {
 
     <ul class="sidebar-nav" id="sidebar-nav">
 
-    
-        <li class="nav-item">
+
+      <li class="nav-item">
         <a class="nav-link " data-bs-target="#forms-nav" data-bs-toggle="collapse">
           <i class='bx bx-gear'></i><span>Operations</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="forms-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
-          
+
           <li class="nav-item">
-            <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "case.php" ? "active" : "" ?>" href="case.php">
+            <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "case.php" ? "active" : "" ?>"
+              href="case.php">
               <i class="bi bi-file-earmark"></i>
               <span>Case</span>
             </a>
           </li>
-          
-           <li class="nav-item">
-            <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "task.php" ? "active" : "" ?>" href="task.php">
+
+          <li class="nav-item">
+            <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "task.php" ? "active" : "" ?>"
+              href="task.php">
               <i class="bi bi-check"></i>
               <span>Task</span>
             </a>
           </li>
-           <li class="nav-item">
-        <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "case_hist.php" ? "active" : "" ?>" href="case_hist.php">
-          <i class="bi bi-clock-history"></i>
-          <span>Case History</span>
-        </a>
-      </li>
+          <li class="nav-item">
+            <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "case_hist.php" ? "active" : "" ?>"
+              href="case_hist.php">
+              <i class="bi bi-clock-history"></i>
+              <span>Case History</span>
+            </a>
+          </li>
 
-      <li class="nav-item">
-        <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "case_counter.php" ? "active" : "" ?>" href="case_counter.php">
-          <i class="bi bi-alarm"></i>
-          <span>Case Counter</span>
-        </a>
-      </li>
-          
+          <li class="nav-item">
+            <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "case_counter.php" ? "active" : "" ?>"
+              href="case_counter.php">
+              <i class="bi bi-alarm"></i>
+              <span>Case Counter</span>
+            </a>
+          </li>
+
 
         </ul>
       </li>
 
-    <li class="nav-item">
+      <li class="nav-item">
         <a class="nav-link " data-bs-target="#material-nav" data-bs-toggle="collapse">
           <i class="bi bi-card-text"></i><span>Masters</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="material-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
           <li>
             <a href="company.php" class="<?php echo basename($_SERVER["PHP_SELF"]) == "company.php" ? "active" : "" ?>">
-                <i class="bi bi-building bi-md"></i><span>Company</span>
+              <i class="bi bi-building bi-md"></i><span>Company</span>
             </a>
           </li>
           <li>
@@ -306,14 +311,12 @@ if (!isset($_SESSION["userlogin_CS"])) {
             </a>
           </li>
           <li>
-            <a href="intern.php"
-              class="<?php echo basename($_SERVER["PHP_SELF"]) == "intern.php" ? "active" : "" ?>">
+            <a href="intern.php" class="<?php echo basename($_SERVER["PHP_SELF"]) == "intern.php" ? "active" : "" ?>">
               <i class="bi bi-people-fill"></i><span>Interns</span>
             </a>
           </li>
           <li>
-            <a href="court.php"
-              class="<?php echo basename($_SERVER["PHP_SELF"]) == "court.php" ? "active" : "" ?>">
+            <a href="court.php" class="<?php echo basename($_SERVER["PHP_SELF"]) == "court.php" ? "active" : "" ?>">
               <i class="bi bi-bank"></i><span>Courts</span>
             </a>
           </li>
@@ -323,35 +326,32 @@ if (!isset($_SESSION["userlogin_CS"])) {
               <i class="bi bi-alarm"></i><span>Case Type</span>
             </a>
           </li>
-          
-          
+
+
           <li>
-            <a href="stage.php"
-              class="<?php echo basename($_SERVER["PHP_SELF"]) == "stage.php" ? "active" : "" ?>">
+            <a href="stage.php" class="<?php echo basename($_SERVER["PHP_SELF"]) == "stage.php" ? "active" : "" ?>">
               <i class="bi bi-stopwatch"></i><span>Stages</span>
             </a>
           </li>
           <li>
-            <a href="state.php"
-              class="<?php echo basename($_SERVER["PHP_SELF"]) == "state.php" ? "active" : "" ?>">
+            <a href="state.php" class="<?php echo basename($_SERVER["PHP_SELF"]) == "state.php" ? "active" : "" ?>">
               <i class="bi bi-geo-alt"></i><span>State</span>
             </a>
           </li>
           <li>
-            <a href="city.php"
-              class="<?php echo basename($_SERVER["PHP_SELF"]) == "city.php" ? "active" : "" ?>">
+            <a href="city.php" class="<?php echo basename($_SERVER["PHP_SELF"]) == "city.php" ? "active" : "" ?>">
               <i class="bi bi-geo-alt"></i><span>City</span>
             </a>
           </li>
-          
-          
+
+
         </ul>
       </li>
 
-      
+
     </ul>
 
   </aside><!-- End Sidebar-->
 
   <main id="main" class="main min-vh-100">
-  <div id="sound"></div>
+    <div id="sound"></div>

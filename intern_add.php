@@ -4,7 +4,7 @@ include "header.php";
 if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
     $mode = (isset($_COOKIE['edit_id'])) ? 'edit' : 'view';
     $Id = (isset($_COOKIE['edit_id'])) ? $_COOKIE['edit_id'] : $_COOKIE['view_id'];
-    $stmt = $obj->con1->prepare("SELECT * FROM `interns` WHERE id=?");
+    $stmt = $obj->con1->prepare("SELECT * FROM `staff` WHERE id=?");
     $stmt->bind_param('i', $Id);
     $stmt->execute();
     $data = $stmt->get_result()->fetch_assoc();
@@ -18,11 +18,12 @@ if (isset($_REQUEST["save"])) {
     $password = $_REQUEST['password'];
     $status = $_REQUEST['radio'];
     $date_time=$_REQUEST['date_time'];
+    $type = "intern";
 
     try {
-    //    echo "INSERT INTO `interns`(`name`, `contact`,`email`,`password`, `status`, `date_time`) VALUES (".$name.",".$contact.",".$email.",".$password.",".$status.",".$date_time.")";
-        $stmt = $obj->con1->prepare("INSERT INTO `interns`(`name`, `contact`,`email`,`password`,`status`,`date_time`) VALUES (?,?,?,?,?,?)");
-        $stmt->bind_param("ssssss", $name,$contact,$email,$password,$status,$date_time);
+    //    echo "INSERT INTO `staff`(`name`, `contact`,`email`,`password`, `status`, `date_time`) VALUES (".$name.",".$contact.",".$email.",".$password.",".$status.",".$date_time.")";
+        $stmt = $obj->con1->prepare("INSERT INTO `staff`(`name`, `contact`,`email`,`password`,`status`,`date/time`,`type`) VALUES (?,?,?,?,?,?,?)");
+        $stmt->bind_param("sssssss", $name,$contact,$email,$password,$status,$date_time,$type);
         $Resp = $stmt->execute();
         if (!$Resp) {
             throw new Exception(
@@ -59,7 +60,7 @@ if (isset($_REQUEST["update"])) {
 
 
     try {
-        $stmt = $obj->con1->prepare("UPDATE `interns` SET `name`=?, `contact`=?, `email`=?, `password`=?, `status`=?, `date_time`=? WHERE `id`=?");
+        $stmt = $obj->con1->prepare("UPDATE `staff` SET `name`=?, `contact`=?, `email`=?, `password`=?, `status`=?, `date/time`=? WHERE `id`=?");
         $stmt->bind_param("ssssssi",  $name,$contact,$email,$password,$status,$date_time, $e_id);
         $Resp = $stmt->execute();
         if (!$Resp) {
@@ -134,7 +135,7 @@ if (isset($_REQUEST["update"])) {
                         <div class="col-md-12">
                             <label for="title" class="form-label">Date Time</label>
                             <input type="date" class="form-control" id="date_time" name="date_time"
-                                value="<?php echo (isset($mode)) ? date('Y-m-d', strtotime($data['date_time'])) : date('Y-m-d'); ?>"
+                                value="<?php echo (isset($mode)) ? date('Y-m-d', strtotime($data['date/time'])) : date('Y-m-d'); ?>"
                                 <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
                         </div>
 

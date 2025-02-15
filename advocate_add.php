@@ -4,7 +4,7 @@ include "header.php";
 if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
     $mode = (isset($_COOKIE['edit_id'])) ? 'edit' : 'view';
     $Id = (isset($_COOKIE['edit_id'])) ? $_COOKIE['edit_id'] : $_COOKIE['view_id'];
-    $stmt = $obj->con1->prepare("SELECT * FROM `advocate` WHERE id=?");
+    $stmt = $obj->con1->prepare("SELECT * FROM `staff` WHERE id=?");
     $stmt->bind_param('i', $Id);
     $stmt->execute();
     $data = $stmt->get_result()->fetch_assoc();
@@ -17,11 +17,12 @@ if (isset($_REQUEST["save"])) {
     $advocate_email = $_REQUEST['advocate_email'];
     $advocate_password = $_REQUEST['advocate_password'];
     $status = $_REQUEST['radio'];
+    $type = 'admin';
 
     try {
-       echo "INSERT INTO `advocate`(`name`, `contact`,`email`, `password`, `status`) VALUES (".$advocate_name.",".$advocate_contact.",".$advocate_email.",".$advocate_password.", ".$status.")";
-        $stmt = $obj->con1->prepare("INSERT INTO `advocate`(`name`, `contact`,`email`, `password` ,`status`) VALUES (?,?,?,?,?)");
-        $stmt->bind_param("sssss", $advocate_name, $advocate_contact, $advocate_email, $advocate_password, $status);
+    //    echo "INSERT INTO `advocate`(`name`, `contact`,`email`, `password`, `status`) VALUES (".$advocate_name.",".$advocate_contact.",".$advocate_email.",".$advocate_password.", ".$status.")";
+        $stmt = $obj->con1->prepare("INSERT INTO `staff`(`name`, `contact`,`email`, `password` ,`status`,`type`) VALUES (?,?,?,?,?,?)");
+        $stmt->bind_param("ssssss", $advocate_name, $advocate_contact, $advocate_email, $advocate_password, $status,$type);
         $Resp = $stmt->execute();
         if (!$Resp) {
             throw new Exception(
@@ -57,7 +58,7 @@ if (isset($_REQUEST["update"])) {
 
 
     try {
-        $stmt = $obj->con1->prepare("UPDATE `advocate` SET `name`=?, `contact`=?,`email`=?, `password`=?, `status`=? WHERE `id`=?");
+        $stmt = $obj->con1->prepare("UPDATE `staff` SET `name`=?, `contact`=?,`email`=?, `password`=?, `status`=? WHERE `id`=?");
         $stmt->bind_param("sssssi",  $advocate_name, $advocate_contact, $advocate_email, $advocate_password, $status, $e_id);
         $Resp = $stmt->execute();
         if (!$Resp) {

@@ -1,42 +1,36 @@
 <?php
 ob_start();
-include ("db_connect.php");
-$obj=new DB_connect();
+include("db_connect.php");
+$obj = new DB_connect();
 date_default_timezone_set("Asia/Kolkata");
 
-if(isset($_REQUEST["submit"])){
-  // echo "hello";
-    session_start();
-    
-    $ui = $_REQUEST["username"];
-    $pa = $_REQUEST["password"];
-    // echo "select id,username,password from admin where username='".$ui."' and binary(password) ='".$pa."'";
-    $qr = $obj->con1->prepare("select id,name,password,email from `advocate` where email=? and binary(password) =?");
-    $qr->bind_param("ss",$ui,$pa);
-    $qr->execute();
-    $result = $qr->get_result();
-    $qr->close();
-    $row=mysqli_fetch_array($result);
-    
-    if(strtolower($row["email"])==strtolower($ui))
-    {
-      $_SESSION["userlogin_CS"]="true";
-      $_SESSION["id"]=$row["id"];
-      $_SESSION["userid"]=$ui;
-      $_SESSION["username"]=$row["name"];
-      $_SESSION["user_type"] = "advocate";
-     
-    header("location:index.php");
-    }
-    else
-    {
-      setcookie("submit", "wrong_pass",time()+3600,"/");
-    header("location:login.php");	
-    }
-    
+if (isset($_REQUEST["submit"])) {
+  session_start();
+  $ui = $_REQUEST["username"];
+  $pa = $_REQUEST["password"];
+  $qr = $obj->con1->prepare("select * from `staff` where email=? and binary(password) =?");
+  $qr->bind_param("ss", $ui, $pa);
+  $qr->execute();
+  $result = $qr->get_result();
+  $qr->close();
+  $row = mysqli_fetch_array($result);
 
+  if (strtolower($row["email"]) == strtolower($ui)) {
+    $_SESSION["userlogin_CS"] = "true";
+    $_SESSION["id"] = $row["id"];
+    $_SESSION["userid"] = $ui;
+    $_SESSION["username"] = $row["name"];
+    $_SESSION["user_type"] = "advocate";
+
+    header("location:index.php");
+  } else {
+    setcookie("submit", "wrong_pass", time() + 3600, "/");
+    header("location:login.php");
   }
-      ?>
+
+
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -54,7 +48,9 @@ if(isset($_REQUEST["submit"])){
 
   <!-- Google Fonts -->
   <link href="https://fonts.gstatic.com" rel="preconnect">
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+    rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -76,66 +72,64 @@ if(isset($_REQUEST["submit"])){
   * License: https://bootstrapmade.com/license/
   ======================================================== -->
   <script type="text/javascript">
-      function createCookie(name, value, days) {
-        var expires;
-        if (days) {
-            var date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toGMTString();
-        } else {
-            expires = "";
-        }
-        document.cookie = (name) + "=" + String(value) + expires + ";path=/ ";
+    function createCookie(name, value, days) {
+      var expires;
+      if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toGMTString();
+      } else {
+        expires = "";
+      }
+      document.cookie = (name) + "=" + String(value) + expires + ";path=/ ";
 
     }
 
     function readCookie(name) {
-        var nameEQ = (name) + "=";
-        var ca = document.cookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) === 0) return (c.substring(nameEQ.length, c.length));
-        }
-        return null;
+      var nameEQ = (name) + "=";
+      var ca = document.cookie.split(';');
+      for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return (c.substring(nameEQ.length, c.length));
+      }
+      return null;
     }
 
     function eraseCookie(name) {
-        createCookie(name, "", -1);
+      createCookie(name, "", -1);
     }
-</script>
+  </script>
 </head>
 
 <body>
 
   <main>
     <div class="container">
-   
+
       <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
         <div class="container">
-       
-          <div class="row justify-content-center">
-            
-            <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
-            <?php 
-            if(isset($_COOKIE["submit"]) )
-            {
 
-              if($_COOKIE['submit']=="wrong_pass")
-              {
+          <div class="row justify-content-center">
+
+            <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
+              <?php
+              if (isset($_COOKIE["submit"])) {
+
+                if ($_COOKIE['submit'] == "wrong_pass") {
+
+                  ?>
+                  <div class="alert alert-danger alert-dismissible" role="alert">
+                    Incorect UserId/Password.Please Try Again.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                    </button>
+                  </div>
+                  <script type="text/javascript">eraseCookie("submit")</script>
+                  <?php
+                }
+              }
 
               ?>
-              <div class="alert alert-danger alert-dismissible" role="alert">
-                Incorect UserId/Password.Please Try Again.
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-                </button>
-              </div>
-              <script type="text/javascript">eraseCookie("submit")</script>
-              <?php
-              }
-            }
-              
-            ?>
 
               <div class="d-flex justify-content-center py-4">
                 <a href="index.html" class="logo d-flex align-items-center w-auto">
@@ -170,17 +164,17 @@ if(isset($_REQUEST["submit"])){
                       <div class="invalid-feedback">Please enter your password!</div>
                     </div>
 
-                    
+
                     <div class="col-12">
                       <button class="btn btn-primary w-100" type="submit" name="submit">Login</button>
                     </div>
-                   
+
                   </form>
 
                 </div>
               </div>
 
-             
+
 
             </div>
           </div>
@@ -191,7 +185,8 @@ if(isset($_REQUEST["submit"])){
     </div>
   </main><!-- End #main -->
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+      class="bi bi-arrow-up-short"></i></a>
 
   <!-- Vendor JS Files -->
   <script src="assets/vendor/apexcharts/apexcharts.min.js"></script>

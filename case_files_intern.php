@@ -132,19 +132,12 @@ function deletedata(id, case_no) {
                                     </div>
                                 </td>
                                 <td><?php
-                                if($row["user_type"]=="intern")
-                                {
-                                    $stmt_user=$obj->con1->prepare("SELECT * FROM `interns` where id=?");
+                                    $stmt_user=$obj->con1->prepare("SELECT * FROM `staff` where id=?");
                                     $stmt_user->bind_param("i",$row["handled_by"]);
                                     $stmt_user->execute();
                                     $user=$stmt_user->get_result()->fetch_assoc();
                                     $stmt_user->close();
                                     echo $user["name"];
-                                }
-                                else
-                                {
-                                    echo "Admin"; 
-                                }
                                  
                                  ?></td>
                                  <td><?php echo date("d/m/Y",strtotime($row["date_time"])) ?></td>

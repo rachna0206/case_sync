@@ -1,61 +1,54 @@
-<?php 
- include "header.php";
- include "alert.php";
+<?php
+include "header.php";
+include "alert.php";
 
- if(isset($_REQUEST["btndelete"]))
-{
-  $id = $_REQUEST['delete_id'];
-  try
-  {
-    $stmt_del = $obj->con1->prepare("DELETE FROM `advocate` WHERE id = ?");
-    $stmt_del->bind_param("i",$id);
-    $Resp=$stmt_del->execute();
-    if(!$Resp)
-    {
-      throw new Exception("Problem in deleting! ". strtok($obj->con1-> error,  '('));
+if (isset($_REQUEST["btndelete"])) {
+    $id = $_REQUEST['delete_id'];
+    try {
+        $stmt_del = $obj->con1->prepare("DELETE FROM `staff` WHERE id = ?");
+        $stmt_del->bind_param("i", $id);
+        $Resp = $stmt_del->execute();
+        if (!$Resp) {
+            throw new Exception("Problem in deleting! " . strtok($obj->con1->error, '('));
+        }
+        $stmt_del->close();
+    } catch (\Exception $e) {
+        setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
     }
-    $stmt_del->close();
-  }
-  catch(\Exception  $e) {
-    setcookie("sql_error", urlencode($e->getMessage()),time()+3600,"/");
-  }
 
-  if($Resp)
-  {
-    setcookie("msg", "data_del",time()+3600,"/");
-    header("location:advocate.php");
-  }
-  else
-  {
-   setcookie("msg", "fail",time()+3600,"/");
-   header("location:advocate.php");
- }
+    if ($Resp) {
+        setcookie("msg", "data_del", time() + 3600, "/");
+        header("location:advocate.php");
+    } else {
+        setcookie("msg", "fail", time() + 3600, "/");
+        header("location:advocate.php");
+    }
 }
 ?>
 <script type="text/javascript">
-function add_data() {
-    eraseCookie("edit_id");
-    eraseCookie("view_id");
-    window.location = "advocate_add.php";
-}
+    function add_data() {
+        eraseCookie("edit_id");
+        eraseCookie("view_id");
+        window.location = "advocate_add.php";
+    }
 
-function editdata(id) {
-    eraseCookie("view_id");
-    createCookie("edit_id", id, 1);
-    window.location = "advocate_add.php";
-}
+    function editdata(id) {
+        eraseCookie("view_id");
+        createCookie("edit_id", id, 1);
+        window.location = "advocate_add.php";
+    }
 
-function viewdata(id) {
-    eraseCookie("edit_id");
-    createCookie("view_id", id, 1);
-    window.location = "advocate_add.php";
-}
+    function viewdata(id) {
+        eraseCookie("edit_id");
+        createCookie("view_id", id, 1);
+        window.location = "advocate_add.php";
+    }
 
-function deletedata(id) {
-    $('#deleteModal').modal('toggle');
-    $('#delete_id').val(id);
-    $('#delete_record').html(email);
-}
+    function deletedata(id) {
+        $('#deleteModal').modal('toggle');
+        $('#delete_id').val(id);
+        $('#delete_record').html(email);
+    }
 </script>
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
@@ -114,41 +107,41 @@ function deletedata(id) {
                         </thead>
                         <tbody>
                             <?php
-                            $stmt = $obj->con1->prepare("SELECT * FROM `advocate` ORDER BY `id` DESC");
+                            $stmt = $obj->con1->prepare("SELECT * FROM `staff` where `type` = 'admin' ORDER BY `id` DESC");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
                             while ($row = mysqli_fetch_array($Resp)) { ?>
-                            <tr>
+                                <tr>
 
-                                <th scope="row"><?php echo $i; ?></th>
-                                <td><?php echo $row["name"] ?></td>
+                                    <th scope="row"><?php echo $i; ?></th>
+                                    <td><?php echo $row["name"] ?></td>
 
-                                <td><?php echo $row["contact"] ?></td>
-                                <td><?php echo $row["email"] ?></td>
-                                <td>
-                                    <h4>
-                                        <span
-                                            class="badge rounded-pill bg-<?php echo ($row["status"] === "enable") ? 'success' : 'danger'; ?>">
-                                            <?php echo ucfirst($row["status"]); ?>
-                                        </span>
-                                    </h4>
-                                </td>
+                                    <td><?php echo $row["contact"] ?></td>
+                                    <td><?php echo $row["email"] ?></td>
+                                    <td>
+                                        <h4>
+                                            <span
+                                                class="badge rounded-pill bg-<?php echo ($row["status"] === "enable") ? 'success' : 'danger'; ?>">
+                                                <?php echo ucfirst($row["status"]); ?>
+                                            </span>
+                                        </h4>
+                                    </td>
 
 
-                                <td>
-                                    <a href="javascript:viewdata('<?php echo $row["id"]?>')"><i
-                                            class="bx bx-show-alt bx-sm me-2"></i> </a>
-                                    <a href="javascript:editdata('<?php echo$row["id"]?>')"><i
-                                            class="bx bx-edit-alt bx-sm me-2 text-success"></i> </a>
-                                    <a
-                                        href="javascript:deletedata('<?php echo $row["id"]?>','<?php echo $row["email"]?>');"><i
-                                            class="bx bx-trash bx-sm me-2 text-danger"></i> </a>
-                                </td>
-                            </tr>
-                            <?php $i++;
-                                                  }
-                                             ?>
+                                    <td>
+                                        <a href="javascript:viewdata('<?php echo $row["id"] ?>')"><i
+                                                class="bx bx-show-alt bx-sm me-2"></i> </a>
+                                        <a href="javascript:editdata('<?php echo $row["id"] ?>')"><i
+                                                class="bx bx-edit-alt bx-sm me-2 text-success"></i> </a>
+                                        <a
+                                            href="javascript:deletedata('<?php echo $row["id"] ?>','<?php echo $row["email"] ?>');"><i
+                                                class="bx bx-trash bx-sm me-2 text-danger"></i> </a>
+                                    </td>
+                                </tr>
+                                <?php $i++;
+                            }
+                            ?>
                         </tbody>
                     </table>
                 </div>

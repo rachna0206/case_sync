@@ -4,7 +4,7 @@ include "alert.php";;
 
 if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
     $Id = (isset($_COOKIE['edit_id'])) ? $_COOKIE['edit_id'] : $_COOKIE['view_id'];
-    $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.name,c3.case_type, a1.name FROM `case` c1, company c2,case_type c3, advocate a1 WHERE c1.company_id=c2.id and c1.case_type=c3.id and c1.handle_by = a1.id and c1.id=?");
+    $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.name,c3.case_type, a1.name FROM `case` c1, company c2,case_type c3, staff a1 WHERE c1.company_id=c2.id and c1.case_type=c3.id and c1.handle_by = a1.id and c1.id=?");
     $stmt->bind_param('i', $Id);
     $stmt->execute();
     $data = $stmt->get_result()->fetch_assoc();
@@ -51,7 +51,7 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
                             <?php
                             $id = $_COOKIE["view_id"];
                             $intern_id = $_SESSION['intern_id'];
-                            $stmt = $obj->con1->prepare("SELECT `case_hist`.*, task.instruction, DATE_FORMAT(`case_hist`.dos, '%d-%m-%Y') AS fdos, DATE_FORMAT(`case_hist`.date_time, '%d-%m-%Y') AS fdt, interns.name AS intern_name, stage.stage AS stage_name, `case`.case_no, advocate.name AS advocate_name FROM `case_hist` INNER JOIN `task` ON task.id = `case_hist`.task_id INNER JOIN `case` ON `case`.id = task.case_id INNER JOIN `stage` ON `case_hist`.stage = stage.id INNER JOIN `interns` ON task.alloted_to = interns.id INNER JOIN advocate ON advocate.id = task.alloted_by WHERE task.case_id=? ORDER BY `case_hist`.id DESC;");
+                            $stmt = $obj->con1->prepare("SELECT `case_hist`.*, task.instruction, DATE_FORMAT(`case_hist`.dos, '%d-%m-%Y') AS fdos, DATE_FORMAT(`case_hist`.date_time, '%d-%m-%Y') AS fdt, interns.name AS intern_name, stage.stage AS stage_name, `case`.case_no, advocate.name AS advocate_name FROM `case_hist` INNER JOIN `task` ON task.id = `case_hist`.task_id INNER JOIN `case` ON `case`.id = task.case_id INNER JOIN `stage` ON `case_hist`.stage = stage.id INNER JOIN staff as interns ON task.alloted_to = interns.id INNER JOIN staff as advocate ON advocate.id = task.alloted_by WHERE task.case_id=? ORDER BY `case_hist`.id DESC;");
                             $stmt->bind_param("i", $Id);
 
                             $stmt->execute();

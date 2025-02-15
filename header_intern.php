@@ -3,6 +3,7 @@ ob_start();
 include "db_connect.php";
 $obj = new DB_Connect();
 date_default_timezone_set('Asia/Kolkata');
+$path = "";
 
 session_start();
 
@@ -80,7 +81,7 @@ if (!isset($_SESSION["intern_userlogin"])) {
       createCookie(name, "", -1);
     }
 
-    $(document).ready(function() {
+    $(document).ready(function () {
       get_notification();
     });
 
@@ -180,8 +181,8 @@ if (!isset($_SESSION["intern_userlogin"])) {
 
     <div class="d-flex align-items-center justify-content-between">
       <a href="index_intern.php" class="logo d-flex align-items-center">
-       <!-- logo --> 
-      <img src="assets/img/" alt="">   
+        <!-- logo -->
+        <img src="assets/img/" alt="">
         <span class="d-none d-lg-block">CaseSync</span>
       </a>
       <i class="bi bi-list toggle-sidebar-btn"></i>
@@ -201,19 +202,19 @@ if (!isset($_SESSION["intern_userlogin"])) {
 
         <li class="nav-item dropdown">
 
-<a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
-  <i class="bi bi-bell"></i>
-  <span class="badge bg-primary badge-number" id="noti_count"></span>
-</a><!-- End Notification Icon -->
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-bell"></i>
+            <span class="badge bg-primary badge-number" id="noti_count"></span>
+          </a><!-- End Notification Icon -->
 
-<ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
- 
-  <div id="noti_list">
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
 
-  </div>
-</ul><!-- End Notification Dropdown Items -->
+            <div id="noti_list">
 
-</li><!-- End Notification Nav -->
+            </div>
+          </ul><!-- End Notification Dropdown Items -->
+
+        </li><!-- End Notification Nav -->
 
 
         <li class="nav-item dropdown pe-3">
@@ -224,7 +225,7 @@ if (!isset($_SESSION["intern_userlogin"])) {
           </a><!-- End Profile Iamge Icon -->
 
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
-          <li>
+            <li>
               <a class="dropdown-item d-flex align-items-center" href="change_password.php">
                 <i class="bi bi-key"></i>
                 <span>Change Password</span>
@@ -251,7 +252,7 @@ if (!isset($_SESSION["intern_userlogin"])) {
     <ul class="sidebar-nav" id="sidebar-nav">
 
 
-      
+
 
       <!-- Forms And Application -->
       <li class="nav-item">
@@ -266,10 +267,10 @@ if (!isset($_SESSION["intern_userlogin"])) {
           <span>Case History</span>
         </a>
       </li>
-      
+
     </ul>
 
   </aside><!-- End Sidebar-->
 
   <main id="main" class="main min-vh-100">
-  <div id="sound"></div>
+    <div id="sound"></div>

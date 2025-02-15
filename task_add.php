@@ -15,7 +15,6 @@ if (isset($_REQUEST["save"])) {
     $cid = $_REQUEST['case_number_id'];
     $ato = $_REQUEST['alloted_to'];
     $instruction =  $_REQUEST['instruction'];
-    $action_by = "advocate";
     $adate = $_REQUEST['alloted_date'];
     $edate = $_REQUEST['exp_end_date'];
     $status = $_REQUEST['radio'];
@@ -30,9 +29,9 @@ if (isset($_REQUEST["save"])) {
     $noti_msg = "New task has been assigned";
 
     try {
-        // echo "INSERT INTO `task`(`case_id`, `alloted_to`,`instruction` , `alloted_by` ,`action_by`,`alloted_date`,`expected_end_date`, `status`) VALUES ($cid, $ato, $instruction, $sessionID, $action_by, $adate, $edate, $status)";
-        $stmt = $obj->con1->prepare("INSERT INTO `task`(`case_id`, `alloted_to`,`instruction` , `alloted_by` ,`action_by`,`alloted_date`,`expected_end_date`, `status`) VALUES (?,?,?,?,?,?,?,?)");
-        $stmt->bind_param("ississss", $cid, $ato, $instruction, $sessionID, $action_by, $adate, $edate, $status);
+        echo "INSERT INTO `task`(`case_id`, `alloted_to`,`instruction` , `alloted_by` ,`alloted_date`,`expected_end_date`, `status`) VALUES ($cid, $ato, $instruction, $sessionID, $adate, $edate, $status)";
+        $stmt = $obj->con1->prepare("INSERT INTO `task`(`case_id`, `alloted_to`,`instruction` , `alloted_by` ,`alloted_date`,`expected_end_date`, `status`) VALUES (?,?,?,?,?,?,?)");
+        $stmt->bind_param("sssssss", $cid, $ato, $instruction, $sessionID, $adate, $edate, $status);
         $Resp = $stmt->execute();
         $last_id=mysqli_insert_id($obj->con1);
         if (!$Resp) {
@@ -49,9 +48,9 @@ if (isset($_REQUEST["save"])) {
 
      
          //add notification
-         $stmt_noti = $obj->con1->prepare("INSERT INTO `notification` (`task_id`, `type`, `sender_id`,`receiver_id`, `msg`, `sender_type`,`receiver_type`, `status`, `playstatus`) VALUES (?, ?, ?, ?, ?, ?, ?,?,?)");
+         $stmt_noti = $obj->con1->prepare("INSERT INTO `notification` (`task_id`, `type`, `sender_id`,`receiver_id`, `msg`,  `status`, `playstatus`) VALUES (?, ?, ?, ?, ?,?,?)");
 
-         $stmt_noti->bind_param("isiisssii", $last_id, $noti_type, $sessionID,$ato, $noti_msg, $sender_type,$receiver_type, $noti_status, $play_status);
+         $stmt_noti->bind_param("isiisii", $last_id, $noti_type, $sessionID,$ato, $noti_msg, $noti_status, $play_status);
          $Resp_noti = $stmt_noti->execute();
          $stmt_noti->close();
 
@@ -101,10 +100,11 @@ if (isset($_REQUEST["btn_intern"])) {
     $password = $_REQUEST['password'];
     $date = $_REQUEST['date'];
     $status = 'enable';
+    $type = "intern";
     try {
         // echo "INSERT INTO `city`(`name`, `status`) VALUES (". $city_name.", ".$status.")";
-        $stmt = $obj->con1->prepare("INSERT INTO `interns`(`name`,`contact`,`email`,`password`, `date_time`,`status`) VALUES (?,?,?,?,?,?)");
-        $stmt->bind_param("ssssss", $int_name,  $contact_no, $email, $password, $date, $status);
+        $stmt = $obj->con1->prepare("INSERT INTO `staff`(`name`,`contact`,`email`,`password`, `date_time`,`status`,`type`) VALUES (?,?,?,?,?,?,?)");
+        $stmt->bind_param("sssssss", $int_name,  $contact_no, $email, $password, $date, $status,$type);
         $Resp = $stmt->execute();
         if (!$Resp) {
             throw new Exception(
@@ -289,7 +289,7 @@ if (isset($_REQUEST["update"])) {
                                 <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
                                 <option value="">Select Intern</option>
                                 <?php
-                                $task = "SELECT * FROM `interns`";
+                                $task = "SELECT * FROM `staff` where type='intern'";
                                 $result = $obj->select($task);
                                 $selectedCaseId = isset($data['alloted_to']) ? $data['alloted_to'] : '';
 
@@ -394,7 +394,6 @@ if (isset($_REQUEST["update"])) {
     }
 
     function filterTask() {
-
         var case_type_id = document.getElementById("case_type").value;
         var city_id = document.getElementById("city").value;
 

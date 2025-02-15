@@ -3,5 +3,5 @@
 define('DB_USERNAME', 'root');
 define('DB_PASSWORD', '');
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'pragmanx_case_sync');
+define('DB_NAME', 'pragmanx_case_sync_new');
 ?>

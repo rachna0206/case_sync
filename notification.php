@@ -9,10 +9,15 @@ if ($_REQUEST["action"] == "get_notification") {
    
     $html = '';
     $ids = "";
+<<<<<<< Updated upstream
     if ($_SESSION["user_type"] == "advocate") {
         $noti_qry = "SELECT n1.*,a1.name FROM `notification` n1,advocate a1 where n1.sender_id=a1.id and n1.status='1' and  n1.receiver_type='advocate'  order by n1.id desc ";
+=======
+    if($_SESSION["user_type"] == "advocate") {
+        $noti_qry = "SELECT n1.*,a1.name FROM `notification` n1,staff a1 where n1.sender_id=a1.id and n1.status='1' order by n1.id desc;";
+>>>>>>> Stashed changes
     } else {
-        $noti_qry = "SELECT n1.*,i1.name FROM `notification` n1,interns i1 where n1.sender_id=i1.id and n1.status='1' and n1.receiver_type='intern'   and n1.receiver_id='".$_SESSION["intern_id"]."' order by n1.id desc ";
+        $noti_qry = "SELECT n1.*,i1.name FROM `notification` n1,staff i1 where n1.sender_id=i1.id and n1.status='1' and n1.receiver_id='" . $_SESSION["intern_id"] . "' order by n1.id desc; ";
     }
     
 //echo $noti_qry;
@@ -84,9 +89,9 @@ if ($_REQUEST["action"] == "get_notification") {
 if ($_REQUEST["action"] == "get_Playnotification") {
 
     if ($_SESSION["user_type"] == "advocate") {
-        $noti_qry = "SELECT * FROM `notification` where playstatus='1' and receiver_type='advocate' order by id desc ";
+        $noti_qry = "SELECT * FROM `notification` where playstatus='1' order by id desc ";
     } else {
-        $noti_qry = "SELECT * FROM `notification` where playstatus='1' and receiver_type='intern' and receiver_id='".$_SESSION["id"]."' order by id desc ";
+        $noti_qry = "SELECT * FROM `notification` where playstatus='1' and receiver_id='".$_SESSION["id"]."' order by id desc ";
     }
     // echo $noti_qry;
     $res_noti = $obj->select($noti_qry);

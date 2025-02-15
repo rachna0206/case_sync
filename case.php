@@ -14,8 +14,8 @@ if (isset($_REQUEST["btndelete"])) {
         $Resp_subimg = $stmt_subimg->get_result()->fetch_assoc();
         $stmt_subimg->close();
 
-        if (file_exists("documents/case" . $Resp_subimg["docs"])) {
-            unlink("documents/case" . $Resp_subimg["docs"]);
+        if (file_exists("documents/case/" . $Resp_subimg["docs"])) {
+            unlink("documents/case/" . $Resp_subimg["docs"]);
         }
 
         $stmt_del = $obj->con1->prepare("DELETE FROM `case` WHERE id=?");
@@ -134,6 +134,7 @@ function normalizeDate($date)
 ?>
 
 <script type="text/javascript">
+
     function add_data() {
         eraseCookie("edit_id");
         eraseCookie("view_id");
@@ -183,8 +184,7 @@ function normalizeDate($date)
                 <div class="modal-body">
                     <div class="col-md-12 mb-3">
                         <label for="handle_by" class="form-label">Handled By</label>
-                        <select class="form-select" id="handle_by" name="handle_by"
-                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                        <select class="form-select" id="handle_by" name="handle_by" <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
                             <option value="">Select an Advocate</option>
                             <?php
                             $comp = "SELECT * FROM `advocate` where status='Enable'";
@@ -317,11 +317,9 @@ function normalizeDate($date)
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 15px;">
                         <!-- Add button -->
-                        <a href="javascript:add_data()">
-                            <button type="button" class="btn btn-success mt-4" style="margin-right: 15px;">
+                            <button type="button" class="btn btn-success mt-4" style="margin-right: 15px;" onclick="javascript : add_data()" >
                                 <i class="bi bi-plus me-1"></i> Add
                             </button>
-                        </a>
                         <div>
                             <a class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#excelModal"
                                 style="margin-right: 15px; color: #fff;">
@@ -350,7 +348,7 @@ function normalizeDate($date)
                     </thead>
                     <tbody>
                         <?php
-                        $stmt = $obj->con1->prepare("SELECT c1.*,c1.id AS case_id,c2.name AS company_name,c3.case_type AS case_type_name, c4.name AS court_name, c5.name AS city_name, a1.name AS advocate_name,DATE_FORMAT(`c1`.next_date, '%d-%m-%Y') AS nxt_date FROM `case` c1 LEFT JOIN company c2 ON c1.company_id = c2.id LEFT JOIN case_type c3 ON c1.case_type = c3.id LEFT JOIN court c4 ON c1.court_name = c4.id LEFT JOIN city c5 ON c1.city_id = c5.id LEFT JOIN advocate a1 ON c1.handle_by = a1.id ORDER BY c1.id DESC");
+                        $stmt = $obj->con1->prepare("SELECT c1.*,c1.id AS case_id,c2.name AS company_name,c3.case_type AS case_type_name, c4.name AS court_name, c5.name AS city_name, a1.name AS advocate_name,DATE_FORMAT(`c1`.next_date, '%d-%m-%Y') AS nxt_date FROM `case` c1 LEFT JOIN company c2 ON c1.company_id = c2.id LEFT JOIN case_type c3 ON c1.case_type = c3.id LEFT JOIN court c4 ON c1.court_name = c4.id LEFT JOIN city c5 ON c1.city_id = c5.id LEFT JOIN staff a1 ON c1.handle_by = a1.id ORDER BY c1.id DESC;");
                         $stmt->execute();
                         $Resp = $stmt->get_result();
                         $i = 1;

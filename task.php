@@ -1,73 +1,54 @@
-<?php 
- include "header.php";
- include "alert.php";
+<?php
+include "header.php";
+include "alert.php";
 
-if(isset($_REQUEST["btndelete"]))
-{
-  $id = $_REQUEST['delete_id'];
-  try
-  {
-    $stmt_del = $obj->con1->prepare("DELETE FROM `task` WHERE id = ?");
-    $stmt_del->bind_param("i", $id);
-    $Resp = $stmt_del->execute();
-    if(!$Resp)
-    {
-      throw new Exception("Problem in deleting! " . strtok($obj->con1->error,  '('));
+if (isset($_REQUEST["btndelete"])) {
+    $id = $_REQUEST['delete_id'];
+    try {
+        $stmt_del = $obj->con1->prepare("DELETE FROM `task` WHERE id = ?");
+        $stmt_del->bind_param("i", $id);
+        $Resp = $stmt_del->execute();
+        if (!$Resp) {
+            throw new Exception("Problem in deleting! " . strtok($obj->con1->error, '('));
+        }
+        $stmt_del->close();
+    } catch (\Exception $e) {
+        setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
     }
-    $stmt_del->close();
-  }
-  catch(\Exception  $e) {
-    setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
-  }
 
-  if($Resp)
-  {
-    setcookie("msg", "data_del", time() + 3600, "/");
-    header("location:task.php");
-  }
-  else
-  {
-    setcookie("msg", "fail", time() + 3600, "/");
-    header("location:task.php");
-  }
-}
-if(isset($_COOKIE["filter_task_date"]) && $_COOKIE["filter_task_date"]!="")
-{
-    $stmt = $obj->con1->prepare("SELECT t.*,c.case_no,date_format(t.alloted_date,'%d-%m-%Y') as adt,CASE WHEN t.action_by = 'intern' THEN i.name WHEN t.action_by = 'advocate' THEN a.name ELSE 'Unknown' END AS alloted_by_name, it.name AS alloted_to_name FROM  task t LEFT JOIN  interns i ON t.alloted_by = i.id AND t.action_by = 'intern' LEFT JOIN  advocate a ON t.alloted_by = a.id AND t.action_by = 'advocate' LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN 
-    interns it ON t.alloted_to = it.id   WHERE t.alloted_date = ? ORDER BY t.id DESC");
-    $stmt->bind_param("s", $_COOKIE["filter_task_date"]);
-    setcookie("filter_task_date", "", time() - 3600, "/");
-}
-else
-{
-    $stmt = $obj->con1->prepare("SELECT t.*,c.case_no,date_format(t.alloted_date,'%d-%m-%Y') as adt,CASE WHEN t.action_by = 'intern' THEN i.name WHEN t.action_by = 'advocate' THEN a.name ELSE 'Unknown' END AS alloted_by_name, it.name AS alloted_to_name FROM  task t LEFT JOIN  interns i ON t.alloted_by = i.id AND t.action_by = 'intern' LEFT JOIN  advocate a ON t.alloted_by = a.id AND t.action_by = 'advocate' LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN 
-    interns it ON t.alloted_to = it.id  ORDER BY t.id DESC");
+    if ($Resp) {
+        setcookie("msg", "data_del", time() + 3600, "/");
+        header("location:task.php");
+    } else {
+        setcookie("msg", "fail", time() + 3600, "/");
+        header("location:task.php");
+    }
 }
 ?>
 <script type="text/javascript">
-function add_data() {
-    eraseCookie("edit_id");
-    eraseCookie("view_id");
-    window.location = "task_add.php";
-}
+    function add_data() {
+        eraseCookie("edit_id");
+        eraseCookie("view_id");
+        window.location = "task_add.php";
+    }
 
-function editdata(id) {
-    eraseCookie("view_id");
-    createCookie("edit_id", id, 1);
-    window.location = "task_add.php";
-}
+    function editdata(id) {
+        eraseCookie("view_id");
+        createCookie("edit_id", id, 1);
+        window.location = "task_add.php";
+    }
 
-function viewdata(id) {
-    eraseCookie("edit_id");
-    createCookie("view_id", id, 1);
-    window.location = "task_add.php";
-}
+    function viewdata(id) {
+        eraseCookie("edit_id");
+        createCookie("view_id", id, 1);
+        window.location = "task_add.php";
+    }
 
-function deletedata(id) {
-    $('#deleteModal').modal('toggle');
-    $('#delete_id').val(id);
-    
-}
+    function deletedata(id) {
+        $('#deleteModal').modal('toggle');
+        $('#delete_id').val(id);
+
+    }
 </script>
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
@@ -106,20 +87,21 @@ function deletedata(id) {
     <div class="row">
         <div class="col-lg-12">
 
-            
+
 
             <div class="card">
                 <div class="card-body">
                     <div class="card-title row">
                         <div class="col-md-3">
-                        <a href="javascript:add_data()"><button type="button" class="btn btn-success"><i
-                                    class="bi bi-plus me-1"></i> Add</button></a>
-                                    </div>
-                                    <div class="col-md-3">   
-                               <label for="title" class="col-form-label">Date</label>
-                                <input type="date" name="dtxt" id="dtxt" onchange="get_data(this.value)" value="<?php echo isset($_COOKIE["filter_task_date"])?$_COOKIE["filter_task_date"]:""?>">
-                                </div>
-                            
+                            <button type="button" class="btn btn-success" onclick="javascript:add_data()"><i
+                                        class="bi bi-plus me-1"></i> Add</button>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="title" class="col-form-label">Date</label>
+                            <input type="date" name="dtxt" id="dtxt" onchange="get_data(this.value)"
+                                value="<?php echo isset($_COOKIE["filter_task_date"]) ? $_COOKIE["filter_task_date"] : "" ?>">
+                        </div>
+
                     </div>
                     <table class="table datatable">
                         <thead>
@@ -136,45 +118,52 @@ function deletedata(id) {
                         </thead>
                         <tbody>
                             <?php
-   
+
+                            if (isset($_COOKIE["filter_task_date"]) && $_COOKIE["filter_task_date"] != "") {
+                                $stmt = $obj->con1->prepare("SELECT t.*, c.case_no, date_format(t.alloted_date, '%d-%m-%Y') as adt, s.name AS alloted_by_name, it.name AS alloted_to_name FROM task t LEFT JOIN staff s ON t.alloted_by = s.id LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN staff it ON t.alloted_to = it.id WHERE t.alloted_date = ? ORDER BY t.id DESC;");
+                                $stmt->bind_param("s", $_COOKIE["filter_task_date"]);
+                                setcookie("filter_task_date", "", time() - 3600, "/");
+                            } else {
+                                $stmt = $obj->con1->prepare("SELECT t.*, c.case_no, date_format(t.alloted_date, '%d-%m-%Y') as adt, s.name AS alloted_by_name, it.name AS alloted_to_name FROM task t LEFT JOIN staff s ON t.alloted_by = s.id LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN staff it ON t.alloted_to = it.id ORDER BY t.id DESC;");
+                            }
                             $stmt->execute();
-                                $Resp = $stmt->get_result();
-                            $i = 1;   
+                            $Resp = $stmt->get_result();
+                            $i = 1;
 
                             while ($row = mysqli_fetch_array($Resp)) { ?>
-                            <tr>
+                                <tr>
 
-                                <th scope="row"><?php echo $i; ?></th>
-                                <td scope="row"><?php echo $row["case_no"] ?></td>
-                                <td scope="row"><?php echo $row["alloted_by_name"] ?></td>
-                                <td scope="row"><?php echo $row["alloted_to_name"] ?></td>
-                                <td scope="row"><?php echo $row["adt"] ?></td>
-                                <td scope="row"><?php echo $row["expected_end_date"] ?></td>
-                                <td>
-                                    <h4>
-                                        <span class="badge rounded-pill bg-<?php 
-                                echo ($row['status'] == 'pending') ? 'warning' : 
-                                    (($row['status'] == 'completed') ? 'success' :     
-                                    (($row['status'] == 'allotted') ? 'primary' : 
-                                    (($row['status'] == 'reassign') ? 'info' : 'danger'))); 
-                            ?>">
-                                            <?php echo ucfirst(str_replace("_","-",$row["status"])); ?>
-                                        </span>
-                                    </h4>
-                                </td>
+                                    <th scope="row"><?php echo $i; ?></th>
+                                    <td scope="row"><?php echo $row["case_no"] ?></td>
+                                    <td scope="row"><?php echo $row["alloted_by_name"] ?></td>
+                                    <td scope="row"><?php echo $row["alloted_to_name"] ?></td>
+                                    <td scope="row"><?php echo $row["adt"] ?></td>
+                                    <td scope="row"><?php echo $row["expected_end_date"] ?></td>
+                                    <td>
+                                        <h4>
+                                            <span class="badge rounded-pill bg-<?php
+                                            echo ($row['status'] == 'pending') ? 'warning' :
+                                                (($row['status'] == 'completed') ? 'success' :
+                                                    (($row['status'] == 'allotted') ? 'primary' :
+                                                        (($row['status'] == 'reassign') ? 'info' : 'danger')));
+                                            ?>">
+                                                <?php echo ucfirst(str_replace("_", "-", $row["status"])); ?>
+                                            </span>
+                                        </h4>
+                                    </td>
 
 
 
-                                <td>
-                                    <a href="javascript:viewdata('<?php echo $row["id"]?>')"><i
-                                            class="bx bx-show-alt bx-sm me-2"></i> </a>
-                                    <a href="javascript:editdata('<?php echo $row["id"]?>')"><i
-                                            class="bx bx-edit-alt bx-sm me-2 text-success"></i> </a>
-                                    <a href="javascript:deletedata('<?php echo $row["id"]?>');"><i
-                                            class="bx bx-trash bx-sm me-2 text-danger"></i> </a>
-                                </td>
-                            </tr>
-                            <?php 
+                                    <td>
+                                        <a href="javascript:viewdata('<?php echo $row["id"] ?>')"><i
+                                                class="bx bx-show-alt bx-sm me-2"></i> </a>
+                                        <a href="javascript:editdata('<?php echo $row["id"] ?>')"><i
+                                                class="bx bx-edit-alt bx-sm me-2 text-success"></i> </a>
+                                        <a href="javascript:deletedata('<?php echo $row["id"] ?>');"><i
+                                                class="bx bx-trash bx-sm me-2 text-danger"></i> </a>
+                                    </td>
+                                </tr>
+                                <?php
                                 $i++;
                             }
                             ?>
@@ -187,11 +176,10 @@ function deletedata(id) {
 </section>
 <script type="text/javascript">
 
-    function get_data(date)
-    {
-        console.log("date="+date);  
-        createCookie("filter_task_date",date,1);
-        window.location=window.location.href;
+    function get_data(date) {
+        console.log("date=" + date);
+        createCookie("filter_task_date", date, 1);
+        window.location = window.location.href;
     }
 </script>
 

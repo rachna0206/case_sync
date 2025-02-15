@@ -12,7 +12,7 @@ class DB_Connect
     // Connecting to database
     public function connect()
     {
-        ($con = mysqli_connect("localhost", "root", "", "pragmanx_case_sync")) or
+        ($con = mysqli_connect("localhost", "root", "", "pragmanx_case_sync_new")) or
             die("Connection Failed...!");
 
         if (!$con) {

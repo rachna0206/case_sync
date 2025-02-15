@@ -67,10 +67,9 @@ if (isset($_REQUEST["save"])) {
                 // Move uploaded file
                 move_uploaded_file($SubImageTemp, "documents/case/" . $SubImageName);
                 $added_by=$_SESSION["intern_id"];
-                $user_type="intern";
                 
-                $stmt_image = $obj->con1->prepare("INSERT INTO `multiple_doc`(`c_id`, `docs`,`added_by`,`user_type`) VALUES (?, ?,?,?)");
-                $stmt_image->bind_param("isis", $Resp_case["id"], $SubImageName,$added_by,$user_type);
+                $stmt_image = $obj->con1->prepare("INSERT INTO `multiple_doc`(`c_id`, `docs`,`added_by`) VALUES (?, ?,?)");
+                $stmt_image->bind_param("isis", $Resp_case["id"], $SubImageName,$added_by);
                 $Resp_img = $stmt_image->execute();
                 $stmt_image->close();
 
@@ -114,9 +113,9 @@ if (isset($_REQUEST["save"])) {
 
        // echo "INSERT INTO `notification` (`task_id`, `type`, `sender_id`,`receiver_id`, `msg`, `sender_type`,`receiver_type`, `status`, `playstatus`) VALUES ('$tid','$noti_type', '".$_SESSION["intern_id"]."','".$Resp_task["alloted_by"]."', '$noti_msg', '$sender_type','$receiver_type', '$noti_status', '$play_status')";
 
-        $stmt_noti = $obj->con1->prepare("INSERT INTO `notification` (`task_id`, `type`, `sender_id`,`receiver_id`, `msg`, `sender_type`,`receiver_type`, `status`, `playstatus`) VALUES (?, ?, ?, ?, ?, ?, ?,?, ?)");
+        $stmt_noti = $obj->con1->prepare("INSERT INTO `notification` (`task_id`, `type`, `sender_id`,`receiver_id`, `msg`,  `status`, `playstatus`) VALUES (?, ?, ?, ?, ?, ?,  ?)");
 
-        $stmt_noti->bind_param("isiisssii", $tid,$noti_type, $_SESSION["intern_id"],$Resp_task["alloted_by"], $noti_msg, $sender_type,$receiver_type, $noti_status, $play_status);
+        $stmt_noti->bind_param("isiisii", $tid,$noti_type, $_SESSION["intern_id"],$Resp_task["alloted_by"], $noti_msg,  $noti_status, $play_status);
         $Resp_noti = $stmt_noti->execute();
         $stmt_noti->close();
         }

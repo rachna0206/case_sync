@@ -112,10 +112,10 @@ if (isset($_REQUEST['action'])) {
         $password = $_REQUEST['password'];
         $date = $_REQUEST['date'];
         $status = 'enable';
+        $type = 'intern';
 
-
-        $stmt = $obj->con1->prepare("INSERT INTO `interns`(`name`,`contact`,`email`,`password`, `date_time`,`status`) VALUES (?,?,?,?,?,?)");
-        $stmt->bind_param("ssssss", $int_name,  $contact, $email, $password, $date, $status);
+        $stmt = $obj->con1->prepare("INSERT INTO `staff`(`name`,`contact`,`email`,`password`,`type`, `date/time`,`status`) VALUES (?,?,?,?,?,?,?)");
+        $stmt->bind_param("sssssss", $int_name, $contact, $email, $password, $type, $date, $status);
         $Resp = $stmt->execute();
         $last_id = mysqli_insert_id($obj->con1);
         $stmt->close();
@@ -165,9 +165,9 @@ if (isset($_REQUEST['action'])) {
         $adv_email = $_REQUEST['adv_email'];
         $adv_password = $_REQUEST['adv_password'];
         $status = 'enable';
+        $type = "admin";
 
-
-        $stmt = $obj->con1->prepare("INSERT INTO `advocate`(`name`,`contact`,`email`,`password`,`status`) VALUES (?,?,?,?,?)");
+        $stmt = $obj->con1->prepare("INSERT INTO `staff`(`name`,`contact`,`email`,`password`,`status`,`type`) VALUES (?,?,?,?,?,?)");
         $stmt->bind_param("sssss", $adv_name, $adv_contact, $adv_email, $adv_password, $status);
         $Resp = $stmt->execute();
         $last_id = mysqli_insert_id($obj->con1);
@@ -203,7 +203,7 @@ if (isset($_REQUEST['action'])) {
         $case_type_id = $_REQUEST["case_type_id"];
         $city_id = $_REQUEST["city_id"];
 
-        $stmt = $obj->con1->prepare("SELECT c1.id, c1.case_no, a1.name FROM `case` c1, `advocate` a1 WHERE c1.handle_by = a1.id AND `case_type` = ? AND `city_id` = ?");
+        $stmt = $obj->con1->prepare("SELECT c1.id, c1.case_no, a1.name FROM `case` c1, `staff` a1 WHERE c1.handle_by = a1.id AND `case_type` = ? AND `city_id` = ?");
         $stmt->bind_param("ii", $case_type_id, $city_id);
         $stmt->execute();
         $Resp = $stmt->get_result();
