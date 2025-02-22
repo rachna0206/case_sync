@@ -340,21 +340,23 @@ $app->post('/stage_list', function () use ($app) {
 });
 
 
-$app->post('/next_stage', function () use ($app) {
+$app->post('/proceed_case_add', function () use ($app) {
 
     verifyRequiredParams(array('data'));
     $data_json = json_decode($app->request->post('data'));
     $case_id = $data_json->case_id;
     $next_stage = $data_json->next_stage;
     $next_date = $data_json->next_date;
+    $inserted_by = $data_json->inserted_by;
+    $remark = $data_json->remark;
 
     $db = new DbOperation();
     $data = array();
     $data["data"] = array();
 
-    $result = $db->next_stage($case_id, $next_stage, $next_date);
+    $result = $db->proceed_case_add($case_id, $next_stage, $next_date, $remark, $inserted_by);
     if ($result) {
-        $data['message'] = "Stage updated successfully";
+        $data['message'] = "Proceeded case.";
         $data['success'] = true;
     } else {
         $data['message'] = "Error in updating stage and next date";
@@ -363,7 +365,84 @@ $app->post('/next_stage', function () use ($app) {
     echoResponse(200, $data);
 });
 
+$app->post('/proceed_case_edit', function () use ($app) {
 
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $proceed_id = $data_json->proceed_id;
+    $case_id = $data_json->case_id;
+    $next_stage = $data_json->next_stage;
+    $next_date = $data_json->next_date;
+    $remark = $data_json->remark;
+    $inserted_by = $data_json->inserted_by;
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->proceed_case_edit($case_id, $next_stage, $next_date, $remark, $inserted_by, $proceed_id);
+    if ($result) {
+        $data['message'] = "Proceeded case.";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "Error in updating stage and next date";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+});
+
+$app->post('/proceed_case_delete', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $proceed_id = $data_json->proceed_id;
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->proceed_case_delete($proceed_id);
+    if ($result) {
+        $data['message'] = "Proceeded case.";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "Error in updating stage and next date";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+});
+
+$app->post('/proceed_history', function () use ($app) {
+
+    verifyRequiredParams(array('case_id'));
+    $case_id = $app->request->post('case_id');
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->proceed_history($case_id);
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Proceeded case.";
+        $data['success'] = true;
+
+    } else {
+
+        $data['message'] = "Error in updating stage and next date";
+        $data['success'] = false;
+
+    }
+    echoResponse(200, $data);
+});
 $app->post('/get_task_history', function () use ($app) {
 
     verifyRequiredParams(array('task_id'));
@@ -478,33 +557,7 @@ $app->post('/add_task_remark', function () use ($app) {
 
 });
 
-$app->post('/get_task_info', function () use ($app) {
 
-    verifyRequiredParams(array('task_id'));
-    $task_id = $app->request->post('task_id');
-
-    $db = new DbOperation();
-    $data = array();
-
-    $result = $db->get_task_info($task_id);
-
-    if (mysqli_num_rows($result) > 0) {
-        $data["data"] = array();
-        while ($row = $result->fetch_assoc()) {
-            $temp = array();
-            foreach ($row as $key => $value) {
-                $temp[$key] = $value;
-            }
-            $temp = array_map('utf8_encode', $temp);
-            array_push($data['data'], $temp);
-        }
-    } else {
-        $data["message"] = "no data found";
-        $data["result"] = false;
-    }
-    echoResponse(200, $data);
-
-});
 $app->post('/get_case_counter', function () use ($app) {
 
     $db = new DbOperation();
@@ -867,134 +920,6 @@ $app->post('/add_case', function () use ($app) {
     }
     echoResponse(200, $data);
 });
-
-$app->post('/add_case', function () use ($app) {
-
-    verifyRequiredParams(array('data'));
-    $data_request = json_decode($app->request->post('data'));
-    $case_no = $data_request->case_no;
-    $year = $data_request->year;
-    $case_type = $data_request->case_type;
-    $handle_by = $data_request->handle_by;
-    $applicant = $data_request->applicant;
-    $company_id = $data_request->company_id;
-    $opp_name = $data_request->opp_name;
-    $court_name = $data_request->court_name;
-    $city_id = $data_request->city_id;
-    $sr_date = $data_request->sr_date;
-    $stage = $data_request->stage;
-    $added_by = $data_request->added_by;
-    $user_type = $data_request->user_type;
-    $complainant_advocate = $data_request->complainant_advocate;
-    $respondent_advocate = $data_request->respondent_advocate;
-    $date_of_filing = $data_request->date_of_filing;
-    $next_date = $data_request->next_date;
-    $ImageFileName1 = "";
-    if (isset($_FILES["case_image"]["name"])) {
-
-        $case_img = $_FILES["case_image"]["name"];
-        $case_img_path = $_FILES["case_image"]["tmp_name"];
-        $case_img = preg_replace('/[^A-Za-z0-9.\-]/', '_', $case_img);
-
-        if (file_exists("../../../documents/case/" . $case_img)) {
-            $i = 0;
-            $ImageFileName1 = $case_img;
-            $Arr1 = explode('.', $ImageFileName1);
-
-            $ImageFileName1 = $Arr1[0] . $i . "." . $Arr1[1];
-            while (file_exists("../../../documents/case/" . $ImageFileName1)) {
-                $i++;
-                $ImageFileName1 = $Arr1[0] . $i . "." . $Arr1[1];
-            }
-        } else {
-            $ImageFileName1 = $case_img;
-        }
-
-    }
-    $ImageFileName2 = null;
-
-    if (isset($_FILES["case_docs"]["name"])) {
-        for ($i = 0; $i < sizeof($_FILES["case_docs"]["name"]); $i++) {
-
-            $case_docs[$i] = $_FILES["case_docs"]["name"][$i];
-            $case_docs_path[$i] = $_FILES["case_docs"]["tmp_name"][$i];
-
-            $case_docs[$i] = preg_replace('/[^A-Za-z0-9.\-]/', '_', $case_docs[$i]);
-
-            if (file_exists("../../../documents/case/" . $case_docs[$i])) {
-                $i = 0;
-                $ImageFileName2[$i] = $case_img[$i];
-                $Arr1 = explode('.', $ImageFileName1);
-
-                $ImageFileName2[$i] = $Arr1[0] . $i . "." . $Arr1[1];
-                while (file_exists("../../../documents/case/" . $ImageFileName1)) {
-                    $i++;
-                    $ImageFileName2[$i] = $Arr1[0] . $i . "." . $Arr1[1];
-                }
-            } else {
-                $ImageFileName2[$i] = $case_docs[$i];
-            }
-        }
-    }
-
-
-    $db = new DbOperation();
-    $data = array();
-    $result = $db->add_case($case_no, $year, $company_id, $ImageFileName1, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $ImageFileName2, $added_by, $user_type, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date);
-    if ($result) {
-        if (isset($_FILES["case_image"]["name"])) {
-            move_uploaded_file($case_img_path, "../../../documents/case/" . $ImageFileName1);
-        }
-        if (isset($_FILES["case_docs"]["name"])) {
-            for ($i = 0; $i < sizeof($ImageFileName2); $i++) {
-                move_uploaded_file($case_docs_path[$i], "../../../documents/case/" . $ImageFileName2[$i]);
-            }
-        }
-        // for($i=0;$i<sizeof($))
-        $data["message"] = "Case added successfully";
-        $data["success"] = true;
-    } else {
-        $data["message"] = "Error in adding case , try again";
-        $data["success"] = false;
-    }
-    echoResponse(200, $data);
-});
-$app->post('/edit_case', function () use ($app) {
-
-    verifyRequiredParams(array('data'));
-    $data_request = json_decode($app->request->post('data'));
-    $case_id = $data_request->case_id;
-    $case_no = $data_request->case_no;
-    $year = $data_request->year;
-    $case_type = $data_request->case_type;
-    $handle_by = $data_request->handle_by;
-    $applicant = $data_request->applicant;
-    $company_id = $data_request->company_id;
-    $opp_name = $data_request->opp_name;
-    $court_name = $data_request->court_name;
-    $city_id = $data_request->city_id;
-    $sr_date = $data_request->sr_date;
-    $stage = $data_request->stage;
-    $added_by = $data_request->added_by;
-    $user_type = $data_request->user_type;
-    $complainant_advocate = $data_request->complainant_advocate;
-    $respondent_advocate = $data_request->respondent_advocate;
-    $date_of_filing = $data_request->date_of_filing;
-    $next_date = $data_request->next_date;
-
-    $db = new DbOperation();
-    $data = array();
-    $result = $db->edit_case($case_id, $case_no, $year, $company_id, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $added_by, $user_type, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date);
-    if ($result) {
-        // for($i=0;$i<sizeof($))
-        $data["message"] = "Case added successfully";
-        $data["success"] = true;
-    } else {
-        $data["message"] = "Error in adding case , try again";
-        $data["success"] = false;
-    }
-    echoResponse(200, $data);
-});
 $app->post('/edit_task', function () use ($app) {
 
     verifyRequiredParams(array('data'));
@@ -1032,11 +957,10 @@ $app->post('/add_task', function () use ($app) {
     $alloted_by = $data_json->alloted_by;
     $alloted_date = $data_json->alloted_date;
     $expected_end_date = $data_json->expected_end_date;
-    $status = $data_json->status;
     $remark = $data_json->remark;
 
     $db = new DbOperation();
-    $result = $db->add_task($case_id, $alloted_to, $instructions, $alloted_by, $alloted_date, $expected_end_date, $status, $remark);
+    $result = $db->add_task($case_id, $alloted_to, $instructions, $alloted_by, $alloted_date, $expected_end_date, $remark);
     $data = array();
     if ($result) {
         $data["response"] = "data added successfully.";
@@ -1047,6 +971,7 @@ $app->post('/add_task', function () use ($app) {
     }
     echoResponse(200, $data);
 });
+
 
 $app->post('/delete_task', function () use ($app) {
 
