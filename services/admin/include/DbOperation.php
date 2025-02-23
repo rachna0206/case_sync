@@ -527,7 +527,15 @@ where
         return $result && $Resp_img;
         // return $result;
     }
-
+    public function get_task_info($task_id)
+    {
+        $stmt = $this->con->prepare("SELECT t.*,c.case_no,i.name as alloted_to_name,CASE when t.action_by = 'interns' THEN it.name  when t.action_by = 'advocate' then ad.name end as alloted_by_name from `task` as t join `case` as c on t.case_id = c.id join interns as i on i.id = t.alloted_to join advocate as ad on ad.id = t.alloted_by join interns as it on it.id = t.alloted_by where t.id = ?;");
+        $stmt->bind_param('i', $task_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
     public function get_case_task($case_no)
     {
         $stmt = $this->con->prepare("SELECT t.id,t.case_id,t.alloted_to as alloted_to_id , t.instruction,t.alloted_by as alloted_by_id ,t.action_by,t.alloted_date,t.expected_end_date,t.status,t.reassign_status,t.remark, c.case_no as 'case_num',i.name as alloted_to,ad.name as alloted_by from task as t join `case` as c on c.id = t.case_id join interns as i on i.id = t.alloted_to join advocate as ad on ad.id = t.alloted_by where t.case_id = ? order by t.id desc");

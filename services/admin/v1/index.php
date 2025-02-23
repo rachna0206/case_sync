@@ -612,6 +612,34 @@ $app->post('/get_case_info', function () use ($app) {
     }
     echoResponse(200, $data);
 });
+
+$app->post('/get_task_info', function () use ($app) {
+
+    verifyRequiredParams(array('task_id'));
+    $task_id = $app->request->post('task_id');
+
+    $db = new DbOperation();
+    $data = array();
+
+    $result = $db->get_task_info($task_id);
+
+    if (mysqli_num_rows($result) > 0) {
+        $data["data"] = array();
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+    } else {
+        $data["message"] = "no data found";
+        $data["result"] = false;
+    }
+    echoResponse(200, $data);
+
+});
 $app->get('/get_company_list', function () use ($app) {
     $db = new DbOperation();
     $data = array();
