@@ -3,6 +3,7 @@ ob_start();
 include "db_connect.php";
 $obj = new DB_Connect();
 date_default_timezone_set('Asia/Kolkata');
+$path="";
  
 session_start();
 
