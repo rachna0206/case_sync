@@ -340,21 +340,23 @@ $app->post('/stage_list', function () use ($app) {
 });
 
 
-$app->post('/next_stage', function () use ($app) {
+$app->post('/proceed_case_add', function () use ($app) {
 
     verifyRequiredParams(array('data'));
     $data_json = json_decode($app->request->post('data'));
     $case_id = $data_json->case_id;
     $next_stage = $data_json->next_stage;
     $next_date = $data_json->next_date;
+    $inserted_by = $data_json->inserted_by;
+    $remark = $data_json->remark;
 
     $db = new DbOperation();
     $data = array();
     $data["data"] = array();
 
-    $result = $db->next_stage($case_id, $next_stage, $next_date);
+    $result = $db->proceed_case_add($case_id, $next_stage, $next_date, $remark, $inserted_by);
     if ($result) {
-        $data['message'] = "Stage updated successfully";
+        $data['message'] = "Proceeded case.";
         $data['success'] = true;
     } else {
         $data['message'] = "Error in updating stage and next date";
@@ -363,7 +365,84 @@ $app->post('/next_stage', function () use ($app) {
     echoResponse(200, $data);
 });
 
+$app->post('/proceed_case_edit', function () use ($app) {
 
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $proceed_id = $data_json->proceed_id;
+    $case_id = $data_json->case_id;
+    $next_stage = $data_json->next_stage;
+    $next_date = $data_json->next_date;
+    $remark = $data_json->remark;
+    $inserted_by = $data_json->inserted_by;
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->proceed_case_edit($case_id, $next_stage, $next_date, $remark, $inserted_by, $proceed_id);
+    if ($result) {
+        $data['message'] = "Proceeded case.";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "Error in updating stage and next date";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+});
+
+$app->post('/proceed_case_delete', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $proceed_id = $data_json->proceed_id;
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->proceed_case_delete($proceed_id);
+    if ($result) {
+        $data['message'] = "Proceeded case.";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "Error in updating stage and next date";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+});
+
+$app->post('/proceed_history', function () use ($app) {
+
+    verifyRequiredParams(array('case_id'));
+    $case_id = $app->request->post('case_id');
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->proceed_history($case_id);
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Proceeded case.";
+        $data['success'] = true;
+
+    } else {
+
+        $data['message'] = "Error in updating stage and next date";
+        $data['success'] = false;
+
+    }
+    echoResponse(200, $data);
+});
 $app->post('/get_task_history', function () use ($app) {
 
     verifyRequiredParams(array('task_id'));
@@ -478,33 +557,7 @@ $app->post('/add_task_remark', function () use ($app) {
 
 });
 
-$app->post('/get_task_info', function () use ($app) {
 
-    verifyRequiredParams(array('task_id'));
-    $task_id = $app->request->post('task_id');
-
-    $db = new DbOperation();
-    $data = array();
-
-    $result = $db->get_task_info($task_id);
-
-    if (mysqli_num_rows($result) > 0) {
-        $data["data"] = array();
-        while ($row = $result->fetch_assoc()) {
-            $temp = array();
-            foreach ($row as $key => $value) {
-                $temp[$key] = $value;
-            }
-            $temp = array_map('utf8_encode', $temp);
-            array_push($data['data'], $temp);
-        }
-    } else {
-        $data["message"] = "no data found";
-        $data["result"] = false;
-    }
-    echoResponse(200,$data);
-
-});
 $app->post('/get_case_counter', function () use ($app) {
 
     $db = new DbOperation();
@@ -558,6 +611,34 @@ $app->post('/get_case_info', function () use ($app) {
         $data["success"] = false;
     }
     echoResponse(200, $data);
+});
+
+$app->post('/get_task_info', function () use ($app) {
+
+    verifyRequiredParams(array('task_id'));
+    $task_id = $app->request->post('task_id');
+
+    $db = new DbOperation();
+    $data = array();
+
+    $result = $db->get_task_info($task_id);
+
+    if (mysqli_num_rows($result) > 0) {
+        $data["data"] = array();
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+    } else {
+        $data["message"] = "no data found";
+        $data["result"] = false;
+    }
+    echoResponse(200, $data);
+
 });
 $app->get('/get_company_list', function () use ($app) {
     $db = new DbOperation();
@@ -904,11 +985,10 @@ $app->post('/add_task', function () use ($app) {
     $alloted_by = $data_json->alloted_by;
     $alloted_date = $data_json->alloted_date;
     $expected_end_date = $data_json->expected_end_date;
-    $status = $data_json->status;
     $remark = $data_json->remark;
 
     $db = new DbOperation();
-    $result = $db->add_task($case_id, $alloted_to, $instructions, $alloted_by, $alloted_date, $expected_end_date, $status, $remark);
+    $result = $db->add_task($case_id, $alloted_to, $instructions, $alloted_by, $alloted_date, $expected_end_date, $remark);
     $data = array();
     if ($result) {
         $data["response"] = "data added successfully.";
