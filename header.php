@@ -284,6 +284,12 @@ if (!isset($_SESSION["userlogin_CS"])) {
           <span>Case Counter</span>
         </a>
       </li>
+       <li class="nav-item">
+        <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "todays_case.php" ? "active" : "" ?>" href="todays_case.php">
+          <i class="bi bi-alarm"></i>
+          <span>Today's Cases</span>
+        </a>
+      </li>
           
 
         </ul>

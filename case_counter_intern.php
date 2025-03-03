@@ -1,5 +1,5 @@
 <?php 
- include "header.php";
+ include "header_intern.php";
  include "alert.php";
 
  if(isset($_REQUEST["btndelete"]))
@@ -124,7 +124,7 @@ FROM `case`
 INNER JOIN `court` ON `case`.court_name = court.id  
 INNER JOIN `city` ON case.city_id = city.id 
 WHERE sr_date IS NOT NULL AND sr_date <> '0000-00-00' 
-ORDER BY `case`.id DESC;");
+ORDER BY `case`.id DESC");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
@@ -140,8 +140,7 @@ ORDER BY `case`.id DESC;");
                                 <td ><?php echo 45 - $row["days_difference"] ?></td>
             
                                 <td>
-                                    <a href="javascript:viewdata('<?php echo $row["case_id"]?>')"><i
-                                            class="bx bx-show-alt bx-sm me-2"></i> </a>
+                                 
                                 </td>
                             </tr>
                             <?php $i++;

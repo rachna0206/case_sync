@@ -76,7 +76,7 @@ function deletedata(id) {
                         <tbody>
                         <?php
                             // $stmt = $obj->con1->prepare("SELECT *, company.name as company_name, case_type.case_type as case_type_name, court.name as cname, city.name as city_name, task.id as task_id FROM `case` inner join `company` on case.company_id = company.id inner join `case_type` on case.case_type = case_type.id inner join `court` on court.id = case.court_name inner join `city` on city.id = case.city_id inner join `task` on task.case_id = case.id ORDER BY case.id DESC");
-                            $stmt = $obj->con1->prepare("SELECT `case`.*, date_format(case.sr_date,'%d-%m-%Y') as smndt , case.id as case_id, company.name as company_name, case_type.case_type as case_type_name, court.name as cname, city.name as city_name FROM `case` inner join `company` on case.company_id = company.id inner join `case_type` on case.case_type = case_type.id inner join `court` on court.id = case.court_name inner join `city` on city.id = case.city_id inner join `task` on task.case_id = case.id ORDER BY case.id DESC");
+                            $stmt = $obj->con1->prepare("SELECT `case`.*, DATE_FORMAT(`case`.sr_date, '%d-%m-%Y') AS smndt, `case`.id AS case_id, company.name AS company_name, case_type.case_type AS case_type_name, court.name AS cname, city.name AS city_name FROM `case` INNER JOIN `company` ON `case`.company_id = company.id INNER JOIN `case_type` ON `case`.case_type = case_type.id INNER JOIN `court` ON court.id = `case`.court_name INNER JOIN `city` ON city.id = `case`.city_id ORDER BY `case`.id DESC");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
