@@ -878,6 +878,7 @@ $app->post('/add_case', function () use ($app) {
     $respondent_advocate = $data_request->respondent_advocate;
     $date_of_filing = $data_request->date_of_filing;
     $next_date = $data_request->next_date;
+    $remarks = $data_request->remarks;
     $ImageFileName1 = "";
     if (isset($_FILES["case_image"]["name"])) {
 
@@ -929,7 +930,7 @@ $app->post('/add_case', function () use ($app) {
 
     $db = new DbOperation();
     $data = array();
-    $result = $db->add_case($case_no, $year, $company_id, $ImageFileName1, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $ImageFileName2, $added_by, $user_type, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date);
+    $result = $db->add_case($case_no, $year, $company_id, $ImageFileName1, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $ImageFileName2, $added_by, $user_type, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date, $remarks);
     if ($result) {
         if (isset($_FILES["case_image"]["name"])) {
             move_uploaded_file($case_img_path, "../../../documents/case/" . $ImageFileName1);
@@ -970,6 +971,72 @@ $app->post('/edit_task', function () use ($app) {
         $data["success"] = true;
     } else {
         $data["response"] = "error in inserting data , try again.";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+
+$app->post('/edit_documents', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $file_type = $data_json->file_type;
+    $file_id = $data_json->file_id;
+    $added_by = $data_json->added_by;
+    // $document = $data_json->document;
+    $document = $_FILES["document"]["name"];
+    $document_path = $_FILES["document"]["tmp_name"];
+    $document = preg_replace('/[^A-Za-z0-9.\-]/', '_', $document);
+
+    if (file_exists("../../../documents/case/" . $document)) {
+        $i = 0;
+        $ImageFileName1 = $document;
+        $Arr1 = explode('.', $ImageFileName1);
+
+        $ImageFileName1 = $Arr1[0] . $i . "." . $Arr1[1];
+        while (file_exists("../../../documents/case/" . $ImageFileName1)) {
+            $i++;
+            $ImageFileName1 = $Arr1[0] . $i . "." . $Arr1[1];
+        }
+    } else {
+        $ImageFileName1 = $document;
+    }
+
+    $db = new DbOperation();
+    $result = $db->edit_documents($file_type, $file_id, $added_by, $ImageFileName1);
+    $data = array();
+    if ($result != null) {
+        move_uploaded_file($document_path, "../../../documents/case/" . $ImageFileName1);
+        if (file_exists('../../../documents/case/' . $result)) {
+            unlink('../../../documents/case/' . $result);
+        }
+        $data["response"] = "document edited successfully.";
+        $data["success"] = true;
+    } else {
+        $data["response"] = "error in editing document , try again.";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+
+$app->post('/delete_documents', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $file_type = $data_json->file_type;
+    $file_id = $data_json->file_id;
+
+    $db = new DbOperation();
+    $result = $db->delete_documents($file_type, $file_id);
+    $data = array();
+    if ($result != null) {
+        if (file_exists('../../../documents/case/' . $result)) {
+            unlink('../../../documents/case/' . $result);
+        }
+        $data["response"] = "document deleted successfully.";
+        $data["success"] = true;
+    } else {
+        $data["response"] = "error in deleting document , try again.";
         $data["success"] = false;
     }
     echoResponse(200, $data);
@@ -1178,7 +1245,20 @@ $app->post('/task_assignment', function () use ($app) {
     echoResponse(200, $data);
 });
 
+// $app->post('three_days_cases', function () use ($app) {
 
+//     verifyRequiredParams(array('data'));
+//     $data_request = json_decode($app->request->post('data'));
+//     $date = $data_request->date;
+
+//     $db = new DbOperation();
+//     $data = array();
+//     $data["data"] = array();
+
+//     $result = $db->three_days_cases($date);
+
+
+// });
 
 function verifyRequiredParams($required_fields)
 {

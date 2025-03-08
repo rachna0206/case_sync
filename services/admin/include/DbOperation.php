@@ -204,7 +204,7 @@ class DbOperation
         $stmt->close();
         return $result;
     }
-    public function add_case($case_no, $year, $company_id, $docs, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $multiple_images, $added_by, $user_type, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date)
+    public function add_case($case_no, $year, $company_id, $docs, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $multiple_images, $added_by, $user_type, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date, $remarks)
     {
         $status = "enable";
         // echo "INSERT INTO `case` (`case_no`, `year`, `case_type`, `stage`, `company_id`, `handle_by`, `docs`, `applicant`, `opp_name`, `court_name`, `city_id`, `sr_date`, `status`, `complainant_advocate`, `respondent_advocate`, `date_of_filing`,`next_date`) VALUES ($case_no, $year, $case_type, $stage, $company_id, $handle_by, $docs, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date)";
@@ -214,6 +214,12 @@ class DbOperation
         $stmt->close();
 
         $id = mysqli_insert_id($this->con);
+
+        $inserted_by = 'admin';
+        $stmt = $this->con->prepare("INSERT INTO `case_proceeds`(`case_id`, `next_stage`, `next_date`, `remarks`,`inserted_by`) VALUES (?,?,?,?)");
+        $stmt->bind_param("iissi", $id, $stage, $next_date, $remarks, $inserted_by);
+        $result = $stmt->execute();
+        $stmt->close();
 
         if ($multiple_images != null) {
             for ($i = 0; $i < sizeof($multiple_images); $i++) {
@@ -226,6 +232,44 @@ class DbOperation
         return $result;
     }
 
+    public function edit_documents($file_type, $file_id, $added_by, $document)
+    {
+        if ($file_type == 'main') {
+            $stmt = $this->con->prepare("UPDATE `case` set docs = ? where id = ?");
+            $stmt->bind_param("si", $document, $file_id);
+            $result = $stmt->execute();
+            $stmt->close();
+            $qr = "SELECT * from `case` where id = ?";
+        } else if ($file_type == 'sub') {
+            $stmt = $this->con->prepare("UPDATE multiple_doc set docs = ? , added_by = ? , user_type = 'admin' where id = ?");
+            $stmt->bind_param("sii", $document, $added_by, $file_id);
+            $result = $stmt->execute();
+            $stmt->close();
+            $qr = "SELECT * from `multiple_doc` where id = ?";
+        }
+
+        if ($result) {
+            $stmt = $this->con->prepare($qr);
+            $stmt->bind_param('i', $file_id);
+            $doc = $stmt->get_result()->fetch_assoc()["docs"];
+            $stmt->close();
+        }
+        return $doc;
+    }
+    public function delete_documents($file_type, $file_id)
+    {
+        if ($file_type == 'main') {
+            $qr = "SELECT * from `case` where id = ?";
+        } else if ($file_type == 'sub') {
+            $qr = "SELECT * from `multiple_doc` where id = ?";
+        }
+        $stmt = $this->con->prepare($qr);
+        $stmt->bind_param('i', $file_id);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc()["docs"];
+        $stmt->close();
+        return $result;
+    }
     public function stage_list($case_id)
     {
         $stmt = $this->con->prepare("SELECT * FROM `stage` WHERE status = 'enable' AND `case_type_id` = (select case_type from `case` where id = ?) ;");
@@ -635,6 +679,17 @@ where
         $stmt->close();
         return $result;
     }
+    // public function three_days_cases($date)
+    // { 
+    //     for($i = 0;){
+    //         $stmt = $this->con->prepare("SELECT a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by',a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date,DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id where a.next_date = ? order by a.id desc;");
+    //         $stmt->bind_param('s', $date);
+    //         $stmt->execute();
+    //         $result0 = $stmt->get_result();
+    //         $stmt->close();
+    //     }
+    // }
+
 }
 
 ?>
