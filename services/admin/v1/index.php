@@ -861,24 +861,24 @@ $app->post('/add_case', function () use ($app) {
 
     verifyRequiredParams(array('data'));
     $data_request = json_decode($app->request->post('data'));
-    $case_no = $data_request->case_no;
-    $year = $data_request->year;
-    $case_type = $data_request->case_type;
-    $handle_by = $data_request->handle_by;
-    $applicant = $data_request->applicant;
-    $company_id = $data_request->company_id;
-    $opp_name = $data_request->opp_name;
-    $court_name = $data_request->court_name;
-    $city_id = $data_request->city_id;
-    $sr_date = $data_request->sr_date;
-    $stage = $data_request->stage;
-    $added_by = $data_request->added_by;
-    $user_type = $data_request->user_type;
-    $complainant_advocate = $data_request->complainant_advocate;
-    $respondent_advocate = $data_request->respondent_advocate;
-    $date_of_filing = $data_request->date_of_filing;
-    $next_date = $data_request->next_date;
-    $remarks = $data_request->remarks;
+    $case_no = $data_request->case_no;//
+    $year = $data_request->year;//
+    $case_type = $data_request->case_type;//
+    $handle_by = $data_request->handle_by;//
+    $applicant = $data_request->applicant;//
+    $company_id = $data_request->company_id;//
+    $opp_name = $data_request->opp_name;//
+    $court_name = $data_request->court_name;//
+    $city_id = $data_request->city_id;//
+    $sr_date = $data_request->sr_date;//
+    $stage = $data_request->stage;//
+    $added_by = $data_request->added_by;//
+    $user_type = $data_request->user_type;//
+    $complainant_advocate = $data_request->complainant_advocate;//
+    $respondent_advocate = $data_request->respondent_advocate;//
+    $date_of_filing = $data_request->date_of_filing;//
+    $next_date = $data_request->next_date;//
+    $remarks = $data_request->remarks;//
     $ImageFileName1 = "";
     if (isset($_FILES["case_image"]["name"])) {
 
@@ -926,7 +926,6 @@ $app->post('/add_case', function () use ($app) {
             }
         }
     }
-
 
     $db = new DbOperation();
     $data = array();
@@ -1244,21 +1243,25 @@ $app->post('/task_assignment', function () use ($app) {
     }
     echoResponse(200, $data);
 });
+$app->post('/upcoming_cases', function () use ($app) {
 
-// $app->post('three_days_cases', function () use ($app) {
+    verifyRequiredParams(['data']);
 
-//     verifyRequiredParams(array('data'));
-//     $data_request = json_decode($app->request->post('data'));
-//     $date = $data_request->date;
+    $data_request = json_decode($app->request->post('data'), true);
+    $date = $data_request['date'];
 
-//     $db = new DbOperation();
-//     $data = array();
-//     $data["data"] = array();
+    $db = new DbOperation();
 
-//     $result = $db->three_days_cases($date);
+    $result = $db->upcoming_cases($date);
 
+    $response = [];
+    foreach ($result as $key => $cases) {
+        $dateKey = (new DateTime($date))->modify("+{$key} day")->format('d/m/Y');
+        $response[$dateKey] = mysqli_fetch_all($cases, MYSQLI_ASSOC);
+    }
 
-// });
+    echoResponse(200, $response);
+});
 
 function verifyRequiredParams($required_fields)
 {

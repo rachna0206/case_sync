@@ -68,7 +68,7 @@ class DbOperation
 
     public function get_case_counter()
     {
-        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.applicant, a.opp_name, a.sr_date, b.name as court_name,c.case_type, d.name as city_name, e.name as handle_by, DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter FROM `case` a JOIN `court` b ON a.court_name = b.id JOIN `case_type` c ON a.case_type = c.id JOIN `city` d ON a.city_id = d.id JOIN `advocate` e ON a.handle_by = e.id WHERE DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE)");
+        $stmt = $this->con->prepare("SELECT a.id , a.case_no, a.applicant, a.opp_name, a.sr_date, b.name as court_name,c.case_type, d.name as city_name, e.name as handle_by, DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter FROM `case` a JOIN `court` b ON a.court_name = b.id JOIN `case_type` c ON a.case_type = c.id JOIN `city` d ON a.city_id = d.id JOIN `advocate` e ON a.handle_by = e.id WHERE DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE)");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -87,7 +87,7 @@ class DbOperation
 
     public function get_todays_case()
     {
-        $stmt = $this->con->prepare("SELECT a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by',a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date,DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id where a.next_date = CURRENT_DATE order by a.id desc;");
+        $stmt = $this->con->prepare(" WITH CTE_CaseDetails AS ( SELECT  a.id AS case_id, a.case_no, a.applicant, a.opp_name, a.sr_date, b.name AS court_name, c.case_type, d.name AS city_name, e.name AS handle_by, a.complainant_advocate, a.respondent_advocate, a.date_of_filing, a.next_date, DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter, cp.date_of_creation, ROW_NUMBER() OVER ( PARTITION BY a.id  ORDER BY cp.next_date ASC, cp.date_of_creation DESC ) AS row_num FROM  `case` AS a LEFT JOIN  `court` AS b ON a.court_name = b.id LEFT JOIN  `case_type` AS c ON a.case_type = c.id LEFT JOIN  `city` AS d ON a.city_id = d.id LEFT JOIN  `advocate` AS e ON a.handle_by = e.id LEFT JOIN  `case_procedings` AS cp ON a.id = cp.case_id WHERE  cp.next_date = CURRENT_DATE ) SELECT  case_id, case_no, applicant, opp_name, sr_date, court_name, case_type, city_name, handle_by, complainant_advocate, respondent_advocate, date_of_filing, next_date, case_counter FROM  CTE_CaseDetails WHERE  row_num = 1 ORDER BY  case_id DESC;");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -136,7 +136,7 @@ class DbOperation
         $task_count = $stmt->get_result()->fetch_assoc()["count"];
         $stmt->close();
 
-        $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM `case` as c where c.next_date = CURRENT_DATE;");
+        $stmt = $this->con->prepare("WITH CTE_CaseDetails AS ( SELECT  a.id AS case_id, ROW_NUMBER() OVER ( PARTITION BY a.id  ORDER BY cp.next_date ASC, cp.date_of_creation DESC ) AS row_num FROM  `case` AS a LEFT JOIN  `case_procedings` AS cp ON a.id = cp.case_id WHERE  cp.next_date = CURRENT_DATE ) SELECT  COUNT(*) AS count FROM  CTE_CaseDetails WHERE  row_num = 1; ");
         $stmt->execute();
         $todays_case_count = $stmt->get_result()->fetch_assoc()["count"];
         $stmt->close();
@@ -216,7 +216,8 @@ class DbOperation
         $id = mysqli_insert_id($this->con);
 
         $inserted_by = 'admin';
-        $stmt = $this->con->prepare("INSERT INTO `case_proceeds`(`case_id`, `next_stage`, `next_date`, `remarks`,`inserted_by`) VALUES (?,?,?,?)");
+        // echo "INSERT INTO `case_procedings`(`case_id`, `next_stage`, `next_date`, `remarks`,`inserted_by`) VALUES ('$id', '$stage', '$next_date', '$remarks', '$inserted_by')";
+        $stmt = $this->con->prepare("INSERT INTO `case_procedings`(`case_id`, `next_stage`, `next_date`, `remarks`,`inserted_by`) VALUES (?,?,?,?,?)");
         $stmt->bind_param("iissi", $id, $stage, $next_date, $remarks, $inserted_by);
         $result = $stmt->execute();
         $stmt->close();
@@ -672,23 +673,38 @@ where
     }
     public function proceed_history($case_id)
     {
-        $stmt = $this->con->prepare("SELECT cp.*,s.stage from case_procedings as cp join stage as s on s.id = cp.next_stage where cp.case_id = ?;");
+        $stmt = $this->con->prepare("SELECT cp.*,s.stage from case_procedings as cp join stage as s on s.id = cp.next_stage where cp.case_id = ? order by cp.id desc;");
         $stmt->bind_param('i', $case_id);
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
         return $result;
     }
-    // public function three_days_cases($date)
-    // { 
-    //     for($i = 0;){
-    //         $stmt = $this->con->prepare("SELECT a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by',a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date,DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id where a.next_date = ? order by a.id desc;");
-    //         $stmt->bind_param('s', $date);
-    //         $stmt->execute();
-    //         $result0 = $stmt->get_result();
-    //         $stmt->close();
-    //     }
-    // }
+
+
+    public function upcoming_cases($date)
+    {
+        $result = [];
+        $dateObj = new DateTime($date);
+
+        for ($i = 0; $i < 3; $i++) {
+            $stmt = $this->con->prepare("WITH CTE_CaseDetails AS ( SELECT  a.id AS case_id, a.case_no, a.applicant, a.opp_name, a.sr_date, b.name AS court_name, c.case_type, d.name AS city_name, e.name AS handle_by, a.complainant_advocate, a.respondent_advocate, a.date_of_filing, a.next_date, DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter, cp.date_of_creation, ROW_NUMBER() OVER ( PARTITION BY a.id  ORDER BY cp.next_date ASC, cp.date_of_creation DESC ) AS row_num FROM  `case` AS a LEFT JOIN  `court` AS b ON a.court_name = b.id LEFT JOIN  `case_type` AS c ON a.case_type = c.id LEFT JOIN  `city` AS d ON a.city_id = d.id LEFT JOIN  `advocate` AS e ON a.handle_by = e.id LEFT JOIN  `case_procedings` AS cp ON a.id = cp.case_id WHERE  cp.next_date = ? ) SELECT  case_id, case_no, applicant, opp_name, sr_date, court_name, case_type, city_name, handle_by, complainant_advocate, respondent_advocate, date_of_filing, next_date, case_counter FROM  CTE_CaseDetails WHERE  row_num = 1 ORDER BY  case_id DESC;");
+
+            $formattedDate = $dateObj->format('Y-m-d');
+            $stmt->bind_param('s', $formattedDate);
+
+            $stmt->execute();
+            $temp = $stmt->get_result();
+            $stmt->close();
+
+            $result[] = $temp;
+
+            $dateObj->modify('+1 day');
+        }
+
+        return $result;
+    }
+
 
 }
 

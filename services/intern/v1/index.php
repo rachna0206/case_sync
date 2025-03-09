@@ -702,6 +702,26 @@ $app->post('/proceed_case_delete', function () use ($app) {
 });
 
 
+$app->post('/upcoming_cases', function () use ($app) {
+
+    verifyRequiredParams(['data']);
+
+    $data_request = json_decode($app->request->post('data'), true);
+    $date = $data_request['date'];
+
+    $db = new DbOperation();
+
+    $result = $db->upcoming_cases($date);
+
+    $response = [];
+    foreach ($result as $key => $cases) {
+        $dateKey = (new DateTime($date))->modify("+{$key} day")->format('d/m/Y');
+        $response[$dateKey] = mysqli_fetch_all($cases, MYSQLI_ASSOC);
+    }
+
+    echoResponse(200, $response);
+});
+
 function verifyRequiredParams($required_fields)
 {
     $error = false;
