@@ -2,8 +2,6 @@
 include "header.php";
 include "alert.php";
 
-
-
 if (isset($_REQUEST["btndelete"])) {
     $c_id = $_REQUEST['delete_id'];
 
@@ -32,7 +30,9 @@ if (isset($_REQUEST["btndelete"])) {
     if ($Resp) {
         setcookie("msg", "data_del", time() + 3600, "/");
     }
+
     header("location:case.php");
+
 }
 
 if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== "") {
@@ -54,11 +54,9 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
 
     foreach ($allDataInSheet as $i => $row) {
         if ($i < 2) {
-            // Skip the header row
             continue;
         }
 
-        // Extract and sanitize row data
         $case_no = !empty($row["B"]) ? trim($row["B"]) : null;
         $date_of_filing = !empty($row["A"]) ? $row["A"] : null;
         $complainant = !empty($row["C"]) ? trim($row["C"]) : null;
@@ -73,16 +71,33 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
         $case_type_name = !empty($row["L"]) ? strtolower(trim($row["L"])) : null;
         $city_name = !empty($row["M"]) ? strtolower(trim($row["M"])) : null;
 
-        // Skip processing if required fields are null
+        // if (!empty($next_date)) {
+        //     $possible_formats = ['Y-m-d', 'd-m-Y', 'm/d/Y', 'd/m/Y', 'M d, Y', 'd-M-Y', 'Y/m/d'];
+        //     $next_date_object = null;
+
+        //     foreach ($possible_formats as $format) {
+        //         $next_date_object = DateTime::createFromFormat($format, $next_date);
+        //         if ($next_date_object !== false) {
+        //             break;
+        //         }
+        //     }
+
+        //     $next_date = $next_date_object ? $next_date_object->format('d-m-y') : null;
+        // } else {
+        //     $next_date = null;
+        // }
+
+
         if (is_null($case_no) || is_null($city_name)) {
             continue;
         }
 
-        // Get or insert city
         $stmt = $obj->con1->prepare("SELECT id FROM city WHERE LOWER(name) = ?");
         $stmt->bind_param("s", $city_name);
         $stmt->execute();
         $result = $stmt->get_result();
+        $stmt->close();
+
         if ($result->num_rows > 0) {
             $city_id = $result->fetch_assoc()["id"];
         } else {
@@ -92,50 +107,13 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
             $city_id = $stmt->insert_id;
             $stmt->close();
         }
-
-        // Get or insert stage
-        $stage_id = null;
-        if (!is_null($next_stage)) {
-            $stmt = $obj->con1->prepare("SELECT id FROM stage WHERE LOWER(stage) = ?");
-            $stmt->bind_param("s", $next_stage);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            if ($result->num_rows > 0) {
-                $stage_id = $result->fetch_assoc()["id"];
-            } else {
-                $stmt = $obj->con1->prepare("INSERT INTO stage (stage, status) VALUES (?, 'enable')");
-                $stmt->bind_param("s", $next_stage);
-                $stmt->execute();
-                $stage_id = $stmt->insert_id;
-                $stmt->close();
-            }
-        }
-
-        // Get or insert court
-        $court_id = null;
-        if (!is_null($court_name)) {
-            $stmt = $obj->con1->prepare("SELECT id FROM court WHERE LOWER(name) = ?");
-            $stmt->bind_param("s", $court_name);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            if ($result->num_rows > 0) {
-                $court_id = $result->fetch_assoc()["id"];
-            } else {
-                $stmt = $obj->con1->prepare("INSERT INTO court (name, status) VALUES (?, 'enable')");
-                $stmt->bind_param("s", $court_name);
-                $stmt->execute();
-                $court_id = $stmt->insert_id;
-                $stmt->close();
-            }
-        }
-
-        // Get or insert case type
         $case_type_id = null;
         if (!is_null($case_type_name)) {
             $stmt = $obj->con1->prepare("SELECT id FROM case_type WHERE LOWER(case_type) = ?");
             $stmt->bind_param("s", $case_type_name);
             $stmt->execute();
             $result = $stmt->get_result();
+            $stmt->close();
             if ($result->num_rows > 0) {
                 $case_type_id = $result->fetch_assoc()["id"];
             } else {
@@ -147,20 +125,74 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
             }
         }
 
-        // Check if case exists
-        $stmt = $obj->con1->prepare("SELECT id, next_date, stage FROM `case` WHERE case_no = ? AND city_id = ?");
+        $stage_id = null;
+        if (!is_null($next_stage)) {
+            $stmt = $obj->con1->prepare("SELECT id FROM stage WHERE LOWER(stage) = ?");
+            $stmt->bind_param("s", $next_stage);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+            if ($result->num_rows > 0) {
+                $stage_id = $result->fetch_assoc()["id"];
+            } else {
+                // echo "INSERT INTO stage (`stage`,`case_type_id`, `status`) VALUES ('" . $next_stage . "', '" . $next_stage . "', 'enable')";
+                $stmt = $obj->con1->prepare("INSERT INTO stage (`stage`,`case_type_id`, `status`) VALUES (?,?, 'enable')");
+                $stmt->bind_param("ss", $next_stage, $case_type_id);
+                $stmt->execute();
+                $stage_id = $stmt->insert_id;
+                $stmt->close();
+            }
+        }
+
+        $court_id = null;
+        if (!is_null($court_name)) {
+            $stmt = $obj->con1->prepare("SELECT id FROM court WHERE LOWER(name) = ?");
+            $stmt->bind_param("s", $court_name);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+            if ($result->num_rows > 0) {
+                $court_id = $result->fetch_assoc()["id"];
+            } else {
+                $stmt = $obj->con1->prepare("INSERT INTO court (name,case_type, status) VALUES (?,?, 'enable')");
+                $stmt->bind_param("ss", $court_name, $case_type_id);
+                $stmt->execute();
+                $court_id = $stmt->insert_id;
+                $stmt->close();
+            }
+        }
+
+        $company_id = null;
+        if (!is_null($company_name)) {
+            $stmt = $obj->con1->prepare("SELECT id FROM company WHERE name = ?");
+            $stmt->bind_param("s", $company_name);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+            if ($result->num_rows > 0) {
+                $company_id = $result->fetch_assoc()["id"];
+            } else {
+                $stmt = $obj->con1->prepare("INSERT INTO company (name, status) VALUES (?, 'enable')");
+                $stmt->bind_param("s", $company_name);
+                $stmt->execute();
+                $company_id = $stmt->insert_id;
+                $stmt->close();
+            }
+        }
+
+
+
+        $stmt = $obj->con1->prepare("SELECT c.id,  Date_Format(cp.next_date,'%d-%m-%y') as next_date, cp.next_stage as stage FROM `case` as c left join `case_procedings` as cp on cp.case_id = c.id WHERE c.case_no = ? AND c.city_id = ? order by cp.id desc limit 1");
         $stmt->bind_param("si", $case_no, $city_id);
         $stmt->execute();
         $result = $stmt->get_result();
+        $stmt->close();
 
         if ($result->num_rows > 0) {
             $case = $result->fetch_assoc();
             $case_id = $case["id"];
 
-            // If next_date or stage is updated, insert into case_proceedings
             if (($case["next_date"] !== $next_date || $case["stage"] !== $stage_id) && !is_null($next_date)) {
-                // echo "INSERT INTO case_procedings (case_id, next_date, remarks, next_stage) 
-                // VALUES ($case_id, $next_date, $remarks, $stage_id)";
                 $stmt = $obj->con1->prepare("INSERT INTO case_procedings (case_id, next_date, remarks, next_stage) 
                     VALUES (?, ?, ?, ?)
                 ");
@@ -170,54 +202,29 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                 $stmt->close();
             }
 
-            // Update case details
-            $stmt = $obj->con1->prepare("UPDATE `case` SET date_of_filing = ?, applicant = ?, complainant_advocate = ?, opp_name = ?, respondent_advocate = ?, next_date = ?, stage = ?, court_name = ?, company_id = ?, case_type = ? WHERE id = ?;");
-            $stmt->bind_param(
-                "ssssssssssi",
-                $date_of_filing,
-                $complainant,
-                $complainant_advocate,
-                $opponent,
-                $opponent_advocate,
-                $next_date,
-                $stage_id,
-                $court_id,
-                $company_name,
-                $case_type_id,
-                $case_id
-            );
+            $stmt = $obj->con1->prepare("UPDATE `case` SET date_of_filing = ?, applicant = ?, complainant_advocate = ?, opp_name = ?, respondent_advocate = ?, next_date = ?, stage = ?, court_name = ?, company_id = ?, case_type = ? WHERE id = ? ;");
+            $stmt->bind_param("ssssssssssi", $date_of_filing, $complainant, $complainant_advocate, $opponent, $opponent_advocate, $next_date, $stage_id, $court_id, $company_id, $case_type_id, $case_id);
             $stmt->execute();
             $updated++;
             $stmt->close();
         } else {
-            // Insert new case
-            $stmt = $obj->con1->prepare("
-                INSERT INTO `case` (case_no, date_of_filing, complainant, complainant_advocate, 
-                    opponent, opponent_advocate, next_date, stage, court_name, company_name, case_type, city_id) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->bind_param(
-                "sssssssssssi",
-                $case_no,
-                $date_of_filing,
-                $complainant,
-                $complainant_advocate,
-                $opponent,
-                $opponent_advocate,
-                $next_date,
-                $stage_id,
-                $court_id,
-                $company_name,
-                $case_type_id,
-                $city_id
-            );
+            // echo "INSERT INTO `case` (case_no, date_of_filing, applicant, complainant_advocate, opp_name, respondent_advocate, next_date, stage, court_name, company_id, case_type, city_id) VALUES('" . $case_no . "', '" . $date_of_filing . "', '" . $complainant . "', '" . $complainant_advocate . "', '" . $opponent . "', '" . $opponent_advocate . "', '" . $next_date . "', '" . $stage_id . "', '" . $court_id . "', '" . $company_id . "', '" . $case_type_id . "', '" . $city_id . "');";
+            $stmt = $obj->con1->prepare("INSERT INTO `case` (case_no, date_of_filing, applicant, complainant_advocate, opp_name, respondent_advocate, next_date, stage, court_name, company_id, case_type, city_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssssssssssi", $case_no, $date_of_filing, $complainant, $complainant_advocate, $opponent, $opponent_advocate, $next_date, $stage_id, $court_id, $company_id, $case_type_id, $city_id);
             $stmt->execute();
             $added++;
+            $stmt->close();
+            // if ($next_date != null && $case_id != null)
+            $stmt = $obj->con1->prepare("INSERT INTO case_procedings (case_id, next_date, remarks, next_stage) 
+                    VALUES (?, ?, ?, ?)
+                ");
+            $stmt->bind_param("issi", $case_id, $next_date, $remarks, $stage_id);
+            $stmt->execute();
+            $proceedings_added++;
             $stmt->close();
         }
     }
 
-    // Display summary
     echo "<div>";
     echo "$added records added successfully.<br>";
     echo "$updated records updated successfully.<br>";
