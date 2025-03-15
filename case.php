@@ -72,7 +72,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
         $city_name = !empty($row["M"]) ? strtolower(trim($row["M"])) : null;
 
         // if (!empty($next_date)) {
-        //     $possible_formats = ['Y-m-d', 'd-m-Y', 'm/d/Y', 'd/m/Y', 'M d, Y', 'd-M-Y', 'Y/m/d'];
+        //     $possible_formats = ['d-m-Y'];
         //     $next_date_object = null;
 
         //     foreach ($possible_formats as $format) {
@@ -82,10 +82,18 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
         //         }
         //     }
 
-        //     $next_date = $next_date_object ? $next_date_object->format('d-m-y') : null;
+        //     $next_date = $next_date_object ? $next_date_object->format('Y-m-d') : null;
         // } else {
         //     $next_date = null;
         // }
+
+        // $date=date_create("2013-03-15");
+
+        // $next_date_obj = date_create_from_format('d-m-y', $next_date);
+        // $next_date = date_format($next_date_obj, 'Y-m-d');
+
+        // echo $next_date . "</br>";
+
 
 
         if (is_null($case_no) || is_null($city_name)) {
@@ -200,7 +208,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
 
 
 
-        $stmt = $obj->con1->prepare("SELECT c.id,  Date_Format(cp.next_date,'%d-%m-%y') as next_date, cp.next_stage as stage FROM `case` as c left join `case_procedings` as cp on cp.case_id = c.id WHERE c.case_no = ? AND c.city_id = ? order by cp.id desc limit 1");
+        $stmt = $obj->con1->prepare("SELECT c.id,  Date_Format(cp.next_date,'%d-%m-%Y') as next_date, cp.next_stage as stage FROM `case` as c left join `case_procedings` as cp on cp.case_id = c.id WHERE c.case_no = ? AND c.city_id = ? order by cp.id desc limit 1");
         $stmt->bind_param("si", $case_no, $city_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -209,21 +217,25 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
         if ($result->num_rows > 0) {
             $case = $result->fetch_assoc();
             $case_id = $case["id"];
+            $inserted_by = $_SESSION['id'];
+            $formatted_next_date = date('d-m-Y', strtotime($next_date));
 
-            if (($case["next_date"] !== $next_date || $case["stage"] !== $stage_id) && !is_null($next_date)) {
-                $stmt = $obj->con1->prepare("INSERT INTO case_procedings (case_id, next_date, remarks, next_stage) 
-                    VALUES (?, ?, ?, ?)
-                ");
-                $stmt->bind_param("issi", $case_id, $next_date, $remarks, $stage_id);
+            if ((!empty($next_date) && !empty($stage_id) && $case["next_date"] !== $formatted_next_date) || $case["stage"] !== $stage_id) {
+                $stmt = $obj->con1->prepare("INSERT INTO case_procedings (case_id, next_stage, next_date, remarks, inserted_by) VALUES (?,?, STR_TO_DATE(?, '%m-%d-%y'), ?, ?)");
+                $stmt->bind_param("iisss", $case_id, $stage_id, $next_date, $remarks, $inserted_by);
                 $stmt->execute();
-                $proceedings_added++;
-                $stmt->close();
+                if ($stmt->affected_rows > 0) {
+                    $proceedings_added++;
+                }
             }
+
 
             $stmt = $obj->con1->prepare("UPDATE `case` SET date_of_filing = ?, applicant = ?, complainant_advocate = ?, opp_name = ?, respondent_advocate = ?, next_date = ?, stage = ?, court_name = ?, company_id = ?, case_type = ?,handle_by = ? WHERE id = ? ;");
             $stmt->bind_param("sssssssssssi", $date_of_filing, $complainant, $complainant_advocate, $opponent, $opponent_advocate, $next_date, $stage_id, $court_id, $company_id, $case_type_id, $handle_by, $case_id);
             $stmt->execute();
-            $updated++;
+            if (mysqli_affected_rows($obj->con1) > 0) {
+                $updated++;
+            }
             $stmt->close();
         } else {
             // echo "INSERT INTO `case` (case_no, date_of_filing, applicant, complainant_advocate, opp_name, respondent_advocate, next_date, stage, court_name, company_id, case_type, city_id) VALUES('" . $case_no . "', '" . $date_of_filing . "', '" . $complainant . "', '" . $complainant_advocate . "', '" . $opponent . "', '" . $opponent_advocate . "', '" . $next_date . "', '" . $stage_id . "', '" . $court_id . "', '" . $company_id . "', '" . $case_type_id . "', '" . $city_id . "');";

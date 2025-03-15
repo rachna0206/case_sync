@@ -101,7 +101,7 @@ class DbOperation
     a.complainant_advocate,
     a.respondent_advocate,
     a.date_of_filing,
-    a.next_date,
+    cp.next_date,
     DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter
 FROM `case` AS a
 LEFT JOIN `court` AS b ON a.court_name = b.id
