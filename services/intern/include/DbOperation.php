@@ -23,7 +23,61 @@ class DbOperation
 
     public function get_todays_case($intern_id)
     {
-        $stmt = $this->con->prepare(" WITH CTE_CaseDetails AS ( SELECT  a.id AS case_id, a.case_no, a.applicant, a.opp_name, a.sr_date, b.name AS court_name, c.case_type, d.name AS city_name, e.name AS handle_by, a.complainant_advocate, a.respondent_advocate, a.date_of_filing, a.next_date, DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter, cp.date_of_creation, ROW_NUMBER() OVER ( PARTITION BY a.id  ORDER BY cp.next_date ASC, cp.date_of_creation DESC ) AS row_num FROM  `case` AS a LEFT JOIN  `court` AS b ON a.court_name = b.id LEFT JOIN  `case_type` AS c ON a.case_type = c.id LEFT JOIN  `city` AS d ON a.city_id = d.id LEFT JOIN  `advocate` AS e ON a.handle_by = e.id LEFT JOIN  `case_procedings` AS cp ON a.id = cp.case_id WHERE  cp.next_date = CURRENT_DATE ) SELECT  case_id, case_no, applicant, opp_name, sr_date, court_name, case_type, city_name, handle_by, complainant_advocate, respondent_advocate, date_of_filing, next_date, case_counter FROM  CTE_CaseDetails WHERE  row_num = 1 ORDER BY  case_id DESC;");
+        $stmt = $this->con->prepare("SELECT
+    case_id,
+    case_no,
+    applicant,
+    opp_name,
+    sr_date,
+    court_name,
+    case_type,
+    city_name,
+    handle_by,
+    complainant_advocate,
+    respondent_advocate,
+    date_of_filing,
+    next_date,
+    case_counter
+FROM
+    (
+        SELECT
+            a.id AS case_id,
+            a.case_no,
+            a.applicant,
+            a.opp_name,
+            a.sr_date,
+            b.name AS court_name,
+            c.case_type,
+            d.name AS city_name,
+            e.name AS handle_by,
+            a.complainant_advocate,
+            a.respondent_advocate,
+            a.date_of_filing,
+            a.next_date,
+            DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter,
+            cp.date_of_creation,
+            @row_num := IF(@prev_case_id = a.id, @row_num + 1, 1) AS row_num,
+            @prev_case_id := a.id
+        FROM
+            `case` AS a
+            LEFT JOIN `court` AS b ON a.court_name = b.id
+            LEFT JOIN `case_type` AS c ON a.case_type = c.id
+            LEFT JOIN `city` AS d ON a.city_id = d.id
+            LEFT JOIN `advocate` AS e ON a.handle_by = e.id
+            LEFT JOIN `case_procedings` AS cp ON a.id = cp.case_id
+            CROSS JOIN (SELECT @row_num := 0, @prev_case_id := NULL) AS vars
+        WHERE
+            cp.next_date = CURRENT_DATE
+        ORDER BY
+            a.id,
+            cp.next_date ASC,
+            cp.date_of_creation DESC
+    ) AS CTE_CaseDetails
+WHERE
+    row_num = 1
+ORDER BY
+    case_id DESC;
+");
         //  $stmt->bind_param('i', $intern_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -118,7 +172,28 @@ class DbOperation
         $task_count = $stmt->get_result()->fetch_assoc()["count"];
         $stmt->close();
 
-        $stmt = $this->con->prepare("WITH CTE_CaseDetails AS ( SELECT  a.id AS case_id, ROW_NUMBER() OVER ( PARTITION BY a.id  ORDER BY cp.next_date ASC, cp.date_of_creation DESC ) AS row_num FROM  `case` AS a LEFT JOIN  `case_procedings` AS cp ON a.id = cp.case_id WHERE  cp.next_date = CURRENT_DATE ) SELECT  COUNT(*) AS count FROM  CTE_CaseDetails WHERE  row_num = 1; ");
+        $stmt = $this->con->prepare("SELECT
+    COUNT(*) AS count
+FROM
+    (
+        SELECT
+            a.id AS case_id,
+            @row_num := IF(@prev_case_id = a.id, @row_num + 1, 1) AS row_num,
+            @prev_case_id := a.id
+        FROM
+            `case` AS a
+            LEFT JOIN `case_procedings` AS cp ON a.id = cp.case_id
+            CROSS JOIN (SELECT @row_num := 0, @prev_case_id := NULL) AS vars
+        WHERE
+            cp.next_date = CURRENT_DATE
+        ORDER BY
+            a.id,
+            cp.next_date ASC,
+            cp.date_of_creation DESC
+    ) AS CTE_CaseDetails
+WHERE
+    row_num = 1;
+ ");
         $stmt->execute();
         $todays_case_count = $stmt->get_result()->fetch_assoc()["count"];
         $stmt->close();
@@ -398,7 +473,7 @@ where
         $dateObj = new DateTime($date);
 
         for ($i = 0; $i < 3; $i++) {
-            $stmt = $this->con->prepare("WITH CTE_CaseDetails AS ( SELECT  a.id AS case_id, a.case_no, a.applicant, a.opp_name, a.sr_date, b.name AS court_name, c.case_type, d.name AS city_name, e.name AS handle_by, a.complainant_advocate, a.respondent_advocate, a.date_of_filing, a.next_date, DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter, cp.date_of_creation, ROW_NUMBER() OVER ( PARTITION BY a.id  ORDER BY cp.next_date ASC, cp.date_of_creation DESC ) AS row_num FROM  `case` AS a LEFT JOIN  `court` AS b ON a.court_name = b.id LEFT JOIN  `case_type` AS c ON a.case_type = c.id LEFT JOIN  `city` AS d ON a.city_id = d.id LEFT JOIN  `advocate` AS e ON a.handle_by = e.id LEFT JOIN  `case_procedings` AS cp ON a.id = cp.case_id WHERE  cp.next_date = ? ) SELECT  case_id, case_no, applicant, opp_name, sr_date, court_name, case_type, city_name, handle_by, complainant_advocate, respondent_advocate, date_of_filing, next_date, case_counter FROM  CTE_CaseDetails WHERE  row_num = 1 ORDER BY  case_id DESC;");
+            $stmt = $this->con->prepare("SELECT case_id, case_no, applicant, opp_name, sr_date, court_name, case_type, city_name, handle_by, complainant_advocate, respondent_advocate, date_of_filing, next_date, case_counter FROM ( SELECT a.id AS case_id, a.case_no, a.applicant, a.opp_name, a.sr_date, b.name AS court_name, c.case_type, d.name AS city_name, e.name AS handle_by, a.complainant_advocate, a.respondent_advocate, a.date_of_filing, a.next_date, DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter, cp.date_of_creation, @row_num := IF(@prev_case_id = a.id, @row_num + 1, 1) AS row_num, @prev_case_id := a.id FROM `case` AS a LEFT JOIN `court` AS b ON a.court_name = b.id LEFT JOIN `case_type` AS c ON a.case_type = c.id LEFT JOIN `city` AS d ON a.city_id = d.id LEFT JOIN `advocate` AS e ON a.handle_by = e.id LEFT JOIN `case_procedings` AS cp ON a.id = cp.case_id CROSS JOIN ( SELECT @row_num := 0, @prev_case_id := NULL ) AS vars WHERE cp.next_date = ? ORDER BY a.id, cp.next_date ASC, cp.date_of_creation DESC ) AS CTE_CaseDetails WHERE row_num = 1 ORDER BY case_id DESC;");
 
             $formattedDate = $dateObj->format('Y-m-d');
             $stmt->bind_param('s', $formattedDate);

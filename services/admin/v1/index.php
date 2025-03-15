@@ -292,7 +292,7 @@ $app->post('/get_case_documents', function () use ($app) {
             $temp = array();
             foreach ($row as $key => $value) {
                 if ($key == 'docs') {
-                    $temp[$key] = "https://pragmanxt.com/case_sync_pro/documents/case/" . $value;
+                    $temp[$key] = "https://pragmanxt.com/case_sync/documents/case/" . $value;
                 } else {
                     $temp[$key] = $value;
                 }
@@ -596,7 +596,7 @@ $app->post('/get_case_info', function () use ($app) {
             $temp = array();
             foreach ($row as $key => $value) {
                 if ($key == 'docs') {
-                    $temp[$key] = "https://pragmanxt.com/case_sync_pro/documents/case/" . $value;
+                    $temp[$key] = "https://pragmanxt.com/case_sync/documents/case/" . $value;
                 } else {
                     $temp[$key] = $value;
                 }
