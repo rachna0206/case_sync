@@ -180,6 +180,24 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
             }
         }
 
+        $handle_by = null;
+        if (!is_null($opponent_advocate)) {
+            $stmt = $obj->con1->prepare("SELECT id FROM advocate WHERE name = ?");
+            $stmt->bind_param("s", $opponent_advocate);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+            if ($result->num_rows > 0) {
+                $handle_by = $result->fetch_assoc()["id"];
+            } else {
+                $stmt = $obj->con1->prepare("INSERT INTO advocate (name, status,email,password) VALUES (?, 'enable','test@mail.com','12345')");
+                $stmt->bind_param("s", $opponent_advocate);
+                $stmt->execute();
+                $handle_by = $stmt->insert_id;
+                $stmt->close();
+            }
+        }
+
 
 
         $stmt = $obj->con1->prepare("SELECT c.id,  Date_Format(cp.next_date,'%d-%m-%y') as next_date, cp.next_stage as stage FROM `case` as c left join `case_procedings` as cp on cp.case_id = c.id WHERE c.case_no = ? AND c.city_id = ? order by cp.id desc limit 1");
@@ -202,15 +220,15 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                 $stmt->close();
             }
 
-            $stmt = $obj->con1->prepare("UPDATE `case` SET date_of_filing = ?, applicant = ?, complainant_advocate = ?, opp_name = ?, respondent_advocate = ?, next_date = ?, stage = ?, court_name = ?, company_id = ?, case_type = ? WHERE id = ? ;");
-            $stmt->bind_param("ssssssssssi", $date_of_filing, $complainant, $complainant_advocate, $opponent, $opponent_advocate, $next_date, $stage_id, $court_id, $company_id, $case_type_id, $case_id);
+            $stmt = $obj->con1->prepare("UPDATE `case` SET date_of_filing = ?, applicant = ?, complainant_advocate = ?, opp_name = ?, respondent_advocate = ?, next_date = ?, stage = ?, court_name = ?, company_id = ?, case_type = ?,handle_by = ? WHERE id = ? ;");
+            $stmt->bind_param("sssssssssssi", $date_of_filing, $complainant, $complainant_advocate, $opponent, $opponent_advocate, $next_date, $stage_id, $court_id, $company_id, $case_type_id, $handle_by, $case_id);
             $stmt->execute();
             $updated++;
             $stmt->close();
         } else {
             // echo "INSERT INTO `case` (case_no, date_of_filing, applicant, complainant_advocate, opp_name, respondent_advocate, next_date, stage, court_name, company_id, case_type, city_id) VALUES('" . $case_no . "', '" . $date_of_filing . "', '" . $complainant . "', '" . $complainant_advocate . "', '" . $opponent . "', '" . $opponent_advocate . "', '" . $next_date . "', '" . $stage_id . "', '" . $court_id . "', '" . $company_id . "', '" . $case_type_id . "', '" . $city_id . "');";
-            $stmt = $obj->con1->prepare("INSERT INTO `case` (case_no, date_of_filing, applicant, complainant_advocate, opp_name, respondent_advocate, next_date, stage, court_name, company_id, case_type, city_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssssssssssi", $case_no, $date_of_filing, $complainant, $complainant_advocate, $opponent, $opponent_advocate, $next_date, $stage_id, $court_id, $company_id, $case_type_id, $city_id);
+            $stmt = $obj->con1->prepare("INSERT INTO `case` (case_no, date_of_filing, applicant, complainant_advocate, opp_name, respondent_advocate, next_date, stage, court_name, company_id, case_type, city_id, handle_by) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)");
+            $stmt->bind_param("ssssssssssssi", $case_no, $date_of_filing, $complainant, $complainant_advocate, $opponent, $opponent_advocate, $next_date, $stage_id, $court_id, $company_id, $case_type_id, $city_id, $handle_by);
             $stmt->execute();
             $added++;
             $stmt->close();
