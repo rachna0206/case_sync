@@ -36,6 +36,24 @@ if (isset($_REQUEST["btndelete"])) {
 }
 
 if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== "") {
+
+    $allowed_mime_types = [
+        'application/vnd.ms-excel', // XLS (Old Excel Format)
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' // XLSX (New Excel Format)
+    ];
+
+    $file_type = $_FILES["excel_file"]["type"];
+
+    if (!in_array($file_type, $allowed_mime_types)) {
+        echo "<script>
+        alert('Invalid file type! Please upload an Excel file.');
+        window.location = 'case.php';
+        </script>";
+        header("");
+    }
+
+    // if($_FILES["excel_file"]["tmp_name"]){}
+
     require 'Classes/PHPExcel.php';
     require 'Classes/PHPExcel/IOFactory.php';
 
@@ -223,7 +241,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
             if ((!empty($next_date) && !empty($stage_id) && $case["next_date"] !== $formatted_next_date) || $case["stage"] !== $stage_id) {
                 $stmt = $obj->con1->prepare("INSERT INTO case_procedings (case_id, next_stage, next_date, remarks, inserted_by) VALUES (?,?, STR_TO_DATE(?, '%m-%d-%y'), ?, ?)");
                 $stmt->bind_param("iisss", $case_id, $stage_id, $next_date, $remarks, $inserted_by);
-                $stmt->execute();
+                $result = $stmt->execute();
                 if ($stmt->affected_rows > 0) {
                     $proceedings_added++;
                 }
@@ -245,12 +263,12 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
             $added++;
             $stmt->close();
             // if ($next_date != null && $case_id != null)
-            $stmt = $obj->con1->prepare("INSERT INTO case_procedings (case_id, next_date, remarks, next_stage) 
-                    VALUES (?, ?, ?, ?)
-                ");
-            $stmt->bind_param("issi", $case_id, $next_date, $remarks, $stage_id);
-            $stmt->execute();
-            $proceedings_added++;
+            $stmt = $obj->con1->prepare("INSERT INTO case_procedings (case_id, next_stage, next_date, remarks, inserted_by) VALUES (?,?, STR_TO_DATE(?, '%m-%d-%y'), ?, ?)");
+            $stmt->bind_param("iisss", $case_id, $stage_id, $next_date, $remarks, $inserted_by);
+            $result = $stmt->execute();
+            if ($stmt->affected_rows > 0) {
+                $proceedings_added++;
+            }
             $stmt->close();
         }
     }
