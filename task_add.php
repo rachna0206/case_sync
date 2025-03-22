@@ -289,7 +289,7 @@ if (isset($_REQUEST["update"])) {
                                 <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
                                 <option value="">Select Intern</option>
                                 <?php
-                                $task = "SELECT * FROM `staff` where type='intern'";
+                                $task = "SELECT * FROM `staff` where `status`='enable'";
                                 $result = $obj->select($task);
                                 $selectedCaseId = isset($data['alloted_to']) ? $data['alloted_to'] : '';
 
@@ -297,7 +297,7 @@ if (isset($_REQUEST["update"])) {
                                     $selected = ($row["id"] == $selectedCaseId) ? 'selected' : '';
                                 ?>
                                     <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                        <?= htmlspecialchars($row["name"]) ?>
+                                        <?php echo htmlspecialchars($row["name"] . ' - (' .$row["type"]. ')') ?>
                                     </option>
                                 <?php } ?>
                             </select>

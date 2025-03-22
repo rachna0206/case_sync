@@ -64,7 +64,7 @@ $app->post('/intern_task_list', function () use ($app) {
     $data = array();
     $data["data"] = array();
 
-    $result = $db->intern_task_list($intern_id,$case_id);
+    $result = $db->intern_task_list($intern_id, $case_id);
     if (mysqli_num_rows($result) > 0) {
         while ($row = $result->fetch_assoc()) {
             $temp = array();
@@ -142,6 +142,37 @@ $app->post('/notification', function () use ($app) {
 });
 
 
+$app->post('/proceed_history', function () use ($app) {
+
+    verifyRequiredParams(array('case_id'));
+    $case_id = $app->request->post('case_id');
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->proceed_history($case_id);
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Proceeded case.";
+        $data['success'] = true;
+
+    } else {
+
+        $data['message'] = "Error in updating stage and next date";
+        $data['success'] = false;
+
+    }
+    echoResponse(200, $data);
+});
 $app->post('/get_case_info', function () use ($app) {
 
     verifyRequiredParams(array('case_id'));
@@ -156,7 +187,7 @@ $app->post('/get_case_info', function () use ($app) {
             $temp = array();
             foreach ($row as $key => $value) {
                 if ($key == 'docs') {
-                    $temp[$key] = "https://pragmanxt.com/case_sync_pro/documents/case/" . $value;
+                    $temp[$key] = "https://pragmanxt.com/case_sync/documents/case/" . $value;
                 } else {
                     $temp[$key] = $value;
                 }
@@ -459,29 +490,6 @@ $app->post('/stage_list', function () use ($app) {
 });
 
 
-$app->post('/next_stage', function () use ($app) {
-
-    verifyRequiredParams(array('data'));
-    $data_json = json_decode($app->request->post('data'));
-    $case_id = $data_json->case_id;
-    $next_stage = $data_json->next_stage;
-    $next_date = $data_json->next_date;
-
-    $db = new DbOperation();
-    $data = array();
-    $data["data"] = array();
-
-    $result = $db->next_stage($case_id, $next_stage, $next_date);
-    if ($result) {
-        $data['message'] = "Stage updated successfully";
-        $data['success'] = true;
-    } else {
-        $data['message'] = "Error in updating stage and next date";
-        $data['success'] = false;
-    }
-    echoResponse(200, $data);
-});
-
 $app->post('/case_history_documents', function () use ($app) {
 
     verifyRequiredParams(array('case_id'));
@@ -498,7 +506,7 @@ $app->post('/case_history_documents', function () use ($app) {
             $temp = array();
             foreach ($row as $key => $value) {
                 if ($key == 'docs') {
-                    $temp[$key] = 'https://pragmanxt.com/case_sync_pro/documents/case/' . $value;
+                    $temp[$key] = 'https://pragmanxt.com/case_sync/documents/case/' . $value;
                 } else {
                     $temp[$key] = $value;
                 }
@@ -514,7 +522,67 @@ $app->post('/case_history_documents', function () use ($app) {
     }
     echoResponse(200, $data);
 });
+$app->post('/add_sequence', function () use ($app) {
 
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $case_id = $data_json->case_id;
+    $sequence = $data_json->sequence;
+    $added_by = $data_json->added_by;
+
+    $db = new DbOperation();
+    $result = $db->add_sequence($case_id, $sequence, $added_by);
+    $data = array();
+    if ($result) {
+        $data["response"] = "data added successfully.";
+        $data["success"] = true;
+    } else {
+        $data["response"] = "error in inserting data , try again.";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+
+$app->post('/edit_sequence', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $id = $data_json->id;
+    $case_id = $data_json->case_id;
+    $sequence = $data_json->sequence;
+    $added_by = $data_json->added_by;
+
+    $db = new DbOperation();
+    $result = $db->edit_sequence($id, $case_id, $sequence, $added_by);
+    $data = array();
+    if ($result) {
+        $data["response"] = "data edited successfully.";
+        $data["success"] = true;
+    } else {
+        $data["response"] = "error in editing data , try again.";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+
+$app->post('/delete_sequence', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $id = $data_json->id;
+
+    $db = new DbOperation();
+    $result = $db->delete_sequence($id);
+    $data = array();
+    if ($result) {
+        $data["response"] = "data deleted successfully.";
+        $data["success"] = true;
+    } else {
+        $data["response"] = "error in deleting data , try again.";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
 $app->get('/get_interns_list', function () use ($app) {
     $db = new DbOperation();
     $data = array();
@@ -620,6 +688,99 @@ $app->post('/task_info', function () use ($app) {
 
 });
 
+
+$app->post('/proceed_case_add', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $case_id = $data_json->case_id;
+    $next_stage = $data_json->next_stage;
+    $next_date = $data_json->next_date;
+    $inserted_by = $data_json->inserted_by;
+    $remark = $data_json->remark;
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->proceed_case_add($case_id, $next_stage, $next_date, $remark, $inserted_by);
+    if ($result) {
+        $data['message'] = "Proceeded case.";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "Error in updating stage and next date";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+});
+
+$app->post('/proceed_case_edit', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $proceed_id = $data_json->proceed_id;
+    $case_id = $data_json->case_id;
+    $next_stage = $data_json->next_stage;
+    $next_date = $data_json->next_date;
+    $remark = $data_json->remark;
+    $inserted_by = $data_json->inserted_by;
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->proceed_case_edit($case_id, $next_stage, $next_date, $remark, $inserted_by, $proceed_id);
+    if ($result) {
+        $data['message'] = "Proceeded case.";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "Error in updating stage and next date";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+});
+
+$app->post('/proceed_case_delete', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $proceed_id = $data_json->proceed_id;
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->proceed_case_delete($proceed_id);
+    if ($result) {
+        $data['message'] = "Proceeded case.";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "Error in updating stage and next date";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+});
+
+
+$app->post('/upcoming_cases', function () use ($app) {
+
+    verifyRequiredParams(['data']);
+
+    $data_request = json_decode($app->request->post('data'), true);
+    $date = $data_request['date'];
+
+    $db = new DbOperation();
+
+    $result = $db->upcoming_cases($date);
+
+    $response = [];
+    foreach ($result as $key => $cases) {
+        $dateKey = (new DateTime($date))->modify("+{$key} day")->format('d/m/Y');
+        $response[$dateKey] = mysqli_fetch_all($cases, MYSQLI_ASSOC);
+    }
+
+    echoResponse(200, $response);
+});
 
 function verifyRequiredParams($required_fields)
 {

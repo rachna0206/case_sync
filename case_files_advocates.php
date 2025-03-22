@@ -111,7 +111,8 @@ if (isset($_REQUEST["btndelete"])) {
                 <div class="card-body">
                     <h5 class="card-title">Case No : <?php echo $data["case_no"] ?> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                         Company : <?php echo $data["name"] ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Case Type :
-                        <?php echo $data["case_type"] ?></h5>
+                        <?php echo $data["case_type"] ?>
+                    </h5>
 
                     <table class="table datatable">
                         <thead>
@@ -127,9 +128,7 @@ if (isset($_REQUEST["btndelete"])) {
                         <tbody>
                             <?php
 
-                            $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.case_type,c1.docs,c1.id as file_id,'main' as file_type,c1.sr_date as date_time,'admin' as handled_by from `case` c1,case_type c2 WHERE c1.case_type=c2.id  and  c1.id=? and docs!=''
-                                union
-                                SELECT c1.case_no,c2.case_type,m.docs,m.id as file_id ,'sub' as file_type,m.date_time,m.added_by as handled_by from `case` c1,case_type c2,multiple_doc m WHERE c1.case_type=c2.id and   m.c_id=c1.id and c1.id=?");
+                            $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.case_type,c1.docs,c1.id as file_id,'main' as file_type,c1.sr_date as date_time,handle_by as handled_by from `case` c1,case_type c2 WHERE c1.case_type=c2.id and c1.id=? and docs!='' union SELECT c1.case_no,c2.case_type,m.docs,m.id as file_id ,'sub' as file_type,m.date_time,m.added_by as handled_by from `case` c1,case_type c2,multiple_doc m WHERE c1.case_type=c2.id and m.c_id=c1.id and c1.id=?;");
                             $stmt->bind_param("ii", $id, $id);
                             $stmt->execute();
                             $Resp = $stmt->get_result();

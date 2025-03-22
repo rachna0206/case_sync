@@ -22,7 +22,7 @@ if (isset($_REQUEST["btndelete"])) {
         $stmt_del->bind_param("i", $c_id);
         $Resp = $stmt_del->execute();
         if (!$Resp) {
-            throw new Exception("Problem in deleting! " . strtok($obj->con1->error,  '('));
+            throw new Exception("Problem in deleting! " . strtok($obj->con1->error, '('));
         }
         $stmt_del->close();
     } catch (\Exception $e) {
@@ -38,98 +38,248 @@ if (isset($_REQUEST["btndelete"])) {
 
 
 if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== "") {
+
+    $allowed_mime_types = [
+        'application/vnd.ms-excel', // XLS (Old Excel Format)
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' // XLSX (New Excel Format)
+    ];
+
+    $file_type = $_FILES["excel_file"]["type"];
+
+    if (!in_array($file_type, $allowed_mime_types)) {
+        echo "<script>
+        alert('Invalid file type! Please upload an Excel file.');
+        window.location = 'case.php';
+        </script>";
+        header("");
+    }
+
+    // if($_FILES["excel_file"]["tmp_name"]){}
+
+    require 'Classes/PHPExcel.php';
+    require 'Classes/PHPExcel/IOFactory.php';
+
     $x_file = $_FILES["excel_file"]["tmp_name"];
-    $company_id = $_REQUEST["company_id"];
-    $handle_by = $_REQUEST["handle_by"];
-    $city = $_REQUEST["city_id"];
-    $case_type = $_REQUEST["case_type"];
-    set_include_path(get_include_path() . PATH_SEPARATOR . 'Classes/');
-    include 'Classes/PHPExcel/IOFactory.php';
-    $inputFileName = $x_file;
 
     try {
-        $objPHPExcel = PHPExcel_IOFactory::load($inputFileName);
+        $objPHPExcel = PHPExcel_IOFactory::load($x_file);
     } catch (Exception $e) {
-        die('Error loading file "' . pathinfo($inputFileName, PATHINFO_BASENAME) . '": ' . $e->getMessage());
+        die('Error loading file "' . pathinfo($x_file, PATHINFO_BASENAME) . '": ' . $e->getMessage());
     }
 
     $worksheet = $objPHPExcel->getActiveSheet();
     $allDataInSheet = $worksheet->toArray(null, true, true, true);
-    $arrayCount = count($allDataInSheet);
 
-    $msg1 = $msg2 = $msg3 = $msg4 = "";
-    $added = $not_added =  $already_exists = $null = 0;
+    $added = $updated = $proceedings_added = 0;
+
+    foreach ($allDataInSheet as $i => $row) {
+        if ($i < 2) {
+            continue;
+        }
+
+        $case_no = !empty($row["B"]) ? trim($row["B"]) : null;
+        $date_of_filing = !empty($row["A"]) ? $row["A"] : null;
+        $complainant = !empty($row["C"]) ? trim($row["C"]) : null;
+        $complainant_advocate = !empty($row["D"]) ? trim($row["D"]) : null;
+        $opponent = !empty($row["E"]) ? trim($row["E"]) : null;
+        $opponent_advocate = !empty($row["F"]) ? trim($row["F"]) : null;
+        $next_stage = !empty($row["G"]) ? strtolower(trim($row["G"])) : null;
+        $court_name = !empty($row["H"]) ? strtolower(trim($row["H"])) : null;
+        $remarks = !empty($row["I"]) ? trim($row["I"]) : null;
+        $next_date = !empty($row["J"]) ? $row["J"] : null;
+        $company_name = !empty($row["K"]) ? strtolower(trim($row["K"])) : null;
+        $case_type_name = !empty($row["L"]) ? strtolower(trim($row["L"])) : null;
+        $city_name = !empty($row["M"]) ? strtolower(trim($row["M"])) : null;
+
+        // if (!empty($next_date)) {
+        //     $possible_formats = ['d-m-Y'];
+        //     $next_date_object = null;
+
+        //     foreach ($possible_formats as $format) {
+        //         $next_date_object = DateTime::createFromFormat($format, $next_date);
+        //         if ($next_date_object !== false) {
+        //             break;
+        //         }
+        //     }
+
+        //     $next_date = $next_date_object ? $next_date_object->format('Y-m-d') : null;
+        // } else {
+        //     $next_date = null;
+        // }
+
+        // $date=date_create("2013-03-15");
+
+        // $next_date_obj = date_create_from_format('d-m-y', $next_date);
+        // $next_date = date_format($next_date_obj, 'Y-m-d');
+
+        // echo $next_date . "</br>";
 
 
-    for ($i = 2; $i <= $arrayCount; $i++) {
 
-        $case_no = trim($allDataInSheet[$i]["B"]);
-        $applicant = trim($allDataInSheet[$i]["C"]);
-        $respondent = strtolower(trim($allDataInSheet[$i]["D"])); // Company name
-        $complainant_advocate = trim($allDataInSheet[$i]["E"]);
-        $respondent_advocate = strtolower(trim($allDataInSheet[$i]["F"])); // Advocate name
-        $date_of_filing = $allDataInSheet[$i]["G"];
-        $next_date = $allDataInSheet[$i]["H"];
-        $stage=0;
-        $year = trim($allDataInSheet[$i]["K"]);
-       // $date_of_filing=date("Y-m-d",strtotime($date_of_filing));
-       // $next_date=date("Y-m-d",strtotime($next_date));
+        if (is_null($case_no) || is_null($city_name)) {
+            continue;
+        }
 
+        $stmt = $obj->con1->prepare("SELECT id FROM city WHERE LOWER(name) = ?");
+        $stmt->bind_param("s", $city_name);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
 
-       if ($case_no != "" && $company_id && $handle_by) {
-
-        // $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and case_type=? and `year`=? and city_id=?");
-     
-        $stmt_dmd_ck = $obj->con1->prepare("SELECT * FROM `case` WHERE case_no = ? and handle_by=? and city_id=? ");
-        $stmt_dmd_ck->bind_param("sii", $case_no, $handle_by, $city);
-        $stmt_dmd_ck->execute();
-        $dmd_result = $stmt_dmd_ck->get_result()->num_rows;
-        $stmt_dmd_ck->close();
-
-        if ($dmd_result > 0) {
-            $msg1 .= '<div style="font-family:serif;font-size:18px;color:rgb(214, 13, 42);padding:0px 0 0 0;margin:10px 0px 0px 0px;"> Record no. ' . $i . ": " . $case_no . " already exists in the database.</div>";
-            $already_exists++;
+        if ($result->num_rows > 0) {
+            $city_id = $result->fetch_assoc()["id"];
         } else {
-
-                //echo "<br>INSERT INTO `case`(`case_no`,`year`,`case_type`,`stage`,`company_id`, `complainant_advocate`,`respondent_advocate`, `date_of_filing`, `handle_by` , `applicant`,`opp_name`,`city_id`, `next_date`) VALUES ('$case_no', '$year','$case_type',$stage,$company_id, '$complainant_advocate','$respondent_advocate',  $date_of_filing,$handle_by,'$applicant','$respondent', $city, $next_date)";
-                $stmt = $obj->con1->prepare("INSERT INTO `case`(`case_no`,`year`,`case_type`,`stage`,`company_id`, `complainant_advocate`,`respondent_advocate`, `date_of_filing`, `handle_by` , `applicant`,`opp_name`,`city_id`, `next_date`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
-                $stmt->bind_param("siiiisssissis", $case_no, $year, $case_type, $stage, $company_id, $complainant_advocate, $respondent_advocate,  $date_of_filing, $handle_by, $applicant, $respondent, $city, $next_date);
-                $Resp = $stmt->execute();
+            $stmt = $obj->con1->prepare("INSERT INTO city (name, status) VALUES (?, 'enable')");
+            $stmt->bind_param("s", $city_name);
+            $stmt->execute();
+            $city_id = $stmt->insert_id;
+            $stmt->close();
+        }
+        $case_type_id = null;
+        if (!is_null($case_type_name)) {
+            $stmt = $obj->con1->prepare("SELECT id FROM case_type WHERE LOWER(case_type) = ?");
+            $stmt->bind_param("s", $case_type_name);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+            if ($result->num_rows > 0) {
+                $case_type_id = $result->fetch_assoc()["id"];
+            } else {
+                $stmt = $obj->con1->prepare("INSERT INTO case_type (case_type, status) VALUES (?, 'enable')");
+                $stmt->bind_param("s", $case_type_name);
+                $stmt->execute();
+                $case_type_id = $stmt->insert_id;
                 $stmt->close();
-                if ($Resp) {
-                    $msg2 .= '<div style="font-family:serif;font-size:18px;padding:0px 0 0 0;margin:10px 0px 0px 0px;">Record no. ' . $i . ": " . ' Added Successfully in the database.</div>';
-                    $added++;
-                } else {
-                    $msg3 .= '<div style="font-family:serif;font-size:18px;color:rgb(214, 13, 42);padding:0px 0 0 0;margin:10px 0px 0px 0px;">Record no. ' . $i . ": " . ' Record not added in the database.</div>';
-                    $not_added++;
+            }
+        }
+
+        $stage_id = null;
+        if (!is_null($next_stage)) {
+            $stmt = $obj->con1->prepare("SELECT id FROM stage WHERE LOWER(stage) = ?");
+            $stmt->bind_param("s", $next_stage);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+            if ($result->num_rows > 0) {
+                $stage_id = $result->fetch_assoc()["id"];
+            } else {
+                // echo "INSERT INTO stage (`stage`,`case_type_id`, `status`) VALUES ('" . $next_stage . "', '" . $next_stage . "', 'enable')";
+                $stmt = $obj->con1->prepare("INSERT INTO stage (`stage`,`case_type_id`, `status`) VALUES (?,?, 'enable')");
+                $stmt->bind_param("ss", $next_stage, $case_type_id);
+                $stmt->execute();
+                $stage_id = $stmt->insert_id;
+                $stmt->close();
+            }
+        }
+
+        $court_id = null;
+        if (!is_null($court_name)) {
+            $stmt = $obj->con1->prepare("SELECT id FROM court WHERE LOWER(name) = ?");
+            $stmt->bind_param("s", $court_name);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+            if ($result->num_rows > 0) {
+                $court_id = $result->fetch_assoc()["id"];
+            } else {
+                $stmt = $obj->con1->prepare("INSERT INTO court (name,case_type, status) VALUES (?,?, 'enable')");
+                $stmt->bind_param("ss", $court_name, $case_type_id);
+                $stmt->execute();
+                $court_id = $stmt->insert_id;
+                $stmt->close();
+            }
+        }
+
+        $company_id = null;
+        if (!is_null($company_name)) {
+            $stmt = $obj->con1->prepare("SELECT id FROM company WHERE name = ?");
+            $stmt->bind_param("s", $company_name);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+            if ($result->num_rows > 0) {
+                $company_id = $result->fetch_assoc()["id"];
+            } else {
+                $stmt = $obj->con1->prepare("INSERT INTO company (name, status) VALUES (?, 'enable')");
+                $stmt->bind_param("s", $company_name);
+                $stmt->execute();
+                $company_id = $stmt->insert_id;
+                $stmt->close();
+            }
+        }
+
+        $handle_by = null;
+        if (!is_null($opponent_advocate)) {
+            $stmt = $obj->con1->prepare("SELECT id FROM staff WHERE name = ? AND type = 'advocate'");
+            $stmt->bind_param("s", $opponent_advocate);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+            if ($result->num_rows > 0) {
+                $handle_by = $result->fetch_assoc()["id"];
+            } else {
+                $stmt = $obj->con1->prepare("INSERT INTO staff (name, type, status, email, password) VALUES (?, 'advocate', 'enable', 'test@mail.com', '12345')");
+                $stmt->bind_param("s", $opponent_advocate);
+                $stmt->execute();
+                $handle_by = $stmt->insert_id;
+                $stmt->close();
+            }
+        }
+
+
+
+        $stmt = $obj->con1->prepare("SELECT c.id,  Date_Format(cp.next_date,'%d-%m-%Y') as next_date, cp.next_stage as stage FROM `case` as c left join `case_procedings` as cp on cp.case_id = c.id WHERE c.case_no = ? AND c.city_id = ? order by cp.id desc limit 1");
+        $stmt->bind_param("si", $case_no, $city_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+
+        if ($result->num_rows > 0) {
+            $case = $result->fetch_assoc();
+            $case_id = $case["id"];
+            $inserted_by = $_SESSION['id'];
+            $formatted_next_date = date('d-m-Y', strtotime($next_date));
+
+            if ((!empty($next_date) && !empty($stage_id) && $case["next_date"] !== $formatted_next_date) || $case["stage"] !== $stage_id) {
+                $stmt = $obj->con1->prepare("INSERT INTO case_procedings (case_id, next_stage, next_date, remarks, inserted_by) VALUES (?,?, STR_TO_DATE(?, '%m-%d-%y'), ?, ?)");
+                $stmt->bind_param("iisss", $case_id, $stage_id, $next_date, $remarks, $inserted_by);
+                $result = $stmt->execute();
+                if ($stmt->affected_rows > 0) {
+                    $proceedings_added++;
                 }
             }
+
+
+            $stmt = $obj->con1->prepare("UPDATE `case` SET date_of_filing = ?, applicant = ?, complainant_advocate = ?, opp_name = ?, respondent_advocate = ?, next_date = ?, stage = ?, court_name = ?, company_id = ?, case_type = ?,handle_by = ? WHERE id = ? ;");
+            $stmt->bind_param("sssssssssssi", $date_of_filing, $complainant, $complainant_advocate, $opponent, $opponent_advocate, $next_date, $stage_id, $court_id, $company_id, $case_type_id, $handle_by, $case_id);
+            $stmt->execute();
+            if (mysqli_affected_rows($obj->con1) > 0) {
+                $updated++;
+            }
+            $stmt->close();
         } else {
-            $msg4 .= '<div style="font-family:serif;font-size:18px;color:rgb(214, 13, 42);padding:0px 0 0 0;margin:10px 0px 0px 0px;"> Record no. ' . $i . ": Missing or invalid dropdown values.</div>";
-            $null++;
+            // echo "INSERT INTO `case` (case_no, date_of_filing, applicant, complainant_advocate, opp_name, respondent_advocate, next_date, stage, court_name, company_id, case_type, city_id) VALUES('" . $case_no . "', '" . $date_of_filing . "', '" . $complainant . "', '" . $complainant_advocate . "', '" . $opponent . "', '" . $opponent_advocate . "', '" . $next_date . "', '" . $stage_id . "', '" . $court_id . "', '" . $company_id . "', '" . $case_type_id . "', '" . $city_id . "');";
+            $stmt = $obj->con1->prepare("INSERT INTO `case` (case_no, date_of_filing, applicant, complainant_advocate, opp_name, respondent_advocate, next_date, stage, court_name, company_id, case_type, city_id, handle_by) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)");
+            $stmt->bind_param("ssssssssssssi", $case_no, $date_of_filing, $complainant, $complainant_advocate, $opponent, $opponent_advocate, $next_date, $stage_id, $court_id, $company_id, $case_type_id, $city_id, $handle_by);
+            $stmt->execute();
+            $added++;
+            $stmt->close();
+            // if ($next_date != null && $case_id != null)
+            $stmt = $obj->con1->prepare("INSERT INTO case_procedings (case_id, next_stage, next_date, remarks, inserted_by) VALUES (?,?, STR_TO_DATE(?, '%m-%d-%y'), ?, ?)");
+            $stmt->bind_param("iisss", $case_id, $stage_id, $next_date, $remarks, $inserted_by);
+            $result = $stmt->execute();
+            if ($stmt->affected_rows > 0) {
+                $proceedings_added++;
+            }
+            $stmt->close();
         }
     }
 
-    //$msges = $msg1 . $msg2 . $msg3 . $msg4;
-    $add_str = ($added > 0) ? $added . " records added successfully.<br>" : "No records added.<br>";
-    $not_str = ($not_added > 0) ? $not_added . " records not added in the databse.<br>" : "";
-    $already_str = ($already_exists > 0) ? $already_exists . " client already exists in the database.<br>" : "";
-    $null_str = ($null > 0) ? $null . " records are null." : "";
-    $msges = "<div style='font-family:serif;font-size:18px;padding:0px 0 0 0;margin:10px 0px 0px 0px;'>" . $add_str . $not_str . $already_str . $null_str . "</div>";
-    $_SESSION["excel_msg"] = $msges;
-
-
-    header("location:case.php");
-}
-
-function normalizeDate($date)
-{
-    if (strpos($date, '-') !== false) {
-        return date('Y-m-d', strtotime(str_replace('-', '/', $date))); // Convert DD-MM-YYYY to YYYY-MM-DD
-    } elseif (strpos($date, '/') !== false) {
-        return date('Y-m-d', strtotime($date)); // Convert MM/DD/YYYY to YYYY-MM-DD
-    }
-    return null; // Invalid format
+    echo "<div>";
+    echo "$added records added successfully.<br>";
+    echo "$updated records updated successfully.<br>";
+    echo "$proceedings_added case proceedings added successfully.<br>";
+    echo "</div>";
 }
 ?>
 
@@ -168,6 +318,7 @@ function normalizeDate($date)
     }
 </script>
 
+
 <!-- Excel Modal -->
 <div class="modal fade" id="excelModal" tabindex="-1" aria-labelledby="excelModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -182,84 +333,7 @@ function normalizeDate($date)
             <!-- Modal Body -->
             <form method="post" enctype="multipart/form-data">
                 <div class="modal-body">
-                    <div class="col-md-12 mb-3">
-                        <label for="handle_by" class="form-label">Handled By</label>
-                        <select class="form-select" id="handle_by" name="handle_by" <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                            <option value="">Select an Advocate</option>
-                            <?php
-                            $comp = "SELECT * FROM `advocate` where status='Enable'";
-                            $result = $obj->select($comp);
-                            $selectedAdvocateId = isset($data['handle_by']) ? $data['handle_by'] : '';
 
-                            while ($row = mysqli_fetch_array($result)) {
-                                $selected = ($row["id"] == $selectedAdvocateId) ? 'selected' : '';
-                            ?>
-                                <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                    <?= htmlspecialchars($row["name"]) ?>
-                                </option>
-                            <?php } ?>
-                        </select>
-                    </div>
-
-                    <div class="col-md-12 mb-3">
-                        <label for="company_id" class="form-label">Company</label>
-                        <select class="form-select" id="company_id" name="company_id"
-                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                            <option value="">Select a Company</option>
-                            <?php
-                            $comp = "SELECT * FROM `company` where status='Enable'";
-                            $result = $obj->select($comp);
-                            $selectedCompanyId = isset($data['company_id']) ? $data['company_id'] : '';
-
-                            while ($row = mysqli_fetch_array($result)) {
-                                $selected = ($row["id"] == $selectedCompanyId) ? 'selected' : '';
-                            ?>
-                                <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                    <?= htmlspecialchars($row["name"]) ?>
-                                </option>
-                            <?php } ?>
-                        </select>
-                    </div>
-                    <div class="col-md-12 mb-3">
-                        <label for="city_id" class="form-label">Case Type</label>
-
-                        <select class="form-select" id="case_type" name="case_type"
-                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                            <option value="">Select Case Type</option>
-                            <?php
-                            $case_type = "SELECT * FROM `case_type` where `status`='enable'";
-                            $result_case_type = $obj->select($case_type);
-
-
-                            while ($row_case_type = mysqli_fetch_array($result_case_type)) {
-
-                            ?>
-                                <option value="<?= htmlspecialchars($row_case_type["id"]) ?>">
-                                    <?= htmlspecialchars($row_case_type["case_type"]) ?>
-                                </option>
-                            <?php } ?>
-                        </select>
-                    </div>
-                    <div class="col-md-12 mb-3">
-                        <label for="city_id" class="form-label">City Name</label>
-
-                        <select class="form-select" id="city_id" name="city_id"
-                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
-                            <option value="">Select a City</option>
-                            <?php
-                            $comp = "SELECT * FROM `city`";
-                            $result = $obj->select($comp);
-                            $selectedCompanyId = isset($data['city_id']) ? $data['city_id'] : '';
-
-                            while ($row = mysqli_fetch_array($result)) {
-                                $selected = ($row["id"] == $selectedCompanyId) ? 'selected' : '';
-                            ?>
-                                <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                    <?= htmlspecialchars($row["name"]) ?>
-                                </option>
-                            <?php } ?>
-                        </select>
-                    </div>
                     <div class="mb-3">
                         <label for="excel_file" class="form-label">Choose Excel File</label>
                         <input type="file" id="excel_file" name="excel_file" class="form-control" required>
@@ -275,6 +349,7 @@ function normalizeDate($date)
         </div>
     </div>
 </div>
+
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
@@ -317,10 +392,11 @@ function normalizeDate($date)
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 15px;">
                         <!-- Add button -->
-                            <button type="button" class="btn btn-success mt-4" style="margin-right: 15px;" onclick="javascript : add_data()" >
-                                <i class="bi bi-plus me-1"></i> Add
-                            </button>
-                        <div>
+                        <button type="button" class="btn btn-success mt-4" style="margin-right: 15px;"
+                            onclick="javascript : add_data()">
+                            <i class="bi bi-plus me-1"></i> Add
+                        </button>
+                        <!-- <div>
                             <a class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#excelModal"
                                 style="margin-right: 15px; color: #fff;">
                                 <i class="bx bx-upload"></i> Import Data
@@ -328,6 +404,16 @@ function normalizeDate($date)
                             <a class="btn btn-primary mt-4" href="excel/demo_client_list.xlsx">
                                 <i class="bx bx-download"></i> Download Demo Excel
                             </a>
+                        </div> -->
+                        <div>
+                            <a class="btn btn-primary mt-4" href="case_list_export.php">
+                                <i class="bx bx-upload"></i> Export Data
+                            </a>
+                            <a class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#excelModal"
+                                style="margin-right: 15px; color: #fff;">
+                                <i class="bx bx-download"></i> Import Data
+                            </a>
+
                         </div>
                     </div>
                 </div>
@@ -363,7 +449,7 @@ function normalizeDate($date)
                             }
 
 
-                        ?>
+                            ?>
                             <tr>
 
                                 <th scope="row"><?php echo $i; ?></th>
@@ -386,11 +472,12 @@ function normalizeDate($date)
                                             class="bx bx-show-alt bx-sm me-2"></i> </a>
                                     <a href="javascript:editdata('<?php echo $row["case_id"] ?>')"><i
                                             class="bx bx-edit-alt bx-sm me-2 text-success"></i> </a>
-                                    <a href="javascript:deletedata('<?php echo $row["case_id"] ?>','<?php echo $row["case_no"] ?>')"><i
+                                    <a
+                                        href="javascript:deletedata('<?php echo $row["case_id"] ?>','<?php echo $row["case_no"] ?>')"><i
                                             class="bx bx-trash bx-sm me-2 text-danger"></i> </a>
                                 </td>
                             </tr>
-                        <?php $i++;
+                            <?php $i++;
                         }
                         ?>
                     </tbody>
