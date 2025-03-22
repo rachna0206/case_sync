@@ -1066,6 +1066,68 @@ $app->post('/add_task', function () use ($app) {
     echoResponse(200, $data);
 });
 
+$app->post('/add_sequence', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $case_id = $data_json->case_id;
+    $sequence = $data_json->sequence;
+    $added_by = $data_json->added_by;
+    
+    $db = new DbOperation();
+    $result = $db->add_sequence($case_id, $sequence, $added_by);
+    $data = array();
+    if ($result) {
+        $data["response"] = "data added successfully.";
+        $data["success"] = true;
+    } else {
+        $data["response"] = "error in inserting data , try again.";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+
+$app->post('/edit_sequence', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $id = $data_json->id;
+    $case_id = $data_json->case_id;
+    $sequence = $data_json->sequence;
+    $added_by = $data_json->added_by;
+
+    $db = new DbOperation();
+    $result = $db->edit_sequence($id,$case_id, $sequence, $added_by);
+    $data = array();
+    if ($result) {
+        $data["response"] = "data edited successfully.";
+        $data["success"] = true;
+    } else {
+        $data["response"] = "error in editing data , try again.";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+
+$app->post('/delete_sequence', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $id = $data_json->id;
+
+    $db = new DbOperation();
+    $result = $db->delete_sequence($id);
+    $data = array();
+    if ($result) {
+        $data["response"] = "data deleted successfully.";
+        $data["success"] = true;
+    } else {
+        $data["response"] = "error in deleting data , try again.";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+
 
 $app->post('/delete_task', function () use ($app) {
 
