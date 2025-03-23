@@ -54,7 +54,7 @@ FROM
             a.respondent_advocate,
             a.date_of_filing,
             a.next_date,
-            DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter,
+            DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE) AS case_counter,
             cp.date_of_creation,
             @row_num := IF(@prev_case_id = a.id, @row_num + 1, 1) AS row_num,
             @prev_case_id := a.id
@@ -87,7 +87,7 @@ ORDER BY
     public function get_case_counter($intern_id)
     {
 
-        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.year, a.sr_date, b.name as court_name, a.applicant, a.opp_name, c.case_type, d.name as city_name,ad.name as advocate_name,a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date, DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as ad on ad.id = a.handle_by where DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE) order by a.id desc;");
+        $stmt = $this->con->prepare("SELECT a.id, a.case_no, a.year, a.sr_date, b.name as court_name, a.applicant, a.opp_name, c.case_type, d.name as city_name,ad.name as advocate_name,a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date, DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as ad on ad.id = a.handle_by where DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE) order by a.id desc;");
         //  $stmt->bind_param('i', $intern_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -143,7 +143,7 @@ ORDER BY
     }
     public function intern_case_history($intern_id) // added by jay 22-01-2025
     {
-        $stmt = $this->con->prepare("SELECT a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by',a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date,DATEDIFF(CURRENT_DATE , a.sr_date) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id order by a.id desc;");
+        $stmt = $this->con->prepare("SELECT a.id,a.case_no , a.applicant , a.opp_name , a.sr_date , a.court_name ,b.name as court_name,c.case_type, d.name as city_name , e.name as 'handle_by',a.complainant_advocate,a.respondent_advocate,a.date_of_filing,a.next_date,DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE) as case_counter from `case` as a join `court` as b on a.court_name = b.id join `case_type` as c on a.case_type = c.id join city as d on a.city_id = d.id join advocate as e on a.handle_by = e.id order by a.id desc;");
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -222,7 +222,7 @@ WHERE
     c.complainant_advocate,
     c.respondent_advocate,
     c.date_of_filing,
-    DATEDIFF(CURRENT_DATE, c.sr_date) as case_counter,
+    DATEDIFF(DATE_ADD(c.sr_date, INTERVAL 45 DAY),CURRENT_DATE) as case_counter,
     cps.stage,
     cp.next_stage,
     cp.next_date,
@@ -456,7 +456,7 @@ where
     }
     public function proceed_history($case_id)
     {
-        $stmt = $this->con->prepare("SELECT cp.*,s.stage from case_procedings as cp join stage as s on s.id = cp.next_stage where cp.case_id = ? order by cp.id desc;");
+        $stmt = $this->con->prepare("SELECT cp.*,s.stage,c.case_no,i.name from case_procedings as cp join stage as s on s.id = cp.next_stage join `case` as c on c.id = cp.case_id left join interns as i on i.id = cp.inserted_by where cp.case_id = ? order by cp.id desc;");
         $stmt->bind_param('i', $case_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -470,18 +470,38 @@ where
         $dateObj = new DateTime($date);
 
         for ($i = 0; $i < 3; $i++) {
-            $stmt = $this->con->prepare("SELECT  
-    case_id, case_no, applicant, opp_name, sr_date, court_name,  
-    case_type, city_name, handle_by, complainant_advocate,  
-    respondent_advocate, date_of_filing, next_date, next_stage_name, case_counter, sequence 
+            $stmt = $this->con->prepare("SELECT 
+    CAST(case_id AS CHAR) AS case_id, 
+    court_name,  
+    case_type, 
+    city_name, 
+    handle_by, 
+    complainant_advocate,  
+    respondent_advocate, 
+    date_of_filing, 
+    next_date, 
+    next_stage_name, 
+    CAST(case_counter AS CHAR) AS case_counter, 
+    sequence 
 FROM ( 
     SELECT  
-        a.id AS case_id, a.case_no, a.applicant, a.opp_name, a.sr_date,  
-        b.name AS court_name, c.case_type, d.name AS city_name, e.name AS handle_by,  
-        a.complainant_advocate, a.respondent_advocate, a.date_of_filing, 
-        cp.next_date, ns.stage AS next_stage_name,  
-        DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter, 
-        cp.date_of_creation, ts.sequence, 
+        CAST(a.id AS CHAR) AS case_id, 
+        a.case_no, 
+        a.applicant, 
+        a.opp_name, 
+        a.sr_date,  
+        b.name AS court_name, 
+        c.case_type, 
+        d.name AS city_name, 
+        e.name AS handle_by,  
+        a.complainant_advocate, 
+        a.respondent_advocate, 
+        a.date_of_filing, 
+        cp.next_date, 
+        ns.stage AS next_stage_name,  
+        CAST(DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY),CURRENT_DATE) AS CHAR) AS case_counter, 
+        cp.date_of_creation, 
+        ts.sequence, 
         @row_num := IF(@prev_case_id = a.id, @row_num + 1, 1) AS row_num, 
         @prev_case_id := a.id 
     FROM `case` AS a  
@@ -497,7 +517,8 @@ FROM (
     ORDER BY ts.sequence ASC, a.id, cp.next_date ASC, cp.date_of_creation DESC 
 ) AS CTE_CaseDetails  
 WHERE row_num = 1  
-ORDER BY sequence ASC, case_id DESC;");
+ORDER BY sequence ASC, case_id DESC;
+");
             $formattedDate = $dateObj->format('Y-m-d');
             $stmt->bind_param('s', $formattedDate);
             $stmt->execute();
