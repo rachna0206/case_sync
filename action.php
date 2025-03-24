@@ -168,7 +168,7 @@ if (isset($_REQUEST['action'])) {
         $type = "admin";
 
         $stmt = $obj->con1->prepare("INSERT INTO `staff`(`name`,`contact`,`email`,`password`,`status`,`type`) VALUES (?,?,?,?,?,?)");
-        $stmt->bind_param("sssss", $adv_name, $adv_contact, $adv_email, $adv_password, $status);
+        $stmt->bind_param("ssssss", $adv_name, $adv_contact, $adv_email, $adv_password, $status, $type);
         $Resp = $stmt->execute();
         $last_id = mysqli_insert_id($obj->con1);
         $stmt->close();

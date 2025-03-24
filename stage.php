@@ -91,11 +91,18 @@ if (isset($_REQUEST["btndelete"])) {
             <div class="card">
                 <div class="card-body">
                     <div class="card-title">
-                        <button type="button" class="btn btn-success">
+                        <a href="javascript:add_data()">
+                            <button type="button" class="btn btn-success">
+                                <i class="bi bi-plus me-1">
+                                </i>
+                                Add
+                            </button>
+                        </a>
+                        <!-- <button type="button" class="btn btn-success">
                             <i class="bi bi-plus me-1">
                             </i>
                             Add
-                        </button>
+                        </button> -->
                     </div>
                     <table class="table datatable">
                         <thead>

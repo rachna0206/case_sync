@@ -48,9 +48,9 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
 
     if (!in_array($file_type, $allowed_mime_types)) {
         echo "<script>
-        alert('Invalid file type! Please upload an Excel file.');
-        window.location = 'case.php';
-        </script>";
+            alert('Invalid file type! Please upload an Excel file.');
+            window.location = 'case.php';
+            </script>";
         header("");
     }
 
@@ -225,8 +225,6 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                 $stmt->close();
             }
         }
-
-
 
         $stmt = $obj->con1->prepare("SELECT c.id,  Date_Format(cp.next_date,'%d-%m-%Y') as next_date, cp.next_stage as stage FROM `case` as c left join `case_procedings` as cp on cp.case_id = c.id WHERE c.case_no = ? AND c.city_id = ? order by cp.id desc limit 1");
         $stmt->bind_param("si", $case_no, $city_id);
