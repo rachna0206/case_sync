@@ -316,7 +316,6 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
     }
 </script>
 
-
 <!-- Excel Modal -->
 <div class="modal fade" id="excelModal" tabindex="-1" aria-labelledby="excelModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -331,7 +330,85 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
             <!-- Modal Body -->
             <form method="post" enctype="multipart/form-data">
                 <div class="modal-body">
+                    <div class="col-md-12 mb-3">
+                        <label for="handle_by" class="form-label">Handled By</label>
+                        <select class="form-select" id="handle_by" name="handle_by"
+                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                            <option value="">Select an Advocate</option>
+                            <?php
+                            $comp = "SELECT * FROM `advocate` where status='Enable'";
+                            $result = $obj->select($comp);
+                            $selectedAdvocateId = isset($data['handle_by']) ? $data['handle_by'] : '';
 
+                            while ($row = mysqli_fetch_array($result)) {
+                                $selected = ($row["id"] == $selectedAdvocateId) ? 'selected' : '';
+                                ?>
+                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                        <?= htmlspecialchars($row["name"]) ?>
+                                    </option>
+                            <?php } ?>
+                        </select>
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label for="company_id" class="form-label">Company</label>
+                        <select class="form-select" id="company_id" name="company_id"
+                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                            <option value="">Select a Company</option>
+                            <?php
+                            $comp = "SELECT * FROM `company` where status='Enable'";
+                            $result = $obj->select($comp);
+                            $selectedCompanyId = isset($data['company_id']) ? $data['company_id'] : '';
+
+                            while ($row = mysqli_fetch_array($result)) {
+                                $selected = ($row["id"] == $selectedCompanyId) ? 'selected' : '';
+                                ?>
+                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                        <?= htmlspecialchars($row["name"]) ?>
+                                    </option>
+                            <?php } ?>
+                        </select>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label for="city_id" class="form-label">Case Type</label>
+
+                        <select class="form-select" id="case_type" name="case_type"
+                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                            <option value="">Select Case Type</option>
+                            <?php
+                            $case_type = "SELECT * FROM `case_type` where `status`='enable'";
+                            $result_case_type = $obj->select($case_type);
+
+
+                            while ($row_case_type = mysqli_fetch_array($result_case_type)) {
+
+                                ?>
+                                    <option value="<?= htmlspecialchars($row_case_type["id"]) ?>">
+                                        <?= htmlspecialchars($row_case_type["case_type"]) ?>
+                                    </option>
+                            <?php } ?>
+                        </select>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label for="city_id" class="form-label">City Name</label>
+
+                        <select class="form-select" id="city_id" name="city_id"
+                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                            <option value="">Select a City</option>
+                            <?php
+                            $comp = "SELECT * FROM `city`";
+                            $result = $obj->select($comp);
+                            $selectedCompanyId = isset($data['city_id']) ? $data['city_id'] : '';
+
+                            while ($row = mysqli_fetch_array($result)) {
+                                $selected = ($row["id"] == $selectedCompanyId) ? 'selected' : '';
+                                ?>
+                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
+                                        <?= htmlspecialchars($row["name"]) ?>
+                                    </option>
+                            <?php } ?>
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label for="excel_file" class="form-label">Choose Excel File</label>
                         <input type="file" id="excel_file" name="excel_file" class="form-control" required>
@@ -380,7 +457,9 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
             <li class="breadcrumb-item active">Data</li>
         </ol>
     </nav>
-</div><!-- End Page Title -->
+</div>
+
+<!-- End Page Title -->
 
 <section class="section">
     <div class="row">
