@@ -4,7 +4,6 @@ include "db_connect.php";
 $obj = new DB_Connect();
 date_default_timezone_set('Asia/Kolkata');
 $path = "";
-
 session_start();
 
 if (!isset($_SESSION["intern_userlogin"])) {
@@ -262,9 +261,21 @@ if (!isset($_SESSION["intern_userlogin"])) {
         </a>
       </li>
       <li class="nav-item">
+        <a class="nav-link collapsed" href="todays_case_intern.php">
+          <i class="bi bi-file-earmark"></i>
+          <span>Today's Cases</span>
+        </a>
+      </li>
+      <li class="nav-item">
         <a class="nav-link collapsed" href="case_hist_intern.php">
           <i class="bi bi-clock-history"></i>
           <span>Case History</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="case_counter_intern.php">
+          <i class="bi bi-clock-history"></i>
+          <span>Case Counter</span>
         </a>
       </li>
 

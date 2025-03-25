@@ -8,7 +8,7 @@ if (isset($_REQUEST["submit"])) {
   session_start();
   $ui = $_REQUEST["username"];
   $pa = $_REQUEST["password"];
-  $qr = $obj->con1->prepare("select * from `staff` where email=? and binary(password) =?");
+  $qr = $obj->con1->prepare("SELECT * from `staff` where email=? and binary(password) =? AND `type` = 'admin'");
   $qr->bind_param("ss", $ui, $pa);
   $qr->execute();
   $result = $qr->get_result();
@@ -27,8 +27,6 @@ if (isset($_REQUEST["submit"])) {
     setcookie("submit", "wrong_pass", time() + 3600, "/");
     header("location:login.php");
   }
-
-
 }
 ?>
 <!DOCTYPE html>

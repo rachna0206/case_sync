@@ -11,7 +11,7 @@ if (isset($_REQUEST["submit"])) {
   $ui = $_REQUEST["username_intern"];
   $pa = $_REQUEST["password_intern"];
   // echo "select id,username,password from admin where username='".$ui."' and binary(password) ='".$pa."'";
-  $qr = $obj->con1->prepare("select id,name,password,email from `staff` where email=? and binary(password) =?");
+  $qr = $obj->con1->prepare("select id,name,password,email from `staff` where email=? and binary(password) =? AND `type` = 'intern'");
   $qr->bind_param("ss", $ui, $pa);
   $qr->execute();
   $result = $qr->get_result();

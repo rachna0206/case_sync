@@ -108,7 +108,9 @@ include "alert.php";
                                                     (($row['status'] == 'allotted') ? 'primary' :
                                                         (($row['status'] == 'reassign') ? 'info' : 'danger')));
                                             ?>">
-                                                <?php echo ucfirst(str_replace("_", "-", $row["status"])); ?>
+                                                <?php
+                                                echo ucfirst(str_replace("_", "-", $row["status"]));
+                                                ?>
                                             </span>
                                         </h4>
                                     </td>
@@ -151,6 +153,20 @@ include "alert.php";
     </div>
 </section>
 
+
+<script>
+    $(document).ready(function () {
+        $('#example').DataTable({
+            "ordering": false, // Completely disables sorting
+            "bSort": false, // Alternative option for older DataTables versions
+            "columnDefs": [{
+                "orderable": false,
+                "targets": "_all"
+            } // Ensures all columns remain unsortable
+            ]
+        });
+    });
+</script>
 
 <?php
 include "footer_intern.php";

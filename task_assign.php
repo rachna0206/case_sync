@@ -2,7 +2,6 @@
 include "header_intern.php";
 
 $cno = $_COOKIE['case_id'];
-// echo "$cno";
 
 if (isset($_REQUEST["save"])) {
     $tid = $_COOKIE["assign_id"];  
@@ -13,34 +12,28 @@ if (isset($_REQUEST["save"])) {
     $new_status = "reassign";
     $old_status="re_alloted";
 
-    // Fetching the instruction from the task table based on case_id
     $stmt = $obj->con1->prepare("SELECT * FROM `task` WHERE `case_id` = ?");
-    $stmt->bind_param('i', $cno); // Changed $con to $cno
+    $stmt->bind_param('i', $cno); 
     $stmt->execute();
     $Resp = $stmt->get_result();
 
     if ($row = mysqli_fetch_array($Resp)) {
         $instruction = $row["instruction"];
     } else {
-        // Handle case where no rows were returned
         setcookie("sql_error", "No task found for this case ID.", time() + 3600, "/");
         header("location:task_intern.php");
         exit();
     }
 
     try {
-        // Prepare insert statement
         $stmt = $obj->con1->prepare("INSERT INTO task(`case_id`, `alloted_to`, `instruction`, `alloted_by`, `alloted_date`, `status`, `remark`) VALUES (?, ?, ?, ?, ?, ?,?)");
-        // Bind parameters
         $stmt->bind_param("iisisss", $cno, $intern, $instruction, $alloted_by, $alloted_date, $new_status, $remark);
         
-        // Execute and check response
         if (!$stmt->execute()) {
             throw new Exception("Problem in adding! " . strtok($obj->con1->error, "("));
         }
         $stmt->close();
         
-       // Update the status of the associated task in the task table
        $updateStmt = $obj->con1->prepare("UPDATE `task` SET `status` = ? WHERE `id` = ?");
        $updateStmt->bind_param("si", $old_status, $tid);
        $updateResp = $updateStmt->execute();
