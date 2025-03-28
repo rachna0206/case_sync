@@ -103,6 +103,7 @@ $app->post('/read_notification', function () use ($app) {
     }
     echoResponse(200, $data);
 });
+
 $app->post('/notification', function () use ($app) {
 
     verifyRequiredParams(array('intern_id'));
@@ -187,7 +188,7 @@ $app->post('/get_case_info', function () use ($app) {
             $temp = array();
             foreach ($row as $key => $value) {
                 if ($key == 'docs') {
-                    $temp[$key] = "https://pragmanxt.com/case_sync/documents/case/" . $value;
+                    $temp[$key] = "https://pragmanxt.com/case_sync_test/documents/case/" . $value;
                 } else {
                     $temp[$key] = $value;
                 }
@@ -341,16 +342,16 @@ $app->post('/intern_case_history', function () use ($app) {
 
 
     // verifyRequiredParams('intern_id');
-    verifyRequiredParams(array('intern_id'));
+    // verifyRequiredParams(array('intern_id'));
 
 
-    $intern_id = $app->request->post('intern_id');
+    // $intern_id = $app->request->post('intern_id');
 
     $db = new DbOperation();
     $data = array();
     $data["data"] = array();
 
-    $result = $db->intern_case_history($intern_id);
+    $result = $db->intern_case_history();
     if (mysqli_num_rows($result) > 0) {
         while ($row = $result->fetch_assoc()) {
             $temp = array();
@@ -506,7 +507,7 @@ $app->post('/case_history_documents', function () use ($app) {
             $temp = array();
             foreach ($row as $key => $value) {
                 if ($key == 'docs') {
-                    $temp[$key] = 'https://pragmanxt.com/case_sync/documents/case/' . $value;
+                    $temp[$key] = 'https://pragmanxt.com/case_sync_test/documents/case/' . $value;
                 } else {
                     $temp[$key] = $value;
                 }

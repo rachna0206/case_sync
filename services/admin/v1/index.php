@@ -292,7 +292,7 @@ $app->post('/get_case_documents', function () use ($app) {
             $temp = array();
             foreach ($row as $key => $value) {
                 if ($key == 'docs') {
-                    $temp[$key] = "https://pragmanxt.com/case_sync/documents/case/" . $value;
+                    $temp[$key] = "https://pragmanxt.com/case_sync_test/documents/case/" . $value;
                 } else {
                     $temp[$key] = $value;
                 }
@@ -596,7 +596,7 @@ $app->post('/get_case_info', function () use ($app) {
             $temp = array();
             foreach ($row as $key => $value) {
                 if ($key == 'docs') {
-                    $temp[$key] = "https://pragmanxt.com/case_sync/documents/case/" . $value;
+                    $temp[$key] = "https://pragmanxt.com/case_sync_test/documents/case/" . $value;
                 } else {
                     $temp[$key] = $value;
                 }
@@ -861,24 +861,23 @@ $app->post('/add_case', function () use ($app) {
 
     verifyRequiredParams(array('data'));
     $data_request = json_decode($app->request->post('data'));
-    $case_no = $data_request->case_no;//
-    $year = $data_request->year;//
-    $case_type = $data_request->case_type;//
-    $handle_by = $data_request->handle_by;//
-    $applicant = $data_request->applicant;//
-    $company_id = $data_request->company_id;//
-    $opp_name = $data_request->opp_name;//
-    $court_name = $data_request->court_name;//
-    $city_id = $data_request->city_id;//
-    $sr_date = $data_request->sr_date;//
-    $stage = $data_request->stage;//
-    $added_by = $data_request->added_by;//
-    $user_type = $data_request->user_type;//
-    $complainant_advocate = $data_request->complainant_advocate;//
-    $respondent_advocate = $data_request->respondent_advocate;//
-    $date_of_filing = $data_request->date_of_filing;//
-    $next_date = $data_request->next_date;//
-    $remarks = $data_request->remarks;//
+    $case_no = $data_request->case_no;
+    $year = $data_request->year;
+    $case_type = $data_request->case_type;
+    $handle_by = $data_request->handle_by;
+    $applicant = $data_request->applicant;
+    $company_id = $data_request->company_id;
+    $opp_name = $data_request->opp_name;
+    $court_name = $data_request->court_name;
+    $city_id = $data_request->city_id;
+    $sr_date = $data_request->sr_date;
+    $stage = $data_request->stage;
+    $added_by = $data_request->added_by;
+    $complainant_advocate = $data_request->complainant_advocate;
+    $respondent_advocate = $data_request->respondent_advocate;
+    $date_of_filing = $data_request->date_of_filing;
+    $next_date = $data_request->next_date;
+    $remarks = $data_request->remarks;
     $ImageFileName1 = "";
     if (isset($_FILES["case_image"]["name"])) {
 
@@ -929,7 +928,7 @@ $app->post('/add_case', function () use ($app) {
 
     $db = new DbOperation();
     $data = array();
-    $result = $db->add_case($case_no, $year, $company_id, $ImageFileName1, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $ImageFileName2, $added_by, $user_type, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date, $remarks);
+    $result = $db->add_case($case_no, $year, $company_id, $ImageFileName1, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $ImageFileName2, $added_by, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date, $remarks);
     if ($result) {
         if (isset($_FILES["case_image"]["name"])) {
             move_uploaded_file($case_img_path, "../../../documents/case/" . $ImageFileName1);
@@ -1073,7 +1072,7 @@ $app->post('/add_sequence', function () use ($app) {
     $case_id = $data_json->case_id;
     $sequence = $data_json->sequence;
     $added_by = $data_json->added_by;
-    
+
     $db = new DbOperation();
     $result = $db->add_sequence($case_id, $sequence, $added_by);
     $data = array();
@@ -1097,7 +1096,7 @@ $app->post('/edit_sequence', function () use ($app) {
     $added_by = $data_json->added_by;
 
     $db = new DbOperation();
-    $result = $db->edit_sequence($id,$case_id, $sequence, $added_by);
+    $result = $db->edit_sequence($id, $case_id, $sequence, $added_by);
     $data = array();
     if ($result) {
         $data["response"] = "data edited successfully.";

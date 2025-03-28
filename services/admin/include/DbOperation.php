@@ -13,7 +13,7 @@ class DbOperation
 
     public function loginAdvocate($user_id, $password)
     {
-        $stmt_login = $this->con->prepare("SELECT * FROM `staff` WHERE `email`=? AND BINARY `password`=? AND `status`='enable' AND `type`='advocate'");
+        $stmt_login = $this->con->prepare("SELECT * FROM `staff` WHERE `email`=? AND BINARY `password`=? AND `status`='enable' AND `type`='admin'");
         $stmt_login->bind_param("ss", $user_id, $password);
         $stmt_login->execute();
         $result = $stmt_login->get_result();
@@ -38,8 +38,8 @@ class DbOperation
     INNER JOIN `task` ON task.id = case_hist.task_id  
     INNER JOIN `case` c1 ON c1.id = task.case_id  
     INNER JOIN `stage` ON case_hist.stage = stage.id  
-    INNER JOIN `staff` AS intern ON task.alloted_to = intern.id AND intern.type = 'intern'  
-    INNER JOIN `staff` AS advocate ON advocate.id = task.alloted_by AND advocate.type = 'admin'  
+    INNER JOIN `staff` AS intern ON task.alloted_to = intern.id  
+    INNER JOIN `staff` AS advocate ON advocate.id = task.alloted_by 
     WHERE task.case_id = ?  
     ORDER BY case_hist.id DESC");
 
@@ -173,13 +173,7 @@ class DbOperation
     public function notifications()
     {
         // Fetch notifications
-        $stmt = $this->con->prepare("SELECT n1.*, s1.name 
-        FROM `notification` n1 
-        JOIN `staff` s1 ON n1.sender_id = s1.id 
-        WHERE n1.status = '1' 
-        AND n1.receiver_type = 'admin' 
-        AND s1.type = 'admin' 
-        ORDER BY n1.id DESC");
+        $stmt = $this->con->prepare("SELECT n1.*, s1.name FROM `notification` n1 JOIN `staff` s1 ON n1.sender_id = s1.id WHERE n1.status = '1' AND s1.type = 'admin' ORDER BY n1.id DESC");
         $stmt->execute();
         $notification = $stmt->get_result();
         $stmt->close();
@@ -317,11 +311,11 @@ class DbOperation
         $stmt->close();
         return $result;
     }
+
     public function add_case($case_no, $year, $company_id, $docs, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $multiple_images, $added_by, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date, $remarks)
     {
         $status = "enable";
 
-        // Insert into `case` table
         $stmt = $this->con->prepare("INSERT INTO `case` (`case_no`, `year`, `case_type`, `stage`, `company_id`, `handle_by`, `docs`, `applicant`, `opp_name`, `court_name`, `city_id`, `sr_date`, `status`, `complainant_advocate`, `respondent_advocate`, `date_of_filing`, `next_date`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param("siiiiisssiissssss", $case_no, $year, $case_type, $stage, $company_id, $handle_by, $docs, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date);
         $result = $stmt->execute();
@@ -329,13 +323,11 @@ class DbOperation
 
         $id = mysqli_insert_id($this->con);
 
-        // Insert into `case_procedings` with `inserted_by` as the user ID instead of 'admin'
         $stmt = $this->con->prepare("INSERT INTO `case_procedings`(`case_id`, `next_stage`, `next_date`, `remarks`, `inserted_by`) VALUES (?,?,?,?,?)");
         $stmt->bind_param("iissi", $id, $stage, $next_date, $remarks, $added_by);
         $result = $stmt->execute();
         $stmt->close();
 
-        // Insert multiple documents
         if ($multiple_images != null) {
             for ($i = 0; $i < sizeof($multiple_images); $i++) {
                 $stmt = $this->con->prepare("INSERT INTO `multiple_doc`(`c_id`, `docs`, `added_by`) VALUES (?,?,?)");
@@ -674,7 +666,7 @@ class DbOperation
 
     public function edit_advocate($advocate_id, $name, $contact, $email, $status, $password) // updated for new database
     {
-        $stmt = $this->con->prepare("UPDATE `staff` SET `name`=?, `contact`=?, `email`=?, `status`=?, `password`=? WHERE `id`=? AND `type`='advocate'");
+        $stmt = $this->con->prepare("UPDATE `staff` SET `name`=?, `contact`=?, `email`=?, `status`=?, `password`=? WHERE `id`=? AND `type`='admin'");
         $stmt->bind_param('sssssi', $name, $contact, $email, $status, $password, $advocate_id);
         $result = $stmt->execute();
         $stmt->close();
@@ -759,7 +751,8 @@ class DbOperation
             t.*, 
             c.case_no, 
             at_staff.name AS alloted_to_name, 
-            ab_staff.name AS alloted_by_name 
+            ab_staff.name AS alloted_by_name ,
+            at_staff.type as action_by
         FROM `task` AS t 
         JOIN `case` AS c ON t.case_id = c.id 
         JOIN `staff` AS at_staff ON at_staff.id = t.alloted_to 
@@ -836,7 +829,7 @@ class DbOperation
 
     public function get_task_history($task_no)
     {
-        $stmt = $this->con->prepare("SELECT * from case_hist where task_id = ? order by id desc");
+        $stmt = $this->con->prepare("SELECT c1.id, c1.case_no, case_hist.remarks, case_hist.status, case_hist.dos AS fdos, case_hist.date_time AS fdt, intern.name AS intern_name, stage.stage AS stage_name, advocate.name AS advocate_name FROM `case_hist` INNER JOIN `task` ON task.id = case_hist.task_id INNER JOIN `case` c1 ON c1.id = task.case_id INNER JOIN `stage` ON case_hist.stage = stage.id INNER JOIN `staff` AS intern ON task.alloted_to = intern.id INNER JOIN `staff` AS advocate ON advocate.id = task.alloted_by WHERE task.id = ? ORDER BY case_hist.id DESC");
         $stmt->bind_param("s", $task_no);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -878,7 +871,13 @@ class DbOperation
     }
     public function get_interns_list()
     {
-        $stmt = $this->con->prepare("SELECT * FROM `staff` WHERE type = 'intern' ORDER BY id DESC");
+        $stmt = $this->con->prepare("
+        SELECT id, name, contact, DATE_FORMAT(`date/time`, '%Y-%m-%d') AS date_time, email 
+        FROM `staff` 
+        WHERE `status` = 'enable' AND `type` = 'intern' 
+        ORDER BY id DESC;
+    ");
+
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -912,7 +911,7 @@ class DbOperation
     }
     public function proceed_history($case_id)
     {
-        $stmt = $this->con->prepare("SELECT cp.*,s.stage from case_procedings as cp join stage as s on s.id = cp.next_stage where cp.case_id = ? order by cp.id desc;");
+        $stmt = $this->con->prepare("SELECT cp.*,s.stage,st.name as inserted_by_name from case_procedings as cp join stage as s on s.id = cp.next_stage join staff as st on st.id = cp.inserted_by where cp.case_id = ? order by cp.id desc");
         $stmt->bind_param('i', $case_id);
         $stmt->execute();
         $result = $stmt->get_result();

@@ -13,7 +13,7 @@ class DbOperation
 
     public function loginIntern($user_id, $password)
     {
-        $stmt_login = $this->con->prepare("SELECT * FROM `staff` WHERE `email`=? AND BINARY `password`=? AND `status`='enable' AND `type`='intern'");
+        $stmt_login = $this->con->prepare("SELECT id, name, contact, DATE_FORMAT(`date/time`, '%Y-%m-%d') AS date_time, email ,password,status FROM `staff` WHERE email = ? AND password = ? AND `status` = 'enable' AND `type` = 'intern' ORDER BY id DESC");
         $stmt_login->bind_param("ss", $user_id, $password);
         $stmt_login->execute();
         $result = $stmt_login->get_result();
@@ -64,7 +64,7 @@ class DbOperation
                 LEFT JOIN `court` AS b ON a.court_name = b.id
                 LEFT JOIN `case_type` AS c ON a.case_type = c.id
                 LEFT JOIN `city` AS d ON a.city_id = d.id
-                LEFT JOIN `staff` AS e ON a.handle_by = e.id AND e.type = 'advocate'
+                LEFT JOIN `staff` AS e ON a.handle_by = e.id AND e.type = 'admin'
                 LEFT JOIN `case_procedings` AS cp ON a.id = cp.case_id
                 CROSS JOIN (SELECT @row_num := 0, @prev_case_id := NULL) AS vars
             WHERE
@@ -109,7 +109,7 @@ class DbOperation
         JOIN `court` AS b ON a.court_name = b.id 
         JOIN `case_type` AS c ON a.case_type = c.id 
         JOIN `city` AS d ON a.city_id = d.id 
-        JOIN `staff` AS ad ON ad.id = a.handle_by AND ad.type = 'advocate' 
+        JOIN `staff` AS ad ON ad.id = a.handle_by AND ad.type = 'admin' 
         WHERE DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY), CURRENT_DATE) 
         ORDER BY a.id DESC;
     ");
@@ -142,8 +142,8 @@ class DbOperation
             st.stage  
         FROM task AS t 
         JOIN `case` AS c ON t.case_id = c.id 
-        JOIN `staff` AS i ON i.id = t.alloted_to AND i.type = 'intern' 
-        JOIN `staff` AS a ON a.id = t.alloted_by AND a.type = 'advocate' 
+        JOIN `staff` AS i ON i.id = t.alloted_to 
+        JOIN `staff` AS a ON a.id = t.alloted_by 
         JOIN `stage` AS st ON st.id = c.stage 
         WHERE i.id = ? " . $qr . " 
         ORDER BY t.id DESC;
@@ -189,7 +189,7 @@ class DbOperation
         $stmt->close();
         return $result;
     }
-    public function intern_case_history($intern_id) // updated for new database
+    public function intern_case_history() // updated for new database
     {
         $stmt = $this->con->prepare("
         SELECT 
@@ -212,7 +212,7 @@ class DbOperation
         JOIN `court` AS b ON a.court_name = b.id 
         JOIN `case_type` AS c ON a.case_type = c.id 
         JOIN `city` AS d ON a.city_id = d.id 
-        JOIN `staff` AS e ON a.handle_by = e.id AND e.type = 'advocate' 
+        JOIN `staff` AS e ON a.handle_by = e.id AND e.type = 'admin' 
         ORDER BY a.id DESC;
     ");
 
@@ -231,7 +231,7 @@ class DbOperation
         JOIN `staff` s ON n.sender_id = s.id AND s.type = 'intern' 
         JOIN `task` AS t ON t.id = n.task_id 
         JOIN `case` AS c ON c.id = t.case_id 
-        WHERE n.status = '1' AND n.receiver_type = 'intern' AND n.receiver_id = ? 
+        WHERE n.status = '1' AND n.receiver_id = ? 
         ORDER BY n.id DESC
     ");
         $stmt->bind_param('i', $intern_id);
@@ -250,8 +250,7 @@ class DbOperation
         SELECT COUNT(*) AS count  
         FROM task AS t 
         JOIN `case` AS c ON t.case_id = c.id 
-        JOIN `staff` AS i ON i.id = t.alloted_to AND i.type = 'intern' 
-        JOIN `staff` AS a ON a.id = t.alloted_by AND a.type = 'advocate' 
+        JOIN `staff` AS i ON i.id = t.alloted_to
         JOIN stage AS st ON st.id = c.stage 
         WHERE i.id = ? 
         ORDER BY t.id DESC
@@ -288,7 +287,7 @@ class DbOperation
         JOIN `court` b ON a.court_name = b.id 
         JOIN `case_type` c ON a.case_type = c.id 
         JOIN `city` d ON a.city_id = d.id 
-        JOIN `staff` e ON a.handle_by = e.id AND e.type = 'advocate' 
+        JOIN `staff` e ON a.handle_by = e.id AND e.type = 'admin' 
         WHERE DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY), CURRENT_DATE)
     ");
         $stmt->execute();
@@ -331,7 +330,7 @@ class DbOperation
         JOIN stage AS st ON st.id = c.stage
         LEFT JOIN stage AS st2 ON st2.id = c.next_stage
         JOIN company AS cmp ON cmp.id = c.company_id
-        JOIN staff AS ad ON ad.id = c.handle_by AND ad.type = 'advocate'
+        JOIN staff AS ad ON ad.id = c.handle_by AND ad.type = 'admin'
         JOIN court AS crt ON crt.id = c.court_name
         JOIN city AS ct ON ct.id = c.city_id
         LEFT JOIN (
@@ -380,7 +379,7 @@ class DbOperation
         INNER JOIN `case` ON `case`.id = task.case_id 
         INNER JOIN `stage` ON `case_hist`.stage = stage.id 
         INNER JOIN `staff` AS intern_staff ON task.alloted_to = intern_staff.id AND intern_staff.type = 'intern' 
-        INNER JOIN `staff` AS advocate_staff ON advocate_staff.id = task.alloted_by AND advocate_staff.type = 'advocate' 
+        INNER JOIN `staff` AS advocate_staff ON advocate_staff.id = task.alloted_by AND advocate_staff.type = 'admin' 
         WHERE task.case_id = ? 
         ORDER BY `case_hist`.id DESC
     ");
@@ -501,7 +500,7 @@ class DbOperation
         INNER JOIN `case` c1 ON c1.id = task.case_id 
         INNER JOIN `stage` ON case_hist.stage = stage.id 
         INNER JOIN `staff` AS intern_staff ON task.alloted_to = intern_staff.id AND intern_staff.type = 'intern' 
-        INNER JOIN `staff` AS advocate_staff ON advocate_staff.id = task.alloted_by AND advocate_staff.type = 'advocate' 
+        INNER JOIN `staff` AS advocate_staff ON advocate_staff.id = task.alloted_by AND advocate_staff.type = 'admin' 
         WHERE task.case_id = ? 
         ORDER BY case_hist.id DESC
     ");
@@ -525,7 +524,7 @@ class DbOperation
     public function get_interns_list()
     {
         $stmt = $this->con->prepare("
-        SELECT id, name, contact, DATE_FORMAT(date_time, '%Y-%m-%d') AS date_time, email 
+        SELECT id, name, contact, DATE_FORMAT(`date/time`, '%Y-%m-%d') AS date_time, email 
         FROM `staff` 
         WHERE `status` = 'enable' AND `type` = 'intern' 
         ORDER BY id DESC;
@@ -542,7 +541,7 @@ class DbOperation
         $stmt = $this->con->prepare("
         SELECT id, name, contact, email 
         FROM `staff` 
-        WHERE `status` = 'enable' AND `type` = 'advocate' 
+        WHERE `status` = 'enable' AND `type` = 'admin' 
         ORDER BY id DESC;
     ");
 
@@ -638,7 +637,7 @@ class DbOperation
     }
     public function proceed_history($case_id)
     {
-        $stmt = $this->con->prepare("SELECT cp.*,s.stage from case_procedings as cp join stage as s on s.id = cp.next_stage where cp.case_id = ? order by cp.id desc;");
+        $stmt = $this->con->prepare("SELECT cp.*,s.stage,st.name as inserted_by_name from case_procedings as cp join stage as s on s.id = cp.next_stage join staff as st on st.id = cp.inserted_by where cp.case_id = ? order by cp.id desc");
         $stmt->bind_param('i', $case_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -671,7 +670,7 @@ class DbOperation
                 LEFT JOIN `court` AS b ON a.court_name = b.id  
                 LEFT JOIN `case_type` AS c ON a.case_type = c.id  
                 LEFT JOIN `city` AS d ON a.city_id = d.id  
-                LEFT JOIN `staff` AS e ON a.handle_by = e.id AND e.type = 'advocate'  
+                LEFT JOIN `staff` AS e ON a.handle_by = e.id AND e.type = 'admin'  
                 LEFT JOIN `case_procedings` AS cp ON a.id = cp.case_id  
                 LEFT JOIN `temp_sequence` AS ts ON a.id = ts.case_id 
                 LEFT JOIN `stage` AS ns ON cp.next_stage = ns.id 

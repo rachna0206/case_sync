@@ -2,34 +2,10 @@
 include "header_intern.php";
 error_reporting(E_ALL);
 
-if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
-    $mode = (isset($_COOKIE['edit_id'])) ? 'edit' : 'view';
-    $Id = (isset($_COOKIE['edit_id'])) ? $_COOKIE['edit_id'] : $_COOKIE['view_id'];
-    echo $stmt = $obj->con1->prepare("SELECT * FROM `case_hist` WHERE id=?");
-    $stmt->bind_param('i', $Id);
-    $stmt->execute();
-    $data = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-} else {
-    $cno = $_COOKIE['case_no'];
-}
-
 if (isset($_REQUEST["save"])) {
-    $tid = $_COOKIE["add_id"];
-    $stage = $_REQUEST['stage'];
     $remark = $_REQUEST['remark'];
-    $date = $_REQUEST['dos'];
-    $nextdate = $_REQUEST['ndt'];
-    $status = $_REQUEST['radio'];
+    $nextdate = $_REQUEST['next_date'];
     $next_stage = $_REQUEST['next_stage'];
-
-
-    $receiver_type = "advocate";
-    $sender_type = "intern";
-    $noti_type = "task_completed";
-    $noti_msg = "Task has been completed";
-    $noti_status = 1;
-    $play_status = 1;
 
     $stmt_case = $obj->con1->prepare("select * from `case` where case_no=?");
     $stmt_case->bind_param("s", $_COOKIE['case_no']);
@@ -37,7 +13,7 @@ if (isset($_REQUEST["save"])) {
     $Resp_case = $stmt_case->get_result()->fetch_assoc();
 
     try {
-        $stmt = $obj->con1->prepare("INSERT INTO case_hist(`task_id`, `stage`, `remarks`, `dos`, `nextdate`, `status`) VALUES (?,?,?,?,?,?)");
+        $stmt = $obj->con1->prepare("INSERT ");
         $stmt->bind_param("isssss", $tid, $stage, $remark, $date, $nextdate, $status);
         $Resp = $stmt->execute();
 
@@ -189,12 +165,10 @@ function generateUniqueFileName($directory, $filename)
                     <form class="row g-3 pt-3" method="post" enctype="multipart/form-data">
                         <div class="col-md-12">
                             <label for="stage" class="form-label">Current Stage</label>
-                            <select class="form-control" id="stage" name="stage" <?php
-                            echo isset($mode) && $mode === 'view' ? 'disabled' : '';
-                            ?>>
+                            <select class="form-control" id="stage" name="stage" disabled>
                                 <option value="">Select a Stage</option>
                                 <?php
-                                $stmt_case = $obj->con1->prepare("select * from `case` where case_no=?");
+                                $stmt_case = $obj->con1->prepare("select * from `case_procedings` where case_id=? order by id desc limit 1");
                                 $stmt_case->bind_param("s", $_COOKIE['case_no']);
                                 $stmt_case->execute();
                                 $Resp_case = $stmt_case->get_result()->fetch_assoc();
@@ -215,26 +189,14 @@ function generateUniqueFileName($directory, $filename)
                             <label for="title" class="form-label">Remark</label>
                             <input type="text" class="form-control" id="remark" name="remark"
                                 value="<?php echo (isset($mode) && isset($data['remarks'])) ? $data['remarks'] : ''; ?>"
-                                <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
+                                <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?> required>
                         </div>
 
-                        <div class="col-md-12">
-                            <label for="dos" class="form-label">Remark Date</label>
-                            <input type="date" class="form-control" id="dos" name="dos"
-                                value="<?php echo (isset($mode) && isset($data['dos']) && !empty($data['dos'])) ? date('Y-m-d', strtotime($data['dos'])) : date('Y-m-d'); ?>"
-                                <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
-                        </div>
 
-                        <div class="col-md-12" <?php echo (isset($mode)) ? 'hidden' : '' ?>>
-                            <label for="docs" class="form-label">Documents</label>
-                            <input type="file" class="form-control mb-3" id="docs" name="docs[]"
-                                onchange="readURL_multiple(this)" multiple>
-                            <div id="preview_file_div" style="color:blue"></div>
-                        </div>
 
                         <div class="col-md-12">
                             <label for="stage" class="form-label">Next Stage</label>
-                            <select class="form-control" id="next_stage" name="next_stage">
+                            <select class="form-control" id="next_stage" name="next_stage" required>
                                 <option value="">Select a Stage</option>
                                 <?php
                                 $stmt_case = $obj->con1->prepare("select * from `case` ");
@@ -257,9 +219,9 @@ function generateUniqueFileName($directory, $filename)
 
                         <div class="col-md-12">
                             <label for="dos" class="form-label">Next Date</label>
-                            <input type="date" class="form-control" id="ndt" name="ndt" value="" <?php
+                            <input type="date" class="form-control" id="next_date" name="next_date" value="" <?php
                             echo isset($mode) && $mode == 'view' ? 'readonly' : '';
-                            ?>>
+                            ?> required>
                         </div>
 
 

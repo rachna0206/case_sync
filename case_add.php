@@ -10,7 +10,6 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
     $data = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 }
-
 if (isset($_REQUEST["save"])) {
     $case_no = $_REQUEST['case_no'];
     $case_year = $_REQUEST['year'];
@@ -57,11 +56,19 @@ if (isset($_REQUEST["save"])) {
     }
 
     try {
-        //echo("INSERT INTO `case`(case_no, year, case_type, company_id, handle_by, docs, applicant, opp_name, court_name, city_id, sr_date, status) VALUES ($case_no, $case_year, $case_type, $company_id, $handle_by, $DocFileName, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status)");
+
         $stmt = $obj->con1->prepare("INSERT INTO `case`(case_no, `year`, case_type, company_id, handle_by, docs, applicant, opp_name, court_name, city_id, sr_date, date_of_filing, next_date, `status`,stage,complainant_advocate,respondent_advocate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param("sisiissssissssiss", $case_no, $case_year, $case_type, $company_id, $handle_by, $DocFileName, $applicant, $opp_name, $court_name, $city_id, $sr_date, $date_of_filing, $date_of_next_hearing, $status, $stage, $complainant_advocate, $respondent_advocate);
         $Resp = $stmt->execute();
         $insert_doc_id = mysqli_insert_id($obj->con1);
+        $stmt->close();
+
+        echo "INSERT into `case_proceedings` (`case_id`,`next_stage`,`next_date`,`inserted_by`) VALUES ($insert_doc_id,$stage,$date_of_next_hearing, ".$_SESSION['id'].");";
+
+        $stmt = $obj->con1->prepare("INSERT into `case_procedings` (`case_id`,`next_stage`,`next_date`,`inserted_by`) VALUES (?,?,?,?);");
+        $stmt->bind_param('iisi',$insert_doc_id,$stage,$date_of_next_hearing, $_SESSION['id']);
+        $stmt->execute();
+        $stmt->close();
 
         if (!$Resp) {
             throw new Exception(
