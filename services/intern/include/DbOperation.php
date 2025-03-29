@@ -55,7 +55,7 @@ class DbOperation
                 a.respondent_advocate,
                 a.date_of_filing,
                 a.next_date,
-                DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter,
+                45-DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter,
                 cp.date_of_creation,
                 @row_num := IF(@prev_case_id = a.id, @row_num + 1, 1) AS row_num,
                 @prev_case_id := a.id
@@ -104,7 +104,7 @@ class DbOperation
             a.respondent_advocate, 
             a.date_of_filing, 
             a.next_date, 
-            DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter 
+            45-DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter 
         FROM `case` AS a 
         JOIN `court` AS b ON a.court_name = b.id 
         JOIN `case_type` AS c ON a.case_type = c.id 
@@ -158,8 +158,8 @@ class DbOperation
     public function add_task_remark($task_id, $remark, $remark_date, $stage_id, $ImageFileName1, $case_id, $intern_id, $status)
     {
         // Insert into case_hist
-        $stmt = $this->con->prepare("INSERT INTO case_hist(`task_id`, `stage`, `remarks`, `dos`, `status`) VALUES (?,?,?,?,?)");
-        $stmt->bind_param("issss", $task_id, $stage_id, $remark, $remark_date, $status);
+        $stmt = $this->con->prepare("INSERT INTO case_hist(`task_id`, `stage`, `remarks`, `dos`, `status`,`added_by`) VALUES (?,?,?,?,?,?)");
+        $stmt->bind_param("issssi", $task_id, $stage_id, $remark, $remark_date, $status,$intern_id);
         $result = $stmt->execute();
         $stmt->close();
 
@@ -191,8 +191,7 @@ class DbOperation
     }
     public function intern_case_history() // updated for new database
     {
-        $stmt = $this->con->prepare("
-        SELECT 
+        $stmt = $this->con->prepare("SELECT 
             a.id, 
             a.case_no, 
             a.applicant, 
@@ -207,13 +206,15 @@ class DbOperation
             a.respondent_advocate, 
             a.date_of_filing, 
             a.next_date, 
-            DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter 
+            cmp.name as company_name,
+            45-DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter 
         FROM `case` AS a 
         JOIN `court` AS b ON a.court_name = b.id 
         JOIN `case_type` AS c ON a.case_type = c.id 
         JOIN `city` AS d ON a.city_id = d.id 
         JOIN `staff` AS e ON a.handle_by = e.id AND e.type = 'admin' 
-        ORDER BY a.id DESC;
+        join `company` as cmp on cmp.id = a.company_id
+        ORDER BY a.id DESC
     ");
 
         $stmt->execute();
@@ -318,7 +319,7 @@ class DbOperation
             c.complainant_advocate,
             c.respondent_advocate,
             c.date_of_filing,
-            DATEDIFF(CURRENT_DATE, c.sr_date) AS case_counter,
+            45-DATEDIFF(CURRENT_DATE, c.sr_date) AS case_counter,
             cps.stage,
             cp.next_stage,
             cp.next_date,
@@ -378,8 +379,8 @@ class DbOperation
         INNER JOIN `task` ON task.id = `case_hist`.task_id 
         INNER JOIN `case` ON `case`.id = task.case_id 
         INNER JOIN `stage` ON `case_hist`.stage = stage.id 
-        INNER JOIN `staff` AS intern_staff ON task.alloted_to = intern_staff.id AND intern_staff.type = 'intern' 
-        INNER JOIN `staff` AS advocate_staff ON advocate_staff.id = task.alloted_by AND advocate_staff.type = 'admin' 
+        INNER JOIN `staff` AS intern_staff ON task.alloted_to = intern_staff.id 
+        INNER JOIN `staff` AS advocate_staff ON advocate_staff.id = task.alloted_by 
         WHERE task.case_id = ? 
         ORDER BY `case_hist`.id DESC
     ");
@@ -662,7 +663,7 @@ class DbOperation
                     b.name AS court_name, c.case_type, d.name AS city_name, e.name AS handle_by,  
                     a.complainant_advocate, a.respondent_advocate, a.date_of_filing, 
                     cp.next_date, ns.stage AS next_stage_name,  
-                    DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter, 
+                    45-DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter, 
                     cp.date_of_creation, ts.sequence, 
                     @row_num := IF(@prev_case_id = a.id, @row_num + 1, 1) AS row_num, 
                     @prev_case_id := a.id 

@@ -514,7 +514,7 @@ $app->post('/add_task_remark', function () use ($app) {
     $stage_id = $data_request->stage_id;
     $remark_date = $data_request->remark_date;
     $case_id = $data_request->case_id;
-    $intern_id = $data_request->intern_id;
+    $intern_id = $data_request->inserted_by;
     $status = $data_request->status;
     $ImageFileName1 = "";
 
