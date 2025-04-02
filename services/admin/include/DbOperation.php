@@ -314,7 +314,7 @@ class DbOperation
 
     public function add_case($case_no, $year, $company_id, $docs, $opp_name, $court_name, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $multiple_images, $added_by, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date, $remarks)
     {
-        $status = "enable";
+        $status = "pending";
 
         $stmt = $this->con->prepare("INSERT INTO `case` (`case_no`, `year`, `case_type`, `stage`, `company_id`, `handle_by`, `docs`, `applicant`, `opp_name`, `court_name`, `city_id`, `sr_date`, `status`, `complainant_advocate`, `respondent_advocate`, `date_of_filing`, `next_date`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param("siiiiisssiissssss", $case_no, $year, $case_type, $stage, $company_id, $handle_by, $docs, $applicant, $opp_name, $court_name, $city_id, $sr_date, $status, $complainant_advocate, $respondent_advocate, $date_of_filing, $next_date);
@@ -657,6 +657,8 @@ class DbOperation
 
     public function edit_intern($intern_id, $name, $contact, $email, $status, $password) // updated for new database
     {
+
+        echo $qr = "UPDATE `staff` SET `name`='$name', `contact`='$contact', `email`='$email', `status`='$status', `password`='$password' WHERE `id`='$intern_id' AND `type`='intern'";
         $stmt = $this->con->prepare("UPDATE `staff` SET `name`=?, `contact`=?, `email`=?, `status`=?, `password`=? WHERE `id`=? AND `type`='intern'");
         $stmt->bind_param('sssssi', $name, $contact, $email, $status, $password, $intern_id);
         $result = $stmt->execute();
@@ -875,7 +877,7 @@ class DbOperation
         $stmt = $this->con->prepare("
         SELECT id, name, contact, DATE_FORMAT(`date/time`, '%Y-%m-%d') AS date_time, email 
         FROM `staff` 
-        WHERE `status` = 'enable' AND `type` = 'intern' 
+        WHERE `type` = 'intern' 
         ORDER BY id DESC;
     ");
 
