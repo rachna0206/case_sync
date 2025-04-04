@@ -159,7 +159,7 @@ class DbOperation
     {
         // Insert into case_hist
         $stmt = $this->con->prepare("INSERT INTO case_hist(`task_id`, `stage`, `remarks`, `dos`, `status`,`added_by`) VALUES (?,?,?,?,?,?)");
-        $stmt->bind_param("issssi", $task_id, $stage_id, $remark, $remark_date, $status,$intern_id);
+        $stmt->bind_param("issssi", $task_id, $stage_id, $remark, $remark_date, $status, $intern_id);
         $result = $stmt->execute();
         $stmt->close();
 
@@ -521,15 +521,9 @@ class DbOperation
         $stmt->close();
         return $result;
     }
-
     public function get_interns_list()
     {
-        $stmt = $this->con->prepare("
-        SELECT id, name, contact, DATE_FORMAT(`date/time`, '%Y-%m-%d') AS date_time, email 
-        FROM `staff` 
-        WHERE `status` = 'enable' AND `type` = 'intern' 
-        ORDER BY id DESC;
-    ");
+        $stmt = $this->con->prepare("SELECT id, name, contact, DATE_FORMAT(`date/time`, '%Y-%m-%d') AS date_time, email ,password,status FROM `staff` WHERE `type` = 'intern' ORDER BY id DESC;");
 
         $stmt->execute();
         $result = $stmt->get_result();

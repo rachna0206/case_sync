@@ -874,12 +874,7 @@ class DbOperation
     }
     public function get_interns_list()
     {
-        $stmt = $this->con->prepare("
-        SELECT id, name, contact, DATE_FORMAT(`date/time`, '%Y-%m-%d') AS date_time, email 
-        FROM `staff` 
-        WHERE `type` = 'intern' 
-        ORDER BY id DESC;
-    ");
+        $stmt = $this->con->prepare("SELECT id, name, contact, DATE_FORMAT(`date/time`, '%Y-%m-%d') AS date_time, email ,password,status FROM `staff` WHERE `type` = 'intern' ORDER BY id DESC;");
 
         $stmt->execute();
         $result = $stmt->get_result();
