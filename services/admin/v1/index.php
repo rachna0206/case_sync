@@ -204,7 +204,31 @@ $app->get('/get_advocate_list', function () use ($app) {
     }
     echoResponse(200, $data);
 });
+$app->post('/task_reassign', function () use ($app) {
 
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $task_id = $data_json->task_id;
+    $intern_id = $data_json->assigned_id;
+    $reassign_id = $data_json->reassign_id;
+    $remark = $data_json->remark;
+    $remark_date = $data_json->remark_date;
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->task_reassign($task_id, $intern_id, $reassign_id, $remark, $remark_date);
+    if ($result) {
+        $data['message'] = "task reassigned successfully";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "error in reassigning task";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+
+});
 $app->post('/stage_court_list', function () use ($app) {
 
     verifyRequiredParams(array('case_type_id'));
