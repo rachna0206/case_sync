@@ -747,21 +747,7 @@ class DbOperation
     }
     public function get_task_info($task_id)
     {
-        $stmt = $this->con->prepare("
-            SELECT 
-                t.*, 
-                c.case_no, 
-                at_staff.name AS alloted_to_name, 
-                ab_staff.name AS alloted_by_name ,
-                at_staff.type as action_by,
-            c.stage
-            FROM `task` AS t 
-            JOIN `case` AS c ON t.case_id = c.id 
-            JOIN `staff` AS at_staff ON at_staff.id = t.alloted_to 
-            JOIN `staff` AS ab_staff ON ab_staff.id = t.alloted_by 
-            WHERE t.id = ?;
-    ");
-
+        $stmt = $this->con->prepare("SELECT t.*, c.case_no, at_staff.name AS alloted_to_name, ab_staff.name AS alloted_by_name , at_staff.type as action_by, c.stage, st.stage as stage_name FROM `task` AS t JOIN `case` AS c ON t.case_id = c.id JOIN `staff` AS at_staff ON at_staff.id = t.alloted_to JOIN `staff` AS ab_staff ON ab_staff.id = t.alloted_by JOIN `stage` AS st on st.id = c.stage WHERE t.id = ?;");
         $stmt->bind_param('i', $task_id);
         $stmt->execute();
         $result = $stmt->get_result();
