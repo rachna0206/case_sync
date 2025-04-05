@@ -530,9 +530,10 @@ $app->post('/add_sequence', function () use ($app) {
     $case_id = $data_json->case_id;
     $sequence = $data_json->sequence;
     $added_by = $data_json->added_by;
+    $remark = $data_json->remark;
 
     $db = new DbOperation();
-    $result = $db->add_sequence($case_id, $sequence, $added_by);
+    $result = $db->add_sequence($case_id, $sequence, $added_by, $remark);
     $data = array();
     if ($result) {
         $data["response"] = "data added successfully.";
@@ -552,9 +553,10 @@ $app->post('/edit_sequence', function () use ($app) {
     $case_id = $data_json->case_id;
     $sequence = $data_json->sequence;
     $added_by = $data_json->added_by;
+    $remark = $data_json->remark;
 
     $db = new DbOperation();
-    $result = $db->edit_sequence($id, $case_id, $sequence, $added_by);
+    $result = $db->edit_sequence($id, $case_id, $sequence, $added_by, $remark);
     $data = array();
     if ($result) {
         $data["response"] = "data edited successfully.";
@@ -565,7 +567,6 @@ $app->post('/edit_sequence', function () use ($app) {
     }
     echoResponse(200, $data);
 });
-
 $app->post('/delete_sequence', function () use ($app) {
 
     verifyRequiredParams(array('data'));

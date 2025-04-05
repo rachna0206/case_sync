@@ -646,39 +646,45 @@ class DbOperation
         $dateObj = new DateTime($date);
 
         for ($i = 0; $i < 3; $i++) {
-            $stmt = $this->con->prepare("
-            SELECT  
-                case_id, case_no, applicant, opp_name, sr_date, court_name,  
-                case_type, city_name, handle_by, complainant_advocate,  
-                respondent_advocate, date_of_filing, next_date, next_stage_name, case_counter, sequence 
-            FROM ( 
-                SELECT  
-                    a.id AS case_id, a.case_no, a.applicant, a.opp_name, a.sr_date,  
-                    b.name AS court_name, c.case_type, d.name AS city_name, e.name AS handle_by,  
-                    a.complainant_advocate, a.respondent_advocate, a.date_of_filing, 
-                    cp.next_date, ns.stage AS next_stage_name,  
-                    45-DATEDIFF(CURRENT_DATE, a.sr_date) AS case_counter, 
-                    cp.date_of_creation, ts.sequence, 
-                    @row_num := IF(@prev_case_id = a.id, @row_num + 1, 1) AS row_num, 
-                    @prev_case_id := a.id 
-                FROM `case` AS a  
-                LEFT JOIN `court` AS b ON a.court_name = b.id  
-                LEFT JOIN `case_type` AS c ON a.case_type = c.id  
-                LEFT JOIN `city` AS d ON a.city_id = d.id  
-                LEFT JOIN `staff` AS e ON a.handle_by = e.id AND e.type = 'admin'  
-                LEFT JOIN `case_procedings` AS cp ON a.id = cp.case_id  
-                LEFT JOIN `temp_sequence` AS ts ON a.id = ts.case_id 
-                LEFT JOIN `stage` AS ns ON cp.next_stage = ns.id 
-                CROSS JOIN ( SELECT @row_num := 0, @prev_case_id := NULL ) AS vars  
-                WHERE cp.next_date = ? 
-                ORDER BY ts.sequence ASC, a.id, cp.next_date ASC, cp.date_of_creation DESC 
-            ) AS CTE_CaseDetails  
-            WHERE row_num = 1  
-            ORDER BY sequence ASC, case_id DESC;
+            $stmt = $this->con->prepare("SELECT  
+    CONVERT(a.id,CHAR) AS case_id, 
+    a.case_no, 
+    a.applicant, 
+    a.opp_name, 
+    a.sr_date,  
+    b.name AS court_name, 
+    c.case_type, 
+    d.name AS city_name, 
+    e.name AS handle_by,  
+    a.complainant_advocate, 
+    a.respondent_advocate, 
+    a.date_of_filing, 
+    cp.next_date, 
+    ns.stage AS next_stage_name,  
+    CONVERT(45-DATEDIFF(CURRENT_DATE, a.sr_date),char) AS case_counter, 
+    ts.sequence, 
+    CONVERT(ts.id,char) AS sequence_id 
+FROM `case` AS a  
+LEFT JOIN `court` AS b ON a.court_name = b.id  
+LEFT JOIN `case_type` AS c ON a.case_type = c.id  
+LEFT JOIN `city` AS d ON a.city_id = d.id  
+LEFT JOIN `staff` AS e ON a.handle_by = e.id AND e.type = 'admin'  
+LEFT JOIN `temp_sequence` AS ts ON a.id = ts.case_id 
+LEFT JOIN `case_procedings` AS cp 
+    ON a.id = cp.case_id 
+    AND cp.date_of_creation = (
+        SELECT MAX(cp2.date_of_creation) 
+        FROM `case_procedings` AS cp2 
+        WHERE cp2.case_id = a.id
+        AND cp2.next_date = ?
+    ) 
+LEFT JOIN `stage` AS ns ON cp.next_stage = ns.id 
+WHERE cp.next_date = ? 
+ORDER BY ts.sequence ASC, a.id DESC;
         ");
 
             $formattedDate = $dateObj->format('Y-m-d');
-            $stmt->bind_param('s', $formattedDate);
+            $stmt->bind_param('ss', $formattedDate, $formattedDate);
             $stmt->execute();
             $temp = $stmt->get_result();
             $stmt->close();
@@ -691,20 +697,20 @@ class DbOperation
         return $result;
     }
 
-    public function add_sequence($case_id, $sequence, $added_by)
+    public function add_sequence($case_id, $sequence, $added_by, $remark)
     {
 
-        $stmt = $this->con->prepare("INSERT INTO `temp_sequence`(`case_id`, `sequence`, `added_by`) VALUES (?,?,?)");
-        $stmt->bind_param("iii", $case_id, $sequence, $added_by);
+        $stmt = $this->con->prepare("INSERT INTO `temp_sequence`(`case_id`, `sequence`, `added_by`,`remark`) VALUES (?,?,?,?)");
+        $stmt->bind_param("iiis", $case_id, $sequence, $added_by, $remark);
         $result = $stmt->execute();
         $stmt->close();
         return $result;
     }
 
-    public function edit_sequence($id, $case_id, $sequence, $added_by)
+    public function edit_sequence($id, $case_id, $sequence, $added_by, $remark)
     {
-        $stmt = $this->con->prepare("UPDATE `temp_sequence` SET `case_id`=?,`sequence`=?,`added_by`=? WHERE `id`=?");
-        $stmt->bind_param("iisi", $case_id, $sequence, $added_by, $id);
+        $stmt = $this->con->prepare("UPDATE `temp_sequence` SET `case_id`=?,`sequence`=?,`added_by`=?,`remark`=? WHERE `id`=?");
+        $stmt->bind_param("iissi", $case_id, $sequence, $added_by, $remark, $id);
         $result = $stmt->execute();
         $stmt->close();
         return $result;

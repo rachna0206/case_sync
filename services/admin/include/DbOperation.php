@@ -658,7 +658,6 @@ class DbOperation
     public function edit_intern($intern_id, $name, $contact, $email, $status, $password) // updated for new database
     {
 
-        echo $qr = "UPDATE `staff` SET `name`='$name', `contact`='$contact', `email`='$email', `status`='$status', `password`='$password' WHERE `id`='$intern_id' AND `type`='intern'";
         $stmt = $this->con->prepare("UPDATE `staff` SET `name`=?, `contact`=?, `email`=?, `status`=?, `password`=? WHERE `id`=? AND `type`='intern'");
         $stmt->bind_param('sssssi', $name, $contact, $email, $status, $password, $intern_id);
         $result = $stmt->execute();
@@ -1025,20 +1024,20 @@ ORDER BY ts.sequence ASC, a.id DESC;
         return $result;
     }
 
-    public function add_sequence($case_id, $sequence, $added_by)
+    public function add_sequence($case_id, $sequence, $added_by,$remark)
     {
 
-        $stmt = $this->con->prepare("INSERT INTO `temp_sequence`(`case_id`, `sequence`, `added_by`) VALUES (?,?,?)");
-        $stmt->bind_param("iii", $case_id, $sequence, $added_by);
+        $stmt = $this->con->prepare("INSERT INTO `temp_sequence`(`case_id`, `sequence`, `added_by`,`remark`) VALUES (?,?,?,?)");
+        $stmt->bind_param("iiis", $case_id, $sequence, $added_by,$remark);
         $result = $stmt->execute();
         $stmt->close();
         return $result;
     }
 
-    public function edit_sequence($id, $case_id, $sequence, $added_by)
+    public function edit_sequence($id, $case_id, $sequence, $added_by,$remark)
     {
-        $stmt = $this->con->prepare("UPDATE `temp_sequence` SET `case_id`=?,`sequence`=?,`added_by`=? WHERE `id`=?");
-        $stmt->bind_param("iisi", $case_id, $sequence, $added_by, $id);
+        $stmt = $this->con->prepare("UPDATE `temp_sequence` SET `case_id`=?,`sequence`=?,`added_by`=?,`remark`=? WHERE `id`=?");
+        $stmt->bind_param("iissi", $case_id, $sequence, $added_by,$remark, $id);
         $result = $stmt->execute();
         $stmt->close();
         return $result;
