@@ -234,7 +234,7 @@ $app->post('/get_case_counter', function () use ($app) {
     $db = new DbOperation();
     $data = array();
     $data["data"] = array();
-    $result = $db->get_case_counter($intern_id);
+    $result = $db->get_case_counter();
 
     if (mysqli_num_rows($result) > 0) {
         while ($row = $result->fetch_assoc()) {
