@@ -10,9 +10,9 @@ if ($_REQUEST["action"] == "get_notification") {
     $html = '';
     $ids = "";
     if ($_SESSION["user_type"] == "advocate") {
-        $noti_qry = "SELECT n1.*,a1.name FROM `notification` n1,advocate a1 where n1.sender_id=a1.id and n1.status='1' and  n1.receiver_type='advocate'  order by n1.id desc ";
+        $noti_qry = "SELECT n1.*,s1.name FROM `notification` n1,staff s1 where n1.sender_id=s1.id and n1.status='1' and ( n1.receiver_id='".$_SESSION["intern_id"]."' or n1.type='task_completed')  order by n1.id desc ";
     } else {
-        $noti_qry = "SELECT n1.*,i1.name FROM `notification` n1,interns i1 where n1.sender_id=i1.id and n1.status='1' and n1.receiver_type='intern'   and n1.receiver_id='".$_SESSION["intern_id"]."' order by n1.id desc ";
+        $noti_qry = "SELECT n1.*,s1.name FROM `notification` n1,staff s1 where n1.sender_id=s1.id and n1.status='1' and n1.receiver_id='".$_SESSION["intern_id"]."' order by n1.id desc ";
     }
     
 //echo $noti_qry;
@@ -34,7 +34,7 @@ if ($_REQUEST["action"] == "get_notification") {
             $ids .= $notification["id"] . ",";
 
             if ($notification["type"] == "task_created") {
-                $msg = "Task Created";
+                $msg = "Task Created"; 
                 $icon = "bi bi-file-earmark-plus text-primary";
             }
             else if($notification["type"] == "task_reassigned")
