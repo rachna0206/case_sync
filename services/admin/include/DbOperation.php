@@ -785,14 +785,14 @@ class DbOperation
         $data = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
-        // Update original task status to re-alloted
-        $stmt = $this->con->prepare("UPDATE task SET `status`='re_alloted', `reassign_status`='re_alloted' WHERE id=?");
-        $stmt->bind_param('i', $task_id);
-        $result1 = $stmt->execute();
-        $stmt->close();
+
+
+
 
         // Extract task details for reassignment
         $case_id = $data["case_id"];
+        $old_alloted_to = $data["alloted_to"];
+        $old_alloted_by = $data["alloted_by"];
         $alloted_to = $reassign_id;
         $instruction = $data["instruction"];
         $alloted_by = $intern_id;  // Intern ID now comes from `staff`
@@ -802,27 +802,43 @@ class DbOperation
         $reassign_status = $data["reassign_status"];
         $old_remark = $data["remark"];
 
-        // Insert new reassigned task (Removed action_by column)
-        $stmt = $this->con->prepare("INSERT INTO `task`(`case_id`, `alloted_to`, `instruction`, `alloted_by`, `alloted_date`, `expected_end_date`, `status`, `reassign_status`, `remark`) VALUES (?,?,?,?,?,?,?,?,?)");
-        $stmt->bind_param('iisisssss', $case_id, $alloted_to, $instruction, $alloted_by, $alloted_date, $expected_end_date, $status, $reassign_status, $old_remark);
-        $result2 = $stmt->execute();
-        $new_task_id = mysqli_insert_id($this->con);
+
+
+
+        // Update original task status to re-alloted
+        $stmt = $this->con->prepare("UPDATE task SET `status`='re_alloted', alloted_to=? , alloted_by=? WHERE id=?");
+        $stmt->bind_param('iii', $alloted_to, $alloted_by, $task_id);
+        $result1 = $stmt->execute();
         $stmt->close();
 
+
+
+
+
         // Fetch case stage
+
         $stmt = $this->con->prepare("SELECT stage FROM `case` WHERE id = ?");
         $stmt->bind_param('i', $case_id);
         $stmt->execute();
-        $stage = $stmt->get_result()->fetch_assoc();
+        $stage_info = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
-        $stage_id = $stage["stage"];
-        $status = 'enable';
+        $stage_id = $stage_info["stage"];
+        $status = 'pending';
 
         // Insert into case history
         $stmt = $this->con->prepare("INSERT INTO `case_hist`(`task_id`, `stage`, `remarks`, `dos`, `status`) VALUES (?,?,?,?,?)");
-        $stmt->bind_param('iisss', $new_task_id, $stage_id, $remark, $remark_date, $status);
+        $stmt->bind_param('iisss', $task_id, $stage_id, $remark, $remark_date, $status);
         $result3 = $stmt->execute();
+        $case_hist_id = mysqli_insert_id($this->con);
+        $stmt->close();
+
+
+        $stmt = $this->con->prepare("INSERT INTO `reassign_table`(`case_hist_id`, `alloted_to`, `alloted_by`, `current_alloted`, `date_time`) VALUES (?,?,?,?,NOW())");
+        //  $current_dttm = date('Y-m-d H:i:s');
+        $stmt->bind_param('iiiis', $case_hist_id, $old_alloted_to, $old_alloted_by, $reassign_id);
+        $result2 = $stmt->execute();
+        $new_task_id = mysqli_insert_id($this->con);
         $stmt->close();
 
         return $result1 && $result2 && $result3;
