@@ -75,7 +75,7 @@ class DbOperation
         }
 
         $status = "enable";
-        $type = "advocate"; // Set advocate type
+        $type = "admin"; // Set advocate type
 
         // Insert new advocate into staff table
         $stmt = $this->con->prepare("INSERT INTO `staff`(`name`, `contact`, `email`, `status`, `password`, `type`) VALUES (?, ?, ?, ?, ?, ?)");
@@ -340,6 +340,20 @@ class DbOperation
     }
 
 
+    // Added by Jay 11-04-2025
+    public function edit_case($case_id, $case_no, $year, $company_id, $opponent, $court_id, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $complainant_advocate, $respondent_advocate, $date_of_filing)
+    {
+
+
+        $stmt = $this->con->prepare("update `case` set case_no=?, `year` = ? , case_type=? , court_name=?, city_id=?, sr_date=?, handle_by=? , applicant=?, opp_name=? , stage=?, complainant_advocate = ?, respondent_advocate=?, date_of_filing=?, company_id=? where id=?");
+        $stmt->bind_param("siiiisississsii", $case_no, $year, $case_type, $court_id, $city_id, $sr_date, $handle_by, $applicant, $opponent, $stage, $complainant_advocate, $respondent_advocate, $date_of_filing, $company_id, $case_id);
+        $result = $stmt->execute();
+        $stmt->close();
+
+        return $result;
+    }
+
+
     public function edit_documents($file_type, $file_id, $added_by, $document)
     {
         if ($file_type == 'main') {
@@ -419,6 +433,14 @@ class DbOperation
         $stmt->bind_param("iissi", $case_id, $next_stage, $formatted_date, $remark, $inserted_by);
         $result = $stmt->execute();
         $stmt->close();
+
+        //update case master
+
+        $stmt_case = $this->con->prepare("update `case` set stage=? where id=?");
+        $stmt_case->bind_param("ii", $next_stage, $case_id);
+        $stmt_case->execute();
+        $stmt_case->close();
+
 
         return $result;
     }
@@ -868,7 +890,7 @@ class DbOperation
 
     public function get_task_history($task_no)
     {
-        $stmt = $this->con->prepare("SELECT c1.id, c1.case_no, case_hist.remarks, case_hist.status, case_hist.dos AS fdos, case_hist.date_time AS fdt, intern.name AS added_by, stage.stage AS stage_name, advocate.name AS advocate_name FROM `case_hist` INNER JOIN `task` ON task.id = case_hist.task_id INNER JOIN `case` c1 ON c1.id = task.case_id INNER JOIN `stage` ON case_hist.stage = stage.id INNER JOIN `staff` AS intern ON task.alloted_to = intern.id INNER JOIN `staff` AS advocate ON advocate.id = task.alloted_by WHERE task.id = ? ORDER BY case_hist.id DESC");
+        $stmt = $this->con->prepare("SELECT c1.id, c1.case_no, case_hist.remarks, case_hist.status, case_hist.dos AS fdos, case_hist.date_time AS fdt,  stage.stage AS stage_name, advocate.name AS added_by FROM `case_hist` INNER JOIN `task` ON task.id = case_hist.task_id INNER JOIN `case` c1 ON c1.id = task.case_id INNER JOIN `stage` ON case_hist.stage = stage.id  INNER JOIN `staff` AS advocate ON advocate.id = case_hist.added_by WHERE task.id = ? ORDER BY case_hist.id DESC");
         $stmt->bind_param("s", $task_no);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -976,6 +998,7 @@ class DbOperation
     ns.stage AS next_stage_name,  
     CONVERT(45-DATEDIFF(CURRENT_DATE, a.sr_date),char) AS case_counter, 
     ts.sequence, 
+    ts.remark,
     CONVERT(ts.id,char) AS sequence_id 
 FROM `case` AS a  
 LEFT JOIN `court` AS b ON a.court_name = b.id  
@@ -1010,20 +1033,20 @@ ORDER BY ts.sequence ASC, a.id DESC;
         return $result;
     }
 
-    public function add_sequence($case_id, $sequence, $added_by,$remark)
+    public function add_sequence($case_id, $sequence, $added_by, $remark)
     {
 
         $stmt = $this->con->prepare("INSERT INTO `temp_sequence`(`case_id`, `sequence`, `added_by`,`remark`) VALUES (?,?,?,?)");
-        $stmt->bind_param("iiis", $case_id, $sequence, $added_by,$remark);
+        $stmt->bind_param("iiis", $case_id, $sequence, $added_by, $remark);
         $result = $stmt->execute();
         $stmt->close();
         return $result;
     }
 
-    public function edit_sequence($id, $case_id, $sequence, $added_by,$remark)
+    public function edit_sequence($id, $case_id, $sequence, $added_by, $remark)
     {
         $stmt = $this->con->prepare("UPDATE `temp_sequence` SET `case_id`=?,`sequence`=?,`added_by`=?,`remark`=? WHERE `id`=?");
-        $stmt->bind_param("iissi", $case_id, $sequence, $added_by,$remark, $id);
+        $stmt->bind_param("iissi", $case_id, $sequence, $added_by, $remark, $id);
         $result = $stmt->execute();
         $stmt->close();
         return $result;

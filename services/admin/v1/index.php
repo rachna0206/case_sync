@@ -971,6 +971,47 @@ $app->post('/add_case', function () use ($app) {
     }
     echoResponse(200, $data);
 });
+
+
+// added by Jay 11-04-2025
+
+$app->post('/edit_case', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_request = json_decode($app->request->post('data'));
+    $case_id = $data_request->case_id;
+    $case_no = $data_request->case_no;
+    $year = $data_request->year;
+    $case_type = $data_request->case_type;
+    $handle_by = $data_request->handle_by;
+    $applicant = $data_request->applicant;
+    $company_id = $data_request->company_id;
+    $opponent = $data_request->opponent;
+    $court_id = $data_request->court_id;
+    $city_id = $data_request->city_id;
+    $sr_date = $data_request->sr_date;
+    $stage = $data_request->stage;
+    $complainant_advocate = $data_request->complainant_advocate;
+    $respondent_advocate = $data_request->respondent_advocate;
+    $date_of_filing = $data_request->date_of_filing;
+
+
+
+    $db = new DbOperation();
+    $data = array();
+    $result = $db->edit_case($case_id, $case_no, $year, $company_id, $opponent, $court_id, $city_id, $sr_date, $case_type, $handle_by, $applicant, $stage, $complainant_advocate, $respondent_advocate, $date_of_filing);
+    if ($result) {
+
+        $data["message"] = "Case Updated successfully";
+        $data["success"] = true;
+    } else {
+        $data["message"] = "Error in updating case , try again";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+
+
 $app->post('/edit_task', function () use ($app) {
 
     verifyRequiredParams(array('data'));
@@ -1099,7 +1140,7 @@ $app->post('/add_sequence', function () use ($app) {
     $remark = $data_json->remark;
 
     $db = new DbOperation();
-    $result = $db->add_sequence($case_id, $sequence, $added_by,$remark);
+    $result = $db->add_sequence($case_id, $sequence, $added_by, $remark);
     $data = array();
     if ($result) {
         $data["response"] = "data added successfully.";
@@ -1122,7 +1163,7 @@ $app->post('/edit_sequence', function () use ($app) {
     $remark = $data_json->remark;
 
     $db = new DbOperation();
-    $result = $db->edit_sequence($id, $case_id, $sequence, $added_by,$remark);
+    $result = $db->edit_sequence($id, $case_id, $sequence, $added_by, $remark);
     $data = array();
     if ($result) {
         $data["response"] = "data edited successfully.";

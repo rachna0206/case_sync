@@ -182,7 +182,7 @@ class DbOperation
     }
     public function task_remark_list($task_id)
     {
-        $stmt = $this->con->prepare("SELECT `case_hist`.*,st.stage from `task` inner join `case_hist` on task.id = case_hist.task_id  join stage as st on st.id = `case_hist`.`stage`WHERE task.id = ? ORDER BY case_hist.id DESC");
+        $stmt = $this->con->prepare("SELECT `case_hist`.*,st.stage, advocate.name AS added_by from `task` inner join `case_hist` on task.id = case_hist.task_id  join stage as st on st.id = `case_hist`.`stage` INNER JOIN `staff` AS advocate ON advocate.id = case_hist.added_by WHERE task.id = ? ORDER BY case_hist.id DESC");
         $stmt->bind_param("s", $task_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -594,7 +594,20 @@ class DbOperation
         $stmt->bind_param("iisss", $case_id, $next_stage, $formatted_date, $remark, $inserted_by);
         $result = $stmt->execute();
         $stmt->close();
+
+
+        //update case master
+
+        $stmt_case = $this->con->prepare("update `case` set stage=? where id=?");
+        $stmt_case->bind_param("ii", $next_stage, $case_id);
+        $stmt_case->execute();
+        $stmt_case->close();
+
+
         return $result;
+
+
+
     }
     public function proceed_case_edit($case_id, $next_stage, $input_date, $remark, $inserted_by, $proceed_id)
     {
@@ -663,6 +676,7 @@ class DbOperation
     ns.stage AS next_stage_name,  
     CONVERT(45-DATEDIFF(CURRENT_DATE, a.sr_date),char) AS case_counter, 
     ts.sequence, 
+      ts.remark,
     CONVERT(ts.id,char) AS sequence_id 
 FROM `case` AS a  
 LEFT JOIN `court` AS b ON a.court_name = b.id  
