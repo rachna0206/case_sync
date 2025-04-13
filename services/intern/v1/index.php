@@ -49,6 +49,31 @@ $app->post('/login_intern', function () use ($app) {
     echoResponse(200, $data);
 });
 
+$app->post('/add_task', function () use ($app) {
+
+    verifyRequiredParams(array('data'));
+    $data_json = json_decode($app->request->post('data'));
+    $case_id = $data_json->case_id;
+    $alloted_to = $data_json->alloted_to;
+    $instructions = $data_json->instructions;
+    $alloted_by = $data_json->alloted_by;
+    $alloted_date = $data_json->alloted_date;
+    $expected_end_date = $data_json->expected_end_date;
+    $remark = $data_json->remark;
+
+    $db = new DbOperation();
+    $result = $db->add_task($case_id, $alloted_to, $instructions, $alloted_by, $alloted_date, $expected_end_date, $remark);
+    $data = array();
+    if ($result) {
+        $data["response"] = "data added successfully.";
+        $data["success"] = true;
+    } else {
+        $data["response"] = "error in inserting data , try again.";
+        $data["success"] = false;
+    }
+    echoResponse(200, $data);
+});
+
 $app->post('/intern_task_list', function () use ($app) {
 
 
@@ -429,6 +454,7 @@ $app->post('/task_reassign', function () use ($app) {
         $data['success'] = false;
     }
     echoResponse(200, $data);
+
 
 });
 

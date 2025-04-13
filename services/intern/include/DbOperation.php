@@ -135,6 +135,7 @@ class DbOperation
             c.case_no,
             t.instruction,
             i.name AS alloted_to,
+            t.alloted_to as alloted_to_id,
             a.name AS alloted_by,
             t.alloted_date,
             t.expected_end_date,
@@ -145,11 +146,11 @@ class DbOperation
         JOIN `staff` AS i ON i.id = t.alloted_to 
         JOIN `staff` AS a ON a.id = t.alloted_by 
         JOIN `stage` AS st ON st.id = c.stage 
-        WHERE i.id = ? " . $qr . " 
+        WHERE i.id = ? or t.alloted_by = ? " . $qr . " 
         ORDER BY t.id DESC;
     ");
 
-        $stmt->bind_param("s", $intern_id);
+        $stmt->bind_param("ss", $intern_id, $intern_id);
         $stmt->execute();
         $result = $stmt->get_result();
         $stmt->close();
@@ -178,7 +179,22 @@ class DbOperation
         $result = $stmt->execute();
         $stmt->close();
 
-        return $result && $Resp_img;
+
+        $type = "remark_added";
+        $alloted_by = $intern_id;
+        $alloted_to = 0;
+        $msg = "Remark has been added";
+        $status = 1;
+        $playstatus = 1;
+
+        $stmt = $this->con->prepare("insert into notification (`task_id`, `type`, `sender_id`, `receiver_id`, `msg`, `status`, `playstatus`, `datetime`) values (?,?,?,?,?,?,?,NOW())");
+        $stmt->bind_param('isiisii', $task_id, $type, $alloted_by, $alloted_to, $msg, $status, $playstatus);
+        $result2 = $stmt->execute();
+        $stmt->close();
+
+        return $result && $Resp_img && $result2;
+
+
     }
     public function task_remark_list($task_id)
     {
@@ -296,6 +312,31 @@ class DbOperation
         $stmt->close();
 
         return [$result, $case_count, $task_count, $todays_case_count, $counters_count];
+    }
+    public function add_task($case_id, $alloted_to, $instrctions, $alloted_by, $alloted_date, $expected_end_date, $remark)
+    {
+        $status = "allotted";
+        $stmt = $this->con->prepare("INSERT INTO `task`(`case_id`, `alloted_to`, `instruction`, `alloted_by`, `alloted_date`, `expected_end_date`, `status`, `remark`) VALUES (?,?,?,?,?,?,?,?)");
+        $stmt->bind_param('iissssss', $case_id, $alloted_to, $instrctions, $alloted_by, $alloted_date, $expected_end_date, $status, $remark);
+        $result = $stmt->execute();
+        $task_id = $this->con->insert_id;
+        $stmt->close();
+
+        // insert into notification values (null,5,'task_assigned',1,3,'New task has been assigned',1,0,NOW())
+
+        $type = "task_assigned";
+        $msg = "New task has been assigned";
+        $status = 1;
+        $playstatus = 1;
+
+        $stmt = $this->con->prepare("insert into notification (`task_id`, `type`, `sender_id`, `receiver_id`, `msg`, `status`, `playstatus`, `datetime`) values (?,?,?,?,?,?,?,NOW())");
+        $stmt->bind_param('isiisii', $task_id, $type, $alloted_by, $alloted_to, $msg, $status, $playstatus);
+        $result = $stmt->execute();
+        $stmt->close();
+
+
+
+        return $result;
     }
 
     public function get_case_info($case_id)
@@ -440,14 +481,14 @@ class DbOperation
         $data = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
-        // Update original task status to re-alloted
-        $stmt = $this->con->prepare("UPDATE task SET `status`='re_alloted', `reassign_status`='re_alloted' WHERE id=?");
-        $stmt->bind_param('i', $task_id);
-        $result1 = $stmt->execute();
-        $stmt->close();
+
+
+
 
         // Extract task details for reassignment
         $case_id = $data["case_id"];
+        $old_alloted_to = $data["alloted_to"];
+        $old_alloted_by = $data["alloted_by"];
         $alloted_to = $reassign_id;
         $instruction = $data["instruction"];
         $alloted_by = $intern_id;  // Intern ID now comes from `staff`
@@ -457,30 +498,60 @@ class DbOperation
         $reassign_status = $data["reassign_status"];
         $old_remark = $data["remark"];
 
-        // Insert new reassigned task (Removed action_by column)
-        $stmt = $this->con->prepare("INSERT INTO `task`(`case_id`, `alloted_to`, `instruction`, `alloted_by`, `alloted_date`, `expected_end_date`, `status`, `reassign_status`, `remark`) VALUES (?,?,?,?,?,?,?,?,?)");
-        $stmt->bind_param('iisisssss', $case_id, $alloted_to, $instruction, $alloted_by, $alloted_date, $expected_end_date, $status, $reassign_status, $old_remark);
+
+
+
+        // Update original task status to re-alloted
+        $stmt = $this->con->prepare("UPDATE task SET `status`='re_alloted', alloted_to=? , alloted_by=? WHERE id=?");
+        $stmt->bind_param('iii', $alloted_to, $alloted_by, $task_id);
+        $result1 = $stmt->execute();
+        $stmt->close();
+
+
+
+
+
+        // Fetch case stage
+
+        $stmt = $this->con->prepare("SELECT stage FROM `case` WHERE id = ?");
+        $stmt->bind_param('i', $case_id);
+        $stmt->execute();
+        $stage_info = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $stage_id = $stage_info["stage"];
+        $status = 'pending';
+
+        // Insert into case history
+        $stmt = $this->con->prepare("INSERT INTO `case_hist`(`task_id`, `stage`, `remarks`, `dos`, `added_by` , `status`) VALUES (?,?,?,?,?,?)");
+        $stmt->bind_param('iissis', $task_id, $stage_id, $remark, $remark_date, $intern_id, $status);
+        $result3 = $stmt->execute();
+        $case_hist_id = mysqli_insert_id($this->con);
+        $stmt->close();
+
+
+        $stmt = $this->con->prepare("INSERT INTO `reassign_table`(`case_hist_id`, `alloted_to`, `alloted_by`, `current_alloted`, `date_time`) VALUES (?,?,?,?,NOW())");
+        //  $current_dttm = date('Y-m-d H:i:s');
+        $stmt->bind_param('iiii', $case_hist_id, $old_alloted_to, $old_alloted_by, $reassign_id);
         $result2 = $stmt->execute();
         $new_task_id = mysqli_insert_id($this->con);
         $stmt->close();
 
-        // Fetch case stage
-        $stmt = $this->con->prepare("SELECT stage FROM `case` WHERE id = ?");
-        $stmt->bind_param('i', $case_id);
-        $stmt->execute();
-        $stage = $stmt->get_result()->fetch_assoc();
+        $type = "task_reassigned";
+        $alloted_by = $intern_id;
+        $alloted_to = $reassign_id;
+        $msg = "Task has been reassigned";
+        $status = 1;
+        $playstatus = 1;
+
+        $stmt = $this->con->prepare("insert into notification (`task_id`, `type`, `sender_id`, `receiver_id`, `msg`, `status`, `playstatus`, `datetime`) values (?,?,?,?,?,?,?,NOW())");
+        $stmt->bind_param('isiisii', $task_id, $type, $alloted_by, $alloted_to, $msg, $status, $playstatus);
+        $result4 = $stmt->execute();
         $stmt->close();
 
-        $stage_id = $stage["stage"];
-        $status = 'enable';
+        return $result1 && $result2 && $result3 && $result4;
 
-        // Insert into case history
-        $stmt = $this->con->prepare("INSERT INTO `case_hist`(`task_id`, `stage`, `remarks`, `dos`, `status`) VALUES (?,?,?,?,?)");
-        $stmt->bind_param('iisss', $new_task_id, $stage_id, $remark, $remark_date, $status);
-        $result3 = $stmt->execute();
-        $stmt->close();
 
-        return $result1 && $result2 && $result3;
     }
     public function get_case_remarks($case_id) // updated for new database
     {
@@ -604,7 +675,21 @@ class DbOperation
         $stmt_case->close();
 
 
-        return $result;
+        $type = "case_proceed";
+        $alloted_by = $inserted_by;
+        $alloted_to = 0;
+        $msg = "Case has been Proceeded";
+        $status = 1;
+        $playstatus = 1;
+
+        $stmt = $this->con->prepare("insert into notification (`task_id`, `type`, `sender_id`, `receiver_id`, `msg`, `status`, `playstatus`, `datetime`) values (?,?,?,?,?,?,?,NOW())");
+        $stmt->bind_param('isiisii', $case_id, $type, $alloted_by, $alloted_to, $msg, $status, $playstatus);
+        $result2 = $stmt->execute();
+        $stmt->close();
+
+
+
+        return $result && $result2;
 
 
 
