@@ -245,7 +245,7 @@ class DbOperation
         $stmt = $this->con->prepare("
         SELECT n.*, s.name, c.case_no 
         FROM `notification` n 
-        JOIN `staff` s ON n.sender_id = s.id AND s.type = 'intern' 
+        JOIN `staff` s ON n.sender_id = s.id 
         JOIN `task` AS t ON t.id = n.task_id 
         JOIN `case` AS c ON c.id = t.case_id 
         WHERE n.status = '1' AND n.receiver_id = ? 

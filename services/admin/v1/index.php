@@ -495,10 +495,12 @@ $app->post('/get_task_history', function () use ($app) {
 });
 
 $app->post('/notifications', function () use ($app) {
+    verifyRequiredParams(array('advocate_id'));
+    $advocate_id = $app->request->post("advocate_id");
     $db = new DbOperation();
     $data = array();
     $data["data"] = array();
-    $result = $db->notifications();
+    $result = $db->notifications($advocate_id);
     $data['counters'] = array();
     $resp = ['unassigned_count', 'assigned_count', 'history_count', 'advocate_count', 'intern_count', 'company_count', 'task_count', 'todays_case_count', 'counters_count', 'new_case_counter'];
 

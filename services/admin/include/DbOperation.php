@@ -170,10 +170,11 @@ class DbOperation
     }
 
 
-    public function notifications()
+    public function notifications($advocate_id)
     {
         // Fetch notifications
-        $stmt = $this->con->prepare("SELECT n1.*, s1.name FROM `notification` n1 JOIN `staff` s1 ON n1.sender_id = s1.id WHERE n1.status = '1' AND s1.type = 'admin' ORDER BY n1.id DESC");
+        $stmt = $this->con->prepare("SELECT n1.*, s1.name FROM `notification` n1 JOIN `staff` s1 ON n1.sender_id = s1.id WHERE n1.status = '1' AND (receiver_id=? or receiver_id=0)  ORDER BY n1.id DESC");
+        $stmt->bind_param("i", $advocate_id);
         $stmt->execute();
         $notification = $stmt->get_result();
         $stmt->close();
