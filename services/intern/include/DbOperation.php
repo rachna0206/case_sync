@@ -111,7 +111,7 @@ class DbOperation
         JOIN `city` AS d ON a.city_id = d.id 
         JOIN `staff` AS ad ON ad.id = a.handle_by AND ad.type = 'admin' 
         WHERE DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY), CURRENT_DATE) 
-        ORDER BY a.id DESC;
+        ORDER BY case_counter;
     ");
 
         $stmt->execute();
@@ -137,6 +137,7 @@ class DbOperation
             i.name AS alloted_to,
             t.alloted_to as alloted_to_id,
             a.name AS alloted_by,
+            a.id AS alloted_by_id,
             t.alloted_date,
             t.expected_end_date,
             t.status,
@@ -310,8 +311,21 @@ class DbOperation
         $stmt->execute();
         $counters_count = $stmt->get_result()->fetch_assoc()["count"];
         $stmt->close();
+        
+        
+        
+       
+        
+        
+          // Fetch task count created by intern today
+        $stmt = $this->con->prepare("
+         SELECT count(*) as count FROM `task` WHERE alloted_by=? and  date(alloted_date) = curdate()");
+        $stmt->bind_param('i', $intern_id);
+        $stmt->execute();
+        $todays_task_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
 
-        return [$result, $case_count, $task_count, $todays_case_count, $counters_count];
+        return [$result, $case_count, $task_count, $todays_case_count, $counters_count,$todays_task_count];
     }
     public function add_task($case_id, $alloted_to, $instrctions, $alloted_by, $alloted_date, $expected_end_date, $remark)
     {
@@ -333,6 +347,34 @@ class DbOperation
         $stmt->bind_param('isiisii', $task_id, $type, $alloted_by, $alloted_to, $msg, $status, $playstatus);
         $result = $stmt->execute();
         $stmt->close();
+        
+        
+        
+        
+        
+        $stmt = $this->con->prepare("SELECT * FROM `staff` WHERE status='enable' and type='admin' and (id!=? and id!=?)");
+         $stmt->bind_param("ii",$alloted_by,$alloted_to);
+        $stmt->execute();
+        $result_staff = $stmt->get_result();
+        $stmt->close();
+        
+        
+        
+
+        while($data=$result_staff->fetch_assoc())
+        {
+           
+           
+            $alloted_to = $data["id"];
+            $msg = "New task has been created";
+            $status = 1;
+            $playstatus = 1;
+    
+            $stmt = $this->con->prepare("insert into notification (`task_id`, `type`, `sender_id`, `receiver_id`, `msg`, `status`, `playstatus`, `datetime`) values (?,?,?,?,?,?,?,NOW())");
+            $stmt->bind_param('isiisii', $task_id, $type, $alloted_by, $alloted_to, $msg, $status, $playstatus);
+            $result2 = $stmt->execute();
+            $stmt->close();
+        }    
 
 
 
@@ -441,10 +483,11 @@ class DbOperation
             c1.docs, 
             c1.id AS file_id, 
             'main' AS file_type, 
-            c1.sr_date AS date_time, 
-            'admin' AS handled_by 
+            DATE_FORMAT(c1.date_of_creation, '%d-%m-%Y %r') AS date_time, 
+            s.name AS handled_by 
         FROM `case` c1 
         JOIN case_type c2 ON c1.case_type = c2.id 
+        JOIN staff s ON c1.handle_by = s.id 
         WHERE c1.id = ? AND c1.docs != '' 
         
         UNION 

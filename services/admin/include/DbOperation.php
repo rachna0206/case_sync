@@ -20,6 +20,44 @@ class DbOperation
         $stmt_login->close();
         return $result;
     }
+    
+    public function advocate_task_list($intern_id, $case_id)
+    {
+        $qr = "";
+        if ($case_id != '') {
+            $qr = "AND t.case_id = '" . $case_id . "' ";
+        }
+
+        $stmt = $this->con->prepare("
+       			SELECT 
+            t.id AS task_id,
+            c.id AS case_id,	
+            c.stage AS stage_id,
+            c.case_no,
+            t.instruction,
+            i.name AS alloted_to,
+            t.alloted_to as alloted_to_id,
+            a.name AS alloted_by,
+            a.id AS alloted_by_id,
+            t.alloted_date,
+            t.expected_end_date,
+            t.status,
+            st.stage  
+        FROM task AS t 
+        JOIN `case` AS c ON t.case_id = c.id 
+        JOIN `staff` AS i ON i.id = t.alloted_to 
+       
+        JOIN `staff` AS a ON a.id = t.alloted_by 
+        JOIN `stage` AS st ON st.id = c.stage 
+        WHERE i.id =? or t.alloted_by =?" . $qr . " 
+        ORDER BY t.id DESC");
+
+        $stmt->bind_param("ss", $intern_id,$intern_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        return $result;
+    }
 
     public function get_case_remarks($case_id) // modified for new database
     {
@@ -111,7 +149,7 @@ class DbOperation
     JOIN `city` AS d ON a.city_id = d.id 
     JOIN `staff` AS ad ON ad.id = a.handle_by AND ad.type = 'admin' 
     WHERE DATEDIFF(DATE_ADD(a.sr_date, INTERVAL 45 DAY), CURRENT_DATE) 
-    ORDER BY a.id DESC;");
+    ORDER BY case_counter");
 
         $stmt->execute();
         $result = $stmt->get_result();
@@ -250,12 +288,20 @@ class DbOperation
         $stmt->close();
 
         // Count new cases created today
-        $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM `case` WHERE date_of_creation = CURRENT_DATE()");
+        $stmt = $this->con->prepare("SELECT COUNT(*) as count FROM `case` WHERE date(date_of_creation) = CURRENT_DATE()");
         $stmt->execute();
         $new_case_counter = $stmt->get_result()->fetch_assoc()["count"];
         $stmt->close();
+        
+        // Count of task allocated to advocate
+        $stmt = $this->con->prepare("SELECT count(*) as count FROM `task` WHERE alloted_to=?");
+        $stmt->bind_param("i", $advocate_id);
+        $stmt->execute();
+        $my_task_count = $stmt->get_result()->fetch_assoc()["count"];
+        $stmt->close();
+        
 
-        return [$notification, $unassigned_count, $assigned_count, $history_count, $advocate_count, $intern_count, $company_count, $task_count, $todays_case_count, $counters_count, $new_case_counter];
+        return [$notification, $unassigned_count, $assigned_count, $history_count, $advocate_count, $intern_count, $company_count, $task_count, $todays_case_count, $counters_count, $new_case_counter,$my_task_count];
     }
 
 
@@ -442,20 +488,26 @@ class DbOperation
         $stmt_case->execute();
         $stmt_case->close();
 
-
-
-        $type = "case_proceed";
-        $alloted_by = $inserted_by;
-        $alloted_to = 0;
-        $msg = "Case has been Proceeded";
-        $status = 1;
-        $playstatus = 1;
-
-        $stmt = $this->con->prepare("insert into notification (`task_id`, `type`, `sender_id`, `receiver_id`, `msg`, `status`, `playstatus`, `datetime`) values (?,?,?,?,?,?,?,NOW())");
-        $stmt->bind_param('isiisii', $case_id, $type, $alloted_by, $alloted_to, $msg, $status, $playstatus);
-        $result2 = $stmt->execute();
+         $stmt = $this->con->prepare("SELECT * FROM `staff` WHERE status='enable' and id!=?");
+         $stmt->bind_param("i",$inserted_by);
+        $stmt->execute();
+        $result_staff = $stmt->get_result();
         $stmt->close();
 
+        while($data=$result_staff->fetch_assoc())
+        {
+            $type = "case_proceed";
+            $alloted_by = $inserted_by;
+            $alloted_to = $data["id"];
+            $msg = "Case has been Proceeded";
+            $status = 1;
+            $playstatus = 1;
+    
+            $stmt = $this->con->prepare("insert into notification (`task_id`, `type`, `sender_id`, `receiver_id`, `msg`, `status`, `playstatus`, `datetime`) values (?,?,?,?,?,?,?,NOW())");
+            $stmt->bind_param('isiisii', $case_id, $type, $alloted_by, $alloted_to, $msg, $status, $playstatus);
+            $result2 = $stmt->execute();
+            $stmt->close();
+        }    
 
 
         return $result && $result2;
@@ -526,7 +578,7 @@ class DbOperation
     JOIN `court` AS b ON a.court_name = b.id 
     JOIN `case_type` AS c ON a.case_type = c.id 
     JOIN `city` AS d ON a.city_id = d.id 
-    JOIN `staff` AS e ON a.handle_by = e.id AND e.type = 'admin' 
+    JOIN `staff` AS e ON a.handle_by = e.id
     ORDER BY a.id DESC;");
 
         $stmt->execute();
@@ -695,6 +747,32 @@ class DbOperation
         $stmt->bind_param('isiisii', $task_id, $type, $alloted_by, $alloted_to, $msg, $status, $playstatus);
         $result = $stmt->execute();
         $stmt->close();
+        
+        
+         $stmt = $this->con->prepare("SELECT * FROM `staff` WHERE status='enable' and type='admin' and (id!=? and id!=?)");
+         $stmt->bind_param("ii",$alloted_by,$alloted_to);
+        $stmt->execute();
+        $result_staff = $stmt->get_result();
+        $stmt->close();
+        
+        
+        
+
+        while($data=$result_staff->fetch_assoc())
+        {
+           
+           
+            $alloted_to = $data["id"];
+            $msg = "New task has been created";
+            $status = 1;
+            $playstatus = 1;
+    
+            $stmt = $this->con->prepare("insert into notification (`task_id`, `type`, `sender_id`, `receiver_id`, `msg`, `status`, `playstatus`, `datetime`) values (?,?,?,?,?,?,?,NOW())");
+            $stmt->bind_param('isiisii', $task_id, $type, $alloted_by, $alloted_to, $msg, $status, $playstatus);
+            $result2 = $stmt->execute();
+            $stmt->close();
+        }    
+
 
 
 
@@ -744,10 +822,11 @@ class DbOperation
             c1.docs, 
             c1.id AS file_id, 
             'main' AS file_type, 
-            c1.sr_date AS date_time, 
-            'admin' AS handled_by 
+            DATE_FORMAT(c1.date_of_creation, '%d-%m-%Y %r') AS date_time, 
+             s.name AS handled_by 
         FROM `case` c1 
         JOIN case_type c2 ON c1.case_type = c2.id 
+         JOIN staff s ON c1.handle_by = s.id 
         WHERE c1.id = ? AND c1.docs != '' 
         
         UNION 
@@ -758,7 +837,7 @@ class DbOperation
             m.docs, 
             m.id AS file_id, 
             'sub' AS file_type, 
-            m.date_time, 
+            DATE_FORMAT(m.date_time, '%d-%m-%Y %r') AS date_time, 
             s.name AS handled_by 
         FROM `case` c1 
         JOIN case_type c2 ON c1.case_type = c2.id 
@@ -800,14 +879,23 @@ class DbOperation
 
 
         $type = "remark_added";
-        $alloted_by = $intern_id;
-        $alloted_to = 0;
+       
+        
+        
+         $stmt = $this->con->prepare("SELECT alloted_by FROM `task` WHERE id=?");
+        $stmt->bind_param('i', $task_id);
+        $stmt->execute();
+        $result_allocated = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        
+        
+        $alloted_by = $result_allocated["alloted_by"];
         $msg = "Remark has been added";
         $status = 1;
         $playstatus = 1;
 
         $stmt = $this->con->prepare("insert into notification (`task_id`, `type`, `sender_id`, `receiver_id`, `msg`, `status`, `playstatus`, `datetime`) values (?,?,?,?,?,?,?,NOW())");
-        $stmt->bind_param('isiisii', $task_id, $type, $alloted_by, $alloted_to, $msg, $status, $playstatus);
+        $stmt->bind_param('isiisii', $task_id, $type, $intern_id, $alloted_by, $msg, $status, $playstatus);
         $result2 = $stmt->execute();
         $stmt->close();
 
@@ -998,7 +1086,7 @@ class DbOperation
         JOIN `court` AS b ON a.court_name = b.id 
         JOIN `case_type` AS c ON a.case_type = c.id 
         JOIN `city` AS d ON a.city_id = d.id 
-        JOIN `staff` AS ad ON ad.id = a.handle_by AND ad.type = 'admin' 
+        JOIN `staff` AS ad ON ad.id = a.handle_by
         WHERE a.id IN (SELECT DISTINCT(case_id) FROM task) 
         ORDER BY a.id DESC;
     ");

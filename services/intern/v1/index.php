@@ -140,7 +140,7 @@ $app->post('/notification', function () use ($app) {
     $data = array();
     $data["data"] = array();
     $data['counters'] = array();
-    $resp = ['case_count', 'task_count', "todays_case_count", "counters_count"];
+    $resp = ['case_count', 'task_count', "todays_case_count", "counters_count" , "todays_task_count"];
 
     $result = $db->notification($intern_id);
 

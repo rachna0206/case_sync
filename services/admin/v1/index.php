@@ -50,6 +50,42 @@ $app->post('/get_case_remarks', function () use ($app) {
 });
 
 
+$app->post('/advocate_task_list', function () use ($app) {
+
+
+    // verifyRequiredParams('intern_id');
+    verifyRequiredParams(array('intern_id'));
+    // verifyRequiredParams(array(''));
+
+    $intern_id = $app->request->post('intern_id');
+    $case_id = "";
+    $case_id = $app->request->post('case_id');
+
+    $db = new DbOperation();
+    $data = array();
+    $data["data"] = array();
+
+    $result = $db->advocate_task_list($intern_id, $case_id);
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $temp = array();
+            foreach ($row as $key => $value) {
+                $temp[$key] = $value;
+            }
+            $temp = array_map('utf8_encode', $temp);
+            array_push($data['data'], $temp);
+        }
+        $data['message'] = "Intern Task List Found";
+        $data['success'] = true;
+    } else {
+        $data['message'] = "No Tasks Found";
+        $data['success'] = false;
+    }
+    echoResponse(200, $data);
+
+});
+
+
 $app->post('/login_advocate', function () use ($app) {
 
     verifyRequiredParams(array('data'));
@@ -502,7 +538,7 @@ $app->post('/notifications', function () use ($app) {
     $data["data"] = array();
     $result = $db->notifications($advocate_id);
     $data['counters'] = array();
-    $resp = ['unassigned_count', 'assigned_count', 'history_count', 'advocate_count', 'intern_count', 'company_count', 'task_count', 'todays_case_count', 'counters_count', 'new_case_counter'];
+    $resp = ['unassigned_count', 'assigned_count', 'history_count', 'advocate_count', 'intern_count', 'company_count', 'task_count', 'todays_case_count', 'counters_count', 'new_case_counter','my_task_count'];
 
     if (mysqli_num_rows($result[0]) > 0) {
         while ($row = $result[0]->fetch_assoc()) {
