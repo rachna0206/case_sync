@@ -320,95 +320,83 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
 <div class="modal fade" id="excelModal" tabindex="-1" aria-labelledby="excelModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <!-- Modal Header -->
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="excelModalLabel">Upload Excel File</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                     aria-label="Close"></button>
             </div>
 
-            <!-- Modal Body -->
             <form method="post" enctype="multipart/form-data">
                 <div class="modal-body">
+                    <!-- Handled By -->
                     <div class="col-md-12 mb-3">
                         <label for="handle_by" class="form-label">Handled By</label>
-                        <select class="form-select" id="handle_by" name="handle_by"
-                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                        <select class="form-select" id="handle_by" name="handle_by" <?= (isset($mode) && $mode === 'view') ? 'disabled' : '' ?>>
                             <option value="">Select an Advocate</option>
                             <?php
-                            $comp = "SELECT * FROM `advocate` where status='Enable'";
-                            $result = $obj->select($comp);
+                            $staffQuery = "SELECT * FROM `staff` WHERE `type`='admin' AND `status`='enable'";
+                            $staffResult = $obj->select($staffQuery);
                             $selectedAdvocateId = isset($data['handle_by']) ? $data['handle_by'] : '';
-
-                            while ($row = mysqli_fetch_array($result)) {
+                            while ($row = mysqli_fetch_array($staffResult)) {
                                 $selected = ($row["id"] == $selectedAdvocateId) ? 'selected' : '';
-                                ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                        <?= htmlspecialchars($row["name"]) ?>
-                                    </option>
-                            <?php } ?>
+                                echo "<option value='" . htmlspecialchars($row["id"]) . "' $selected>" . htmlspecialchars($row["name"]) . "</option>";
+                            }
+                            ?>
                         </select>
                     </div>
 
+                    <!-- Company -->
                     <div class="col-md-12 mb-3">
                         <label for="company_id" class="form-label">Company</label>
-                        <select class="form-select" id="company_id" name="company_id"
-                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                        <select class="form-select" id="company_id" name="company_id" <?= (isset($mode) && $mode === 'view') ? 'disabled' : '' ?>>
                             <option value="">Select a Company</option>
                             <?php
-                            $comp = "SELECT * FROM `company` where status='Enable'";
-                            $result = $obj->select($comp);
+                            $companyQuery = "SELECT * FROM `company` WHERE `status`='enable'";
+                            $companyResult = $obj->select($companyQuery);
                             $selectedCompanyId = isset($data['company_id']) ? $data['company_id'] : '';
-
-                            while ($row = mysqli_fetch_array($result)) {
+                            while ($row = mysqli_fetch_array($companyResult)) {
                                 $selected = ($row["id"] == $selectedCompanyId) ? 'selected' : '';
-                                ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                        <?= htmlspecialchars($row["name"]) ?>
-                                    </option>
-                            <?php } ?>
+                                echo "<option value='" . htmlspecialchars($row["id"]) . "' $selected>" . htmlspecialchars($row["name"]) . "</option>";
+                            }
+                            ?>
                         </select>
                     </div>
-                    <div class="col-md-12 mb-3">
-                        <label for="city_id" class="form-label">Case Type</label>
 
-                        <select class="form-select" id="case_type" name="case_type"
-                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                    <!-- Case Type -->
+                    <div class="col-md-12 mb-3">
+                        <label for="case_type" class="form-label">Case Type</label>
+                        <select class="form-select" id="case_type" name="case_type" <?= (isset($mode) && $mode === 'view') ? 'disabled' : '' ?>>
                             <option value="">Select Case Type</option>
                             <?php
-                            $case_type = "SELECT * FROM `case_type` where `status`='enable'";
-                            $result_case_type = $obj->select($case_type);
-
-
-                            while ($row_case_type = mysqli_fetch_array($result_case_type)) {
-
-                                ?>
-                                    <option value="<?= htmlspecialchars($row_case_type["id"]) ?>">
-                                        <?= htmlspecialchars($row_case_type["case_type"]) ?>
-                                    </option>
-                            <?php } ?>
+                            $caseTypeQuery = "SELECT * FROM `case_type` WHERE `status`='enable'";
+                            $caseTypeResult = $obj->select($caseTypeQuery);
+                            $selectedCaseTypeId = isset($data['case_type']) ? $data['case_type'] : '';
+                            while ($row = mysqli_fetch_array($caseTypeResult)) {
+                                $selected = ($row["id"] == $selectedCaseTypeId) ? 'selected' : '';
+                                echo "<option value='" . htmlspecialchars($row["id"]) . "' $selected>" . htmlspecialchars($row["case_type"]) . "</option>";
+                            }
+                            ?>
                         </select>
                     </div>
-                    <div class="col-md-12 mb-3">
-                        <label for="city_id" class="form-label">City Name</label>
 
-                        <select class="form-select" id="city_id" name="city_id"
-                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                    <!-- City -->
+                    <div class="col-md-12 mb-3">
+                        <label for="city_id" class="form-label">City</label>
+                        <select class="form-select" id="city_id" name="city_id" <?= (isset($mode) && $mode === 'view') ? 'disabled' : '' ?>>
                             <option value="">Select a City</option>
                             <?php
-                            $comp = "SELECT * FROM `city`";
-                            $result = $obj->select($comp);
-                            $selectedCompanyId = isset($data['city_id']) ? $data['city_id'] : '';
-
-                            while ($row = mysqli_fetch_array($result)) {
-                                $selected = ($row["id"] == $selectedCompanyId) ? 'selected' : '';
-                                ?>
-                                    <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
-                                        <?= htmlspecialchars($row["name"]) ?>
-                                    </option>
-                            <?php } ?>
+                            $cityQuery = "SELECT * FROM `city`";
+                            $cityResult = $obj->select($cityQuery);
+                            $selectedCityId = isset($data['city_id']) ? $data['city_id'] : '';
+                            while ($row = mysqli_fetch_array($cityResult)) {
+                                $selected = ($row["id"] == $selectedCityId) ? 'selected' : '';
+                                echo "<option value='" . htmlspecialchars($row["id"]) . "' $selected>" . htmlspecialchars($row["name"]) . "</option>";
+                            }
+                            ?>
                         </select>
                     </div>
+
+                    <!-- File Upload -->
                     <div class="mb-3">
                         <label for="excel_file" class="form-label">Choose Excel File</label>
                         <input type="file" id="excel_file" name="excel_file" class="form-control" required>
@@ -424,6 +412,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
         </div>
     </div>
 </div>
+
 
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
@@ -470,7 +459,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                     <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 15px;">
                         <!-- Add button -->
                         <button type="button" class="btn btn-success mt-4" style="margin-right: 15px;"
-                            onclick="javascript : add_data()">
+                            onclick="add_data()">
                             <i class="bi bi-plus me-1"></i> Add
                         </button>
                         <!-- <div>
@@ -511,7 +500,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                     </thead>
                     <tbody>
                         <?php
-                        $stmt = $obj->con1->prepare("SELECT c1.*,c1.id AS case_id,c2.name AS company_name,c3.case_type AS case_type_name, c4.name AS court_name, c5.name AS city_name, a1.name AS advocate_name,DATE_FORMAT(`c1`.next_date, '%d-%m-%Y') AS nxt_date FROM `case` c1 LEFT JOIN company c2 ON c1.company_id = c2.id LEFT JOIN case_type c3 ON c1.case_type = c3.id LEFT JOIN court c4 ON c1.court_name = c4.id LEFT JOIN city c5 ON c1.city_id = c5.id LEFT JOIN staff a1 ON c1.handle_by = a1.id ORDER BY c1.id DESC;");
+                        $stmt = $obj->con1->prepare("SELECT c1.*,c1.id AS case_id,c2.name AS company_name,c3.case_type AS case_type_name, c4.name AS court_name, c5.name AS city_name, a1.name AS advocate_name,DATE_FORMAT(`c1`.next_date, '%d-%m-%Y') AS nxt_date FROM `case` c1 LEFT JOIN company c2 ON c1.company_id = c2.id LEFT JOIN case_type c3 ON c1.case_type = c3.id LEFT JOIN court c4 ON c1.court_name = c4.id LEFT JOIN city c5 ON c1.city_id = c5.id LEFT JOIN staff a1 ON c1.handle_by = a1.id ORDER BY c1.id DESC");
                         $stmt->execute();
                         $Resp = $stmt->get_result();
                         $i = 1;
@@ -562,7 +551,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
             </div>
         </div>
     </div>
-    </div>
+
 </section>
 
 

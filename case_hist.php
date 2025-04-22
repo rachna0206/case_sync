@@ -1,22 +1,27 @@
-<?php 
- include "header.php";
- include "alert.php";
+<?php
+include "header.php";
+include "alert.php";
 
 
 ?>
 <script type="text/javascript">
 
-
-function viewdata(id) {
-    eraseCookie("edit_id");
-    createCookie("view_id", id, 1);
-    window.location = "case_hist_view.php";
-}
-
-function deletedata(id) {
-    $('#deleteModal').modal('toggle');
-    $('#delete_id').val(id);
-}
+    function add_proceeding(case_id, case_no) {
+        document.cookie = "case_id=" + case_id;
+        document.cookie = "case_no=" + case_no;
+        window.location = "add_proceeding.php";
+    }
+    /* function viewdata(id) {
+         eraseCookie("edit_id");
+         createCookie("view_id", id, 1);
+         window.location = "case_hist_view.php";
+     }
+ 
+     function deletedata(id) {
+         $('#deleteModal').modal('toggle');
+         $('#delete_id').val(id);
+     }
+     */
 </script>
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
@@ -47,7 +52,7 @@ function deletedata(id) {
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="index.php">Home</a></li>
             <li class="breadcrumb-item">Case Histroy</li>
-                <li class="breadcrumb-item active">Data</li>
+            <li class="breadcrumb-item active">Data</li>
         </ol>
     </nav>
 </div><!-- End Page Title -->
@@ -58,12 +63,12 @@ function deletedata(id) {
 
             <div class="card">
                 <div class="card-body">
-                
+
 
                     <table class="table datatable">
                         <thead>
                             <tr>
-                            <th scope="col">Sr no.</th>
+                                <th scope="col">Sr no.</th>
                                 <th scope="col">Case No</th>
                                 <th scope="col">Company</th>
                                 <th scope="col">Court</th>
@@ -74,36 +79,45 @@ function deletedata(id) {
                             </tr>
                         </thead>
                         <tbody>
-                        <?php
+                            <?php
                             // $stmt = $obj->con1->prepare("SELECT *, company.name as company_name, case_type.case_type as case_type_name, court.name as cname, city.name as city_name, task.id as task_id FROM `case` inner join `company` on case.company_id = company.id inner join `case_type` on case.case_type = case_type.id inner join `court` on court.id = case.court_name inner join `city` on city.id = case.city_id inner join `task` on task.case_id = case.id ORDER BY case.id DESC");
                             $stmt = $obj->con1->prepare("SELECT `case`.*, date_format(case.sr_date,'%d-%m-%Y') as smndt , case.id as case_id, company.name as company_name, case_type.case_type as case_type_name, court.name as cname, city.name as city_name FROM `case` inner join `company` on case.company_id = company.id inner join `case_type` on case.case_type = case_type.id inner join `court` on court.id = case.court_name inner join `city` on city.id = case.city_id inner join `task` on task.case_id = case.id ORDER BY case.id DESC");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
                             while ($row = mysqli_fetch_array($Resp)) { ?>
-                            <tr>
+                                <tr>
 
-                                <th scope="row"><?php echo $i; ?></th>
-                                <td ><?php echo $row["case_no"] ?></td>
+                                    <th scope="row"><?php echo $i; ?></th>
+                                    <td><?php echo $row["case_no"] ?></td>
 
-                                <td ><?php echo $row["company_name"] ?></td>
-                                <td><?php echo $row["cname"] ?></td>
-                                <td><?php echo $row["city_name"] ?></td>
-                                <td><?php echo $row["smndt"] ?></td>
-                                <td>
-                                <h4><span
-                                        class="badge rounded-pill bg-<?php echo ($row['status']=='pending')?'warning':'primary'?>"><?php echo ucfirst($row["status"]); ?></span>
-                                </h4>
-                                </td>
+                                    <td><?php echo $row["company_name"] ?></td>
+                                    <td><?php echo $row["cname"] ?></td>
+                                    <td><?php echo $row["city_name"] ?></td>
+                                    <td><?php echo $row["smndt"] ?></td>
+                                    <td>
+                                        <h4><span
+                                                class="badge rounded-pill bg-<?php echo ($row['status'] == 'pending') ? 'warning' : 'primary' ?>"><?php echo ucfirst($row["status"]); ?></span>
+                                        </h4>
+                                    </td>
 
-                                <td>
-                                    <a href="javascript:viewdata('<?php echo $row["case_id"]?>')"><i
-                                            class="bx bx-show-alt bx-sm me-2"></i> </a>
-                                            <a href="javascript:file_data('<?php echo $row["case_id"] ?>')"><i
-                                            class="bi bi-file-earmark-text  bx-sm me-2 text-success"></i> </a>
-                                </td>
+                                    <td>
+                                        <a href="javascript:viewdata('<?php echo $row["case_id"] ?>')"><i
+                                                class="bx bx-show-alt bx-sm me-2"></i> </a>
+                                        <a href="javascript:file_data('<?php echo $row["case_id"] ?>')"><i
+                                                class="bi bi-file-earmark-text  bx-sm me-2 text-success"></i> </a>
+                                        <a
+                                            href="javascript:add_proceeding('<?php echo $row['case_id'] ?>','<?= $row['case_no'] ?>')">
+                                            <i class='bx bx-right-arrow-alt' style='color: red; font-size: 24px;'
+                                                title="Proceed"></i></a>
 
-                                <?php $i++;}?>
+
+
+
+                                    </td>
+
+                                    <?php $i++;
+                            } ?>
                             </tr>
                         </tbody>
                     </table>
@@ -115,11 +129,11 @@ function deletedata(id) {
 
 <script type="text/javascript">
     function file_data(id) {
-    eraseCookie("edit_id");
-    eraseCookie("view_id", id, 1);
-    createCookie("case_id", id, 1);
-    window.location = "case_files_advocates.php";
-}
+        eraseCookie("edit_id");
+        eraseCookie("view_id", id, 1);
+        createCookie("case_id", id, 1);
+        window.location = "case_files_advocates.php";
+    }
 </script>
 
 <?php
