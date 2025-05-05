@@ -2,7 +2,7 @@
 include "header.php";
 include "alert.php";
 
-$id = isset($_COOKIE["case_id"]) ? $_COOKIE["case_id"] : "";
+$id = isset($_COOKIE["case_doc_id"]) ? $_COOKIE["case_doc_id"] : "";
 
 
 
@@ -112,6 +112,8 @@ if (isset($_REQUEST["btndelete"])) {
                     <h5 class="card-title">Case No : <?php echo $data["case_no"] ?> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                         Company : <?php echo $data["name"] ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Case Type :
                         <?php echo $data["case_type"] ?>
+                        <?php echo $id ?>
+
                     </h5>
 
                     <table class="table datatable">
@@ -186,6 +188,7 @@ if (isset($_REQUEST["btndelete"])) {
     function go_back() {
         eraseCookie("edit_id");
         eraseCookie("view_id");
+        eraseCookie("case_id");
         window.location = "case_hist.php";
     }
 

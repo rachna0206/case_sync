@@ -18,7 +18,7 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
 ?>
 <!-- <a href="javascript:go_back();"><i class="bi bi-arrow-left"></i></a> -->
 <div class="pagetitle">
-    <h1>Case History</h1>
+    <h1>Task History</h1>
     <nav>
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="index.php">Home</a></li>

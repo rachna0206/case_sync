@@ -1,10 +1,10 @@
 <?php
-include "header.php";
+include "header_intern.php";
 
 if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
     $mode = (isset($_COOKIE['edit_id'])) ? 'edit' : 'view';
     $Id = (isset($_COOKIE['edit_id'])) ? $_COOKIE['edit_id'] : $_COOKIE['view_id'];
-    $stmt = $obj->con1->prepare("SELECT * FROM `task` WHERE id=?");
+    $stmt = $obj->con1->prepare("SELECT * FROM task WHERE id=?");
     $stmt->bind_param('i', $Id);
     $stmt->execute();
     $data = $stmt->get_result()->fetch_assoc();
@@ -14,26 +14,26 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
 if (isset($_REQUEST["save"])) {
     $cid = $_REQUEST['case_number_id'];
     $ato = $_REQUEST['alloted_to'];
-    $instruction =  $_REQUEST['instruction'];
+    $instruction = $_REQUEST['instruction'];
     $adate = $_REQUEST['alloted_date'];
     $edate = $_REQUEST['exp_end_date'];
     $status = $_REQUEST['radio'];
 
-    $sessionID = $_SESSION["id"];
+    $sessionID = $_SESSION["intern_id"];
     $noti_status = 1;
     $play_status = 1;
     $noti_type = "task_assigned";
-    $sender_type = "advocate";
-   
-    $receiver_type="intern";
+    $sender_type = "intern";
+
+    $receiver_type = "intern";
     $noti_msg = "New task has been assigned";
 
     try {
-        echo "INSERT INTO `task`(`case_id`, `alloted_to`,`instruction` , `alloted_by` ,`alloted_date`,`expected_end_date`, `status`) VALUES ($cid, $ato, $instruction, $sessionID, $adate, $edate, $status)";
-        $stmt = $obj->con1->prepare("INSERT INTO `task`(`case_id`, `alloted_to`,`instruction` , `alloted_by` ,`alloted_date`,`expected_end_date`, `status`) VALUES (?,?,?,?,?,?,?)");
+        echo "INSERT INTO task(case_id, alloted_to,instruction , alloted_by ,alloted_date,expected_end_date, status) VALUES ($cid, $ato, $instruction, $sessionID, $adate, $edate, $status)";
+        $stmt = $obj->con1->prepare("INSERT INTO task(case_id, alloted_to,instruction , alloted_by ,alloted_date,expected_end_date, status) VALUES (?,?,?,?,?,?,?)");
         $stmt->bind_param("sssssss", $cid, $ato, $instruction, $sessionID, $adate, $edate, $status);
         $Resp = $stmt->execute();
-        $last_id=mysqli_insert_id($obj->con1);
+        $last_id = mysqli_insert_id($obj->con1);
         if (!$Resp) {
             throw new Exception(
                 "Problem in adding! " . strtok($obj->con1->error, "(")
@@ -46,20 +46,20 @@ if (isset($_REQUEST["save"])) {
 
     if ($Resp) {
 
-     
-         //add notification
-         $stmt_noti = $obj->con1->prepare("INSERT INTO `notification` (`task_id`, `type`, `sender_id`,`receiver_id`, `msg`,  `status`, `playstatus`) VALUES (?, ?, ?, ?, ?,?,?)");
 
-         $stmt_noti->bind_param("isiisii", $last_id, $noti_type, $sessionID,$ato, $noti_msg, $noti_status, $play_status);
-         $Resp_noti = $stmt_noti->execute();
-         $stmt_noti->close();
+        //add notification
+        $stmt_noti = $obj->con1->prepare("INSERT INTO notification (task_id, type, sender_id,receiver_id, msg,  status, playstatus) VALUES (?, ?, ?, ?, ?,?,?)");
+
+        $stmt_noti->bind_param("isiisii", $last_id, $noti_type, $sessionID, $ato, $noti_msg, $noti_status, $play_status);
+        $Resp_noti = $stmt_noti->execute();
+        $stmt_noti->close();
 
 
         setcookie("msg", "data", time() + 3600, "/");
-        header("location:task.php");
+        header("location:task_alloted_by_me_intern.php");
     } else {
         setcookie("msg", "fail", time() + 3600, "/");
-        header("location:task.php");
+        header("location:task_alloted_by_me_intern.php");
     }
 }
 
@@ -69,8 +69,8 @@ if (isset($_REQUEST["btn_city"])) {
     $city_name = $_REQUEST['name'];
     $status = 'enable';
     try {
-        // echo "INSERT INTO `city`(`name`, `status`) VALUES (". $city_name.", ".$status.")";
-        $stmt = $obj->con1->prepare("INSERT INTO `city`(`state_id`,`name`, `status`) VALUES (?,?,?)");
+        // echo "INSERT INTO city(name, status) VALUES (". $city_name.", ".$status.")";
+        $stmt = $obj->con1->prepare("INSERT INTO city(state_id,name, status) VALUES (?,?,?)");
         $stmt->bind_param("iss", $state, $city_name, $status);
         $Resp = $stmt->execute();
         if (!$Resp) {
@@ -85,10 +85,10 @@ if (isset($_REQUEST["btn_city"])) {
     if ($Resp) {
 
 
-        header("location:task_add.php");
+        header("location:task_add_intern.php");
     } else {
 
-        header("location:task_add.php");
+        header("location:task_add_intern.php");
     }
 }
 
@@ -102,9 +102,9 @@ if (isset($_REQUEST["btn_intern"])) {
     $status = 'enable';
     $type = "intern";
     try {
-        // echo "INSERT INTO `city`(`name`, `status`) VALUES (". $city_name.", ".$status.")";
-        $stmt = $obj->con1->prepare("INSERT INTO `staff`(`name`,`contact`,`email`,`password`, `date_time`,`status`,`type`) VALUES (?,?,?,?,?,?,?)");
-        $stmt->bind_param("sssssss", $int_name,  $contact_no, $email, $password, $date, $status,$type);
+        // echo "INSERT INTO city(name, status) VALUES (". $city_name.", ".$status.")";
+        $stmt = $obj->con1->prepare("INSERT INTO staff(name,contact,email,password, date_time,status,type) VALUES (?,?,?,?,?,?,?)");
+        $stmt->bind_param("sssssss", $int_name, $contact_no, $email, $password, $date, $status, $type);
         $Resp = $stmt->execute();
         if (!$Resp) {
             throw new Exception(
@@ -118,10 +118,10 @@ if (isset($_REQUEST["btn_intern"])) {
     if ($Resp) {
 
 
-        header("location:task_add.php");
+        header("location:task_add_intern.php");
     } else {
 
-        header("location:task_add.php");
+        header("location:task_add_intern.php");
     }
 }
 
@@ -130,8 +130,8 @@ if (isset($_REQUEST["btn_case_type"])) {
     $case_type_m = $_REQUEST['c_type'];
     $status = 'enable';
     try {
-        // echo "INSERT INTO `city`(`case_type`, `status`) VALUES (". $case_type_m.", ".$status.")";
-        $stmt = $obj->con1->prepare("INSERT INTO `case_type`(`case_type`, `status`) VALUES (?,?)");
+        // echo "INSERT INTO city(case_type, status) VALUES (". $case_type_m.", ".$status.")";
+        $stmt = $obj->con1->prepare("INSERT INTO case_type(case_type, status) VALUES (?,?)");
         $stmt->bind_param("ss", $case_type_m, $status);
         $Resp = $stmt->execute();
         if (!$Resp) {
@@ -146,13 +146,12 @@ if (isset($_REQUEST["btn_case_type"])) {
     if ($Resp) {
 
 
-        header("location:task_add.php");
+        header("location:task_add_intern.php");
     } else {
 
-        header("location:task_add.php");
+        header("location:task_add_intern.php");
     }
 }
-
 
 
 if (isset($_REQUEST["update"])) {
@@ -162,12 +161,12 @@ if (isset($_REQUEST["update"])) {
     $adate = $_REQUEST['alloted_date'];
     $edate = $_REQUEST['exp_end_date'];
     $status = $_REQUEST['radio'];
-    $instruction =  $_REQUEST['instruction'];
+    $instruction = $_REQUEST['instruction'];
 
 
     try {
-        $stmt = $obj->con1->prepare("UPDATE `task` SET `case_id`=?, `alloted_to`=?,`instruction`=?,`alloted_date`=?,`expected_end_date`=?,`status`=? WHERE `id`=?");
-        $stmt->bind_param("isssssi",  $cid, $ato, $instruction, $adate, $edate, $status, $e_id);
+        $stmt = $obj->con1->prepare("UPDATE task SET case_id=?, alloted_to=?,instruction=?,alloted_date=?,expected_end_date=?,status=? WHERE id=?");
+        $stmt->bind_param("isssssi", $cid, $ato, $instruction, $adate, $edate, $status, $e_id);
         $Resp = $stmt->execute();
         if (!$Resp) {
             throw new Exception(
@@ -182,10 +181,10 @@ if (isset($_REQUEST["update"])) {
     if ($Resp) {
         setcookie("edit_id", "", time() - 3600, "/");
         setcookie("msg", "update", time() + 3600, "/");
-        header("location:task.php");
+        header("location:task_alloted_by_me_intern.php");
     } else {
         setcookie("msg", "fail", time() + 3600, "/");
-        header("location:task.php");
+        header("location:task_alloted_by_me_intern.php");
     }
 }
 ?>
@@ -217,13 +216,16 @@ if (isset($_REQUEST["update"])) {
                                         <?= isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
                                         <option value="">Select Case Type</option>
                                         <?php
-                                        $comp = "SELECT * FROM `case_type` WHERE status='enable' and id!=0";
+                                        // Query all enabled case types
+                                        $comp = "SELECT * FROM `case_type` WHERE status='enable'";
                                         $result = $obj->select($comp);
-                                        $selectedcourtId = isset($data['case_type']) ? $data['case_type'] : '';
+
+                                        // Use 'case_id' from task table instead of 'case_type'
+                                        $selectedCaseTypeId = isset($data['case_id']) ? $data['case_id'] : '';
 
                                         while ($row = mysqli_fetch_array($result)) {
-                                            $selected = ($row["id"] == $selectedcourtId) ? 'selected' : '';
-                                        ?>
+                                            $selected = ($row["id"] == $selectedCaseTypeId) ? 'selected' : '';
+                                            ?>
                                             <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
                                                 <?= htmlspecialchars($row["case_type"]) ?>
                                             </option>
@@ -232,28 +234,33 @@ if (isset($_REQUEST["update"])) {
                                 </div>
                             </div>
 
-                            <!-- City Dropdown and Button -->
                             <div class="col-md-6">
                                 <label for="city" class="form-label">City</label>
                                 <div class="d-flex">
-                                    <select class="form-select me-2" id="city" name="city" onblur="filterTask()"
-                                        <?= isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                    <select class="form-select me-2" id="city" name="city" onchange="filterTask()"
+                                        <?= (isset($mode) && $mode === 'view') ? 'disabled' : '' ?>>
                                         <option value="">Select City</option>
                                         <?php
-                                        $task = "SELECT * FROM `city` WHERE status='enable'";
-                                        $result = $obj->select($task);
-                                        $selectedCaseId = isset($data['city_id']) ? $data['city_id'] : '';
+                                        // Make sure to fetch cities properly
+                                        $cityQuery = "SELECT * FROM `city` WHERE status='enable'";
+                                        $cityResult = $obj->select($cityQuery);
 
-                                        while ($row = mysqli_fetch_array($result)) {
-                                            $selected = ($row["id"] == $selectedCaseId) ? 'selected' : '';
-                                        ?>
+                                        // This should come from your form loading logic
+                                        $selectedCityId = isset($data['city_id']) ? $data['city_id'] : '';
+
+                                        while ($row = mysqli_fetch_array($cityResult)) {
+                                            $selected = ($row["id"] == $selectedCityId) ? 'selected' : '';
+                                            ?>
                                             <option value="<?= htmlspecialchars($row["id"]) ?>" <?= $selected ?>>
                                                 <?= htmlspecialchars($row["name"]) ?>
                                             </option>
-                                        <?php } ?>
+                                            <?php
+                                        }
+                                        ?>
                                     </select>
                                 </div>
                             </div>
+
                         </div>
                         <span style="color:red" class="d-none" id="err"></span>
                 </div>
@@ -326,7 +333,7 @@ if (isset($_REQUEST["update"])) {
                         <div class="col-md-6">
                             <label for="title" class="form-label">Expected End Date</label>
                             <input type="date" class="form-control" id="exp_end_date" name="exp_end_date"
-                                value="<?php echo (isset($mode) && isset($data['expected_end_date']) && !empty($data['expected_end_date'])) ? date('Y-m-d', strtotime($data['alloted_date'])) : date('Y-m-d'); ?>"
+                                value="<?php echo (isset($mode) && isset($data['expected_end_date']) && !empty($data['expected_end_date'])) ? date('Y-m-d', strtotime($data['expected_end_date'])) : date('Y-m-d'); ?>"
                                 <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
                         </div>
                     </div>
@@ -390,39 +397,40 @@ if (isset($_REQUEST["update"])) {
     function go_back() {
         eraseCookie("edit_id");
         eraseCookie("view_id");
-        window.location = "task.php";
+        window.location = "task_alloted_by_me_intern.php";
     }
 
     function filterTask() {
-        var case_type_id = document.getElementById("case_type").value;
-        var city_id = document.getElementById("city").value;
+    var case_type_id = document.getElementById("case_type").value;
+    var city_id = document.getElementById("city").value;
 
-        if (case_type_id == "") {
-            $("#err").removeClass("d-none").text("Please select a case type.");
-        } else if (city_id == "") {
-            $("#err").removeClass("d-none").text("Please select a city.");
-        } else {
-            $("#err").addClass("d-none");
-            $.ajax({
-                async: true,
-                type: "POST",
-                url: "action.php?action=filter_case",
-                data: "case_type_id=" + case_type_id + "&city_id=" + city_id,
-                cache: false,
-                success: function(result) {
-                    $("#case_number_id").html('<option value="">Select a Case</option>');
-
-                    $("#case_number_id").append(result);
-
-                    var updateMessage = document.getElementById("updatedMsg");
-                    updateMessage.style.display = 'inline';
-                    setTimeout(function() {
-                        updateMessage.style.display = 'none';
-                    }, 2000);
-                }
-            });
-        }
+    if (case_type_id === "") {
+        $("#err").removeClass("d-none").text("Please select a case type.");
+        return;
     }
+    if (city_id === "") {
+        $("#err").removeClass("d-none").text("Please select a city.");
+        return;
+    }
+
+    $("#err").addClass("d-none");
+
+    $.ajax({
+        type: "POST",
+        url: "action.php?action=filter_case",
+        data: {
+            case_type_id: case_type_id,
+            city_id: city_id
+        },
+        success: function (result) {
+            $("#case_number_id").html('<option value="">Select a Case</option>').append(result);
+            var updateMessage = document.getElementById("updatedMsg");
+            updateMessage.style.display = 'inline';
+            setTimeout(() => updateMessage.style.display = 'none', 2000);
+        }
+    });
+}
+
 
 
     function add_alloted_to() {
@@ -440,7 +448,7 @@ if (isset($_REQUEST["update"])) {
             url: "action.php?action=add_alloted_to",
             data: "int_name=" + int_name + "&contact=" + contact + "&email=" + email + "&password=" + password + "&date=" + date,
             cache: false,
-            success: function(result) {
+            success: function (result) {
                 $("#alloted_to").append(result);
             }
         });
@@ -449,5 +457,17 @@ if (isset($_REQUEST["update"])) {
     }
 </script>
 <?php
-include "footer.php";
+include "footer_intern.php";
 ?>
+
+
+
+
+
+
+
+
+
+
+
+jhanvi	9874563210	j@gmail.com	11-04-2025	

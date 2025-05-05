@@ -1,5 +1,5 @@
 <?php
-include "header.php";
+include "header_intern.php";
 error_reporting(E_ALL);
 
 
@@ -12,8 +12,6 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
     $data = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 }
-
-
 if (isset($_REQUEST["save"])) {
     $remark = $_REQUEST['remark'];
     $next_date = $_REQUEST['next_date'];
@@ -49,7 +47,7 @@ if (isset($_REQUEST["save"])) {
         }
 
         // Get the user ID (inserted_by)
-        $inserted_by = $_SESSION["id"];
+        $inserted_by = $_SESSION["intern_id"];
 
         // Insert the proceeding record into `case_procedings` table
         $stmt = $obj->con1->prepare("INSERT INTO `case_procedings` (`case_id`, `next_stage`, `next_date`, `remarks`, `inserted_by`) VALUES (?, ?, ?, ?, ?)");
@@ -76,7 +74,7 @@ if (isset($_REQUEST["save"])) {
 
         while ($data = $result_staff->fetch_assoc()) {
             $type = "case_proceed";
-            $alloted_by = $_SESSION["id"];
+            $alloted_by = $_SESSION["intern_id"];
             $alloted_to = $data["id"];
             $msg = "Case has been Proceeded";
             $status = 1;  // Notification status
@@ -91,13 +89,13 @@ if (isset($_REQUEST["save"])) {
 
         // If all successful, set a success message and redirect
         setcookie("msg", "data", time() + 3600, "/");
-        header("Location: add_proceeding.php");
+        header("Location: add_proceeding_intern.php");
         exit;
 
     } catch (\Exception $e) {
         // Handle errors, set the error message in a cookie, and redirect
         setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
-        header("Location: add_proceeding.php");
+        header("Location: add_proceeding_intern.php");
         exit;
     }
 
@@ -137,18 +135,18 @@ if (isset($_REQUEST["save"])) {
 
 
     }
-    header("location:case_hist.php");
-    header("location:case_hist.php");
+    header("location:case_hist_intern.php");
+    header("location:case_hist_intern.php");
 }
 */
 
 ?>
 
 <div class="pagetitle">
-    <h1>Case Proceeding</h1>
+    <h1>Case</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+            <li class="breadcrumb-item"><a href="index_intern.php">Home</a></li>
             <li class="breadcrumb-item">Case History</li>
             <li class="breadcrumb-item active">
                 <?php echo (isset($mode)) ? (($mode == 'view') ? 'View' : 'Edit') : 'Add' ?> Proceeding -
@@ -266,6 +264,7 @@ if (isset($_REQUEST["save"])) {
     </div>
 </section>
 
+
 <section class="section">
     <div class="row">
         <div class="col-lg-12">
@@ -329,7 +328,6 @@ if (isset($_REQUEST["save"])) {
     </div>
 </section>
 
-
 <script>
     function go_back() {
         eraseCookie("edit_id");
@@ -337,10 +335,10 @@ if (isset($_REQUEST["save"])) {
         eraseCookie("add_id");
         eraseCookie("case_no");
         eraseCookie("case_id");
-        window.location = "case_hist.php";
+        window.location = "case_hist_intern.php";
     }
 
 </script>
 <?php
-include "footer.php";
+include "footer_intern.php";
 ?>

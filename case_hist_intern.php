@@ -1,25 +1,33 @@
-<?php 
- include "header_intern.php";
- include "alert.php";
+<?php
+include "header_intern.php";
+include "alert.php";
 ?>
 <script type="text/javascript">
-function viewdata(id) {
-    eraseCookie("edit_id");
-    createCookie("view_id", id, 1);
-    window.location = "case_intern_hist_view.php";
-}
 
-function file_data(id) {
-    eraseCookie("edit_id");
-    eraseCookie("view_id", id, 1);
-    createCookie("case_id", id, 1);
-    window.location = "case_files_intern.php";
-}
+    function add_proceeding(case_id, case_no) {
+        eraseCookie("edit_id");
+        createCookie("view_id", case_id, 1);
+        document.cookie = "case_id=" + case_id;
+        document.cookie = "case_no=" + case_no;
+        window.location = "add_proceeding_intern.php";
+    }
+    function viewdata(id) {
+        eraseCookie("edit_id");
+        createCookie("view_id", id, 1);
+        window.location = "case_intern_hist_view.php";
+    }
 
-function deletedata(id) {
-    $('#deleteModal').modal('toggle');
-    $('#delete_id').val(id);
-}
+    function file_data(id) {
+        eraseCookie("edit_id");
+        eraseCookie("view_id", id, 1);
+        createCookie("case_id", id, 1);
+        window.location = "case_files_intern.php";
+    }
+
+    function deletedata(id) {
+        $('#deleteModal').modal('toggle');
+        $('#delete_id').val(id);
+    }
 </script>
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
@@ -45,7 +53,7 @@ function deletedata(id) {
 <!-- End Basic Modal-->
 
 <div class="pagetitle">
-    <h1>Case History  <span></span></h1>
+    <h1>Case History <span></span></h1>
     <nav>
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="index.php">Home</a></li>
@@ -68,6 +76,7 @@ function deletedata(id) {
                             <tr>
                                 <th scope="col">Sr no.</th>
                                 <th scope="col">Case No</th>
+                                <th scope="col">Parties</th>
                                 <th scope="col">Company</th>
                                 <th scope="col">Court</th>
                                 <th scope="col">City</th>
@@ -78,59 +87,64 @@ function deletedata(id) {
                         </thead>
                         <tbody>
                             <?php
-                           
-                                $alloted_to_value = $_SESSION['intern_id']; // Get the ID of the logged-in intern
 
-                                $stmt = $obj->con1->prepare("SELECT `case`.*, DATE_FORMAT(`case`.sr_date, '%d-%m-%Y') AS smndt, `case`.id AS case_id, company.name AS company_name, case_type.case_type AS case_type_name, court.name AS cname, city.name AS city_name FROM `case` INNER JOIN `company` ON `case`.company_id = company.id INNER JOIN `case_type` ON `case`.case_type = case_type.id INNER JOIN `court` ON court.id = `case`.court_name INNER JOIN `city` ON city.id = `case`.city_id WHERE `case`.id IN (SELECT DISTINCT case_id FROM `task` WHERE alloted_to = ?) ORDER BY `case`.id DESC;");
+                            $alloted_to_value = $_SESSION['intern_id']; // Get the ID of the logged-in intern
+                            
+                            $stmt = $obj->con1->prepare("SELECT `case`.*, DATE_FORMAT(`case`.sr_date, '%d-%m-%Y') AS smndt, `case`.id AS case_id, company.name AS company_name, case_type.case_type AS case_type_name, court.name AS cname, city.name AS city_name FROM `case` INNER JOIN `company` ON `case`.company_id = company.id INNER JOIN `case_type` ON `case`.case_type = case_type.id INNER JOIN `court` ON court.id = `case`.court_name INNER JOIN `city` ON city.id = `case`.city_id WHERE `case`.id IN (SELECT DISTINCT case_id FROM `task` WHERE alloted_to = ?) ORDER BY `case`.id DESC;");
 
-                                // Bind the parameter
-                                $stmt->bind_param("i", $alloted_to_value);
+                            // Bind the parameter
+                            $stmt->bind_param("i", $alloted_to_value);
 
-                                $stmt->execute();
-                                $Resp = $stmt->get_result();
-                                $i = 1;
+                            $stmt->execute();
+                            $Resp = $stmt->get_result();
+                            $i = 1;
 
                             while ($row = mysqli_fetch_array($Resp)) { ?>
-                            <tr>
+                                <tr>
 
-                                <th scope="row"><?php echo $i; ?></th>
-                                <td><?php echo $row["case_no"] ?></td>
+                                    <th scope="row"><?php echo $i; ?></th>
+                                    <td><?php echo $row["case_no"] ?></td>
+                                    <td><?php echo $row["applicant"] ?> vs <?php echo $row["opp_name"] ?></td>
+                                    <td><?php echo $row["company_name"] ?></td>
+                                    <td><?php echo $row["cname"] ?></td>
+                                    <td><?php echo $row["city_name"] ?></td>
+                                    <td><?php echo $row["smndt"] ?></td>
+                                    <td>
+                                        <h4><span
+                                                class="badge rounded-pill bg-<?php echo ($row['status'] == 'pending') ? 'warning' : 'primary' ?>"><?php echo ucfirst($row["status"]); ?></span>
+                                        </h4>
+                                    </td>
 
-                                <td><?php echo $row["company_name"] ?></td>
-                                <td><?php echo $row["cname"] ?></td>
-                                <td><?php echo $row["city_name"] ?></td>
-                                <td><?php echo $row["smndt"] ?></td>
-                                <td>
-                                    <h4><span
-                                            class="badge rounded-pill bg-<?php echo ($row['status']=='pending')?'warning':'primary'?>"><?php echo ucfirst($row["status"]); ?></span>
-                                    </h4>
-                                </td>
-
-                                <td>
-                                    <a href="javascript:viewdata('<?php echo $row["case_id"]?>')"><i
-                                            class="bx bx-show-alt bx-sm me-2"></i> </a>
-                                    <a href="javascript:file_data('<?php echo $row["case_id"] ?>')"><i
-                                            class="bi bi-file-earmark-text  bx-sm me-2 text-success"></i> </a>
-                                </td>
+                                    <td>
+                                        <a href="javascript:viewdata('<?php echo $row["case_id"] ?>')"><i
+                                                class="bx bx-show-alt bx-sm me-2"></i> </a>
+                                        <a href="javascript:file_data('<?php echo $row["case_id"] ?>')"><i
+                                                class="bi bi-file-earmark-text  bx-sm me-2 text-success"></i> </a>
+                                        <a
+                                            href="javascript:add_proceeding('<?php echo $row['case_id'] ?>','<?= $row['case_no'] ?>')">
+                                            <i class="bi-stopwatch" style='color: grey; font-size: 24px;'
+                                                title="Proceed"></i></a>
+                                    </td>
 
 
 
-                                <?php $i++;}?>
+                                    <?php $i++;
+                            } ?>
                             </tr>
                         </tbody>
                     </table>
-                    
+
                 </div>
             </div>
         </div>
     </div>
 </section>
 <script>
-function go_back() {
-    eraseCookie("edit_id");
-    eraseCookie("view_id");
-    window.location = "case_hist.php";
-}
+    function go_back() {
+        eraseCookie("edit_id");
+        eraseCookie("view_id");
+        window.location = "case_hist.php";
+    }
 
 </script>
 

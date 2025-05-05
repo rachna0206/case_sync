@@ -98,14 +98,16 @@ if (isset($_REQUEST["btndelete"])) {
                                 <th scope="col">Sr no.</th>
                                 <th scope="col">Case No</th>
                                 <th scope="col">Court</th>
-                                <th scope="col">Opponent Name</th>
+                                <th scope="col">Parties</th>
                                 <th scope="col">City</th>
                                 <th scope="col">Remaining Days</th>
+                                <th scope="col">Summon Date</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
-                            $stmt = $obj->con1->prepare("SELECT c.id, c.case_no, c.applicant, c.opp_name, c.sr_date, DATEDIFF(CURRENT_DATE, c.sr_date) AS days_difference, crt.name AS crt_name, ct.name AS city_name FROM `case` as c INNER JOIN `court`as crt ON c.court_name = crt.id INNER JOIN `city` as ct ON c.city_id = ct.id WHERE c.sr_date IS NOT NULL ORDER BY c.id DESC;");
+                            $stmt = $obj->con1->prepare("SELECT c.id, c.case_no,date_format(c.sr_date,'%d-%m-%Y') as smndt ,  
+ c.applicant, c.opp_name, c.sr_date, DATEDIFF(CURRENT_DATE, c.sr_date) AS days_difference, crt.name AS crt_name, ct.name AS city_name FROM `case` as c INNER JOIN `court`as crt ON c.court_name = crt.id INNER JOIN `city` as ct ON c.city_id = ct.id WHERE c.sr_date IS NOT NULL ORDER BY c.id ASC;");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
@@ -116,9 +118,10 @@ if (isset($_REQUEST["btndelete"])) {
                                     <td><?php echo $row["case_no"] ?></td>
 
                                     <td><?php echo $row["crt_name"] ?></td>
-                                    <td><?php echo $row["opp_name"] ?></td>
+                                    <td><?php echo $row["applicant"] ?> vs <?php echo $row["opp_name"] ?></td>
                                     <td><?php echo $row["city_name"] ?></td>
                                     <td><?php echo 45 - $row["days_difference"] ?></td>
+                                    <td><?php echo $row["smndt"] ?></td>
 
                                 </tr>
                                 <?php $i++;

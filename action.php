@@ -215,4 +215,30 @@ if (isset($_REQUEST['action'])) {
         }
         echo $html_case;
     }
+
+    // DELETE PRIORITY
+    if ($_POST['action'] === 'delete_priority') {
+        if (!isset($_SESSION['id'])) {
+            echo "Session expired.";
+            exit;
+        }
+
+        if (!isset($_POST['priority_id']) || empty($_POST['priority_id'])) {
+            echo "Invalid priority ID.";
+            exit;
+        }
+
+        $priority_id = (int) $_POST['priority_id'];
+        $stmt = $obj->con1->prepare("DELETE FROM temp_sequence WHERE id = ?");
+        $stmt->bind_param("i", $priority_id);
+
+        if ($stmt->execute()) {
+            echo "Priority deleted successfully!";
+        } else {
+            echo "Failed to delete priority.";
+        }
+
+        $stmt->close();
+        exit;
+    }
 }

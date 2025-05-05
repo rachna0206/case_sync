@@ -1,10 +1,10 @@
 <?php
-include "header_intern.php";
+include "header.php";
 
 if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
     $mode = (isset($_COOKIE['edit_id'])) ? 'edit' : 'view';
     $Id = (isset($_COOKIE['edit_id'])) ? $_COOKIE['edit_id'] : $_COOKIE['view_id'];
-    $stmt = $obj->con1->prepare("SELECT * from `task` inner join `case_hist` on task.id = case_hist.task_id  WHERE task.id = ? ORDER BY task.id DESC");
+    $stmt = $obj->con1->prepare("SELECT * from task inner join case_hist on task.id = case_hist.task_id  WHERE task.id = ? ORDER BY task.id DESC");
     $stmt->bind_param('i', $Id);
     $stmt->execute();
     $data = $stmt->get_result()->fetch_assoc();
@@ -14,7 +14,7 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
 if (isset($_REQUEST["update"])) {
     $e_id = $_COOKIE['edit_id'];
 
-    $stmt1 = $obj->con1->prepare("SELECT * from `case_hist` WHERE task_id = ?");
+    $stmt1 = $obj->con1->prepare("SELECT * from case_hist WHERE task_id = ?");
     $stmt1->bind_param('i', $Id);
     $stmt1->execute();
     $data1 = $stmt1->get_result()->fetch_assoc();
@@ -27,7 +27,7 @@ if (isset($_REQUEST["update"])) {
     $stage = $_REQUEST['stage'];
 
     try {
-        // $stmt = $obj->con1->prepare("UPDATE `case_hist` SET `stage`=? WHERE `task_id`=?");
+        // $stmt = $obj->con1->prepare("UPDATE case_hist SET stage=? WHERE task_id=?");
         $stmt = $obj->con1->prepare("INSERT INTO case_hist(task_id, stage,remarks,dos, status) VALUES (?,?,?,?,?)");
         $stmt->bind_param("issss", $task_id, $stage, $remarks, $dos, $status);
         $Resp = $stmt->execute();
@@ -44,10 +44,10 @@ if (isset($_REQUEST["update"])) {
     if ($Resp) {
         setcookie("edit_id", "", time() - 3600, "/");
         setcookie("msg", "update", time() + 3600, "/");
-        header("location:task_alloted_to_me_intern.php");
+        header("location:task_intern.php");
     } else {
         setcookie("msg", "fail", time() + 3600, "/");
-        header("location:task_alloted_to_me_intern.php");
+        header("location:task_intern.php");
     }
 }
 ?>
@@ -56,7 +56,7 @@ if (isset($_REQUEST["update"])) {
     <h1>Task</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index_intern.php">Home</a></li>
+            <li class="breadcrumb-item"><a href="index.php">Home</a></li>
             <li class="breadcrumb-item">Task</li>
             <li class="breadcrumb-item active">
                 <?php echo (isset($mode)) ? (($mode == 'view') ? 'View' : 'Edit') : 'Add' ?>-Data
@@ -84,8 +84,8 @@ if (isset($_REQUEST["update"])) {
                         <tbody>
                             <?php
                             $id = $_COOKIE["view_id"];
-                            // $stmt = $obj->con1->prepare("SELECT * FROM `case_hist` inner join `task` on case_hist.task_id = task.id where task_id = '$id' order by case_hist.id DESC");
-                            $stmt = $obj->con1->prepare("SELECT case_hist.*, staff.name, stage.stage as stage_name , date_format(dos,'%d-%m-%Y') as rd FROM `case_hist` inner join staff on case_hist.added_by = staff.id inner join `task` on case_hist.task_id = task.id inner join `stage`on case_hist.stage = stage.id  where case_hist.task_id = '$id' and alloted_to = {$_SESSION['intern_id']} order by case_hist.id DESC");
+                            // $stmt = $obj->con1->prepare("SELECT * FROM case_hist inner join task on case_hist.task_id = task.id where task_id = '$id' order by case_hist.id DESC");
+                            $stmt = $obj->con1->prepare("SELECT case_hist.*,staff.name, stage.stage as stage_name , date_format(dos,'%d-%m-%Y') as rd FROM case_hist inner join staff on case_hist.added_by = staff.id inner join task on case_hist.task_id = task.id inner join `stage`on case_hist.stage = stage.id  where case_hist.task_id = '$id' and alloted_to = {$_SESSION['id']} order by case_hist.id DESC");
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
@@ -126,10 +126,10 @@ if (isset($_REQUEST["update"])) {
     function go_back() {
         eraseCookie("edit_id");
         eraseCookie("view_id");
-        window.location = "task_alloted_to_me_intern.php";
+        window.location = "task_alloted_to_me.php";
     }
 
 </script>
 <?php
-include "footer_intern.php";
+include "footer.php";
 ?>

@@ -1,19 +1,19 @@
 <?php
-include "header.php";
+include "header_intern.php";
 
 $cno = $_COOKIE['case_id'];
 
 if (isset($_REQUEST["save"])) {
-    
+
     $task_id = $_COOKIE["assign_id"];  // Task to reassign
     $reassign_id = $_REQUEST['intern'];  // New intern
     $remark = $_REQUEST['remark'];
-    $intern_id = $_SESSION["id"];  // Current user
+    $intern_id = $_SESSION["intern_id"];  // Current user
     $remark_date = $_REQUEST["rmk_date"];
 
     try {
         // 1. Fetch existing task details
-        $stmt = $obj->con1->prepare("SELECT * FROM `task` WHERE `id`=?");
+        $stmt = $obj->con1->prepare("SELECT * FROM task WHERE id=?");
         $stmt->bind_param('i', $task_id);
         $stmt->execute();
         $data = $stmt->get_result()->fetch_assoc();
@@ -32,12 +32,12 @@ if (isset($_REQUEST["save"])) {
         $old_remark = $data["remark"];
 
         $alloted_to = $reassign_id;
-        $alloted_by = $intern_id;   
+        $alloted_by = $intern_id;
         $status = "re_alloted";
 
         // 2. Update original task status and assign to new intern
-        $stmt = $obj->con1->prepare("UPDATE task SET `status`=?, alloted_to=? , alloted_by=? WHERE id=?");
-        $stmt->bind_param('siii',$status, $alloted_to, $alloted_by, $task_id);
+        $stmt = $obj->con1->prepare("UPDATE task SET `status`='re_alloted', alloted_to=? , alloted_by=? WHERE id=?");
+        $stmt->bind_param('iii', $alloted_to, $alloted_by, $task_id);
         $result1 = $stmt->execute();
         $stmt->close();
 
@@ -89,8 +89,11 @@ if (isset($_REQUEST["save"])) {
         setcookie("sql_error", urlencode("Error during reassignment: " . $e->getMessage()), time() + 3600, "/");
     }
 
-    header("location:task_alloted_to_me.php");
+    header("location:task_alloted_to_me_intern.php");
+
 }
+
+
     
 
 if (isset($_REQUEST["update"])) {
@@ -105,7 +108,7 @@ if (isset($_REQUEST["update"])) {
 
 
     try {
-        $stmt = $obj->con1->prepare("UPDATE case_hist SET task_id=?, stage=?,remarks=?,dos=?,`status`=? WHERE id=?");
+        $stmt = $obj->con1->prepare("UPDATE case_hist SET task_id=?, stage=?,remarks=?,dos=?,status=? WHERE id=?");
         $stmt->bind_param("issssi",  $tid,$stage,$remark,$date, $status, $e_id);
         $Resp = $stmt->execute();
         if (!$Resp) {
@@ -172,7 +175,6 @@ if (isset($_REQUEST["update"])) {
                                 </option>
                                 <?php } ?>
                             </select>
-                             
                         </div>
 
                         <div class="col-md-12">
@@ -211,9 +213,9 @@ function go_back() {
     eraseCookie("view_id");
     eraseCookie("add_id");
     eraseCookie("case_no");
-    window.location = "task_alloted_to_me.php";
+    window.location = "task_alloted_to_me_intern.php";
 }
 </script>
 <?php
-include "footer.php";
+include "footer_intern.php";
 ?>

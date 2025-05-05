@@ -275,6 +275,20 @@ if (!isset($_SESSION["userlogin_CS"])) {
             </a>
           </li>
           <li class="nav-item">
+            <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "task_alloted_to_me.php" ? "active" : "" ?>"
+              href="task_alloted_to_me.php">
+              <i class="bi bi-check"></i>
+              <span>Task Alloted to me</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "task_alloted_by_me.php" ? "active" : "" ?>"
+              href="task_alloted_by_me.php">
+              <i class="bi bi-check"></i>
+              <span>Task Alloted by me</span>
+            </a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "case_hist.php" ? "active" : "" ?>"
               href="case_hist.php">
               <i class="bi bi-clock-history"></i>
@@ -293,7 +307,7 @@ if (!isset($_SESSION["userlogin_CS"])) {
             <a class="nav-link collapsed <?php echo basename($_SERVER["PHP_SELF"]) == "todays_case.php" ? "active" : "" ?>"
               href="todays_case.php">
               <i class="bi bi-alarm"></i>
-              <span>Today's Cases</span>
+              <span>Upcoming Cases</span>
             </a>
           </li>
 

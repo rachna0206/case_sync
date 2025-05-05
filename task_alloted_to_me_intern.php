@@ -8,21 +8,22 @@ include "alert.php";
         eraseCookie("view_id");
         createCookie("add_id", id, 1);
         createCookie("case_no", cno, 1);
-        window.location = "case_hist_add.php";
+        window.location = "case_hist_add_intern.php";
     }
+
 
     function assign_task(id, cno) {
         eraseCookie("edit_id");
         eraseCookie("view_id");
         createCookie("assign_id", id, 1);
         createCookie("case_id", cno, 1);
-        window.location = "task_assign.php";
+        window.location = "task_assign_intern.php";
     }
 
     function editdata(id) {
         eraseCookie("view_id");
         createCookie("edit_id", id, 1);
-        window.location = "case_hist_add.php";
+        window.location = "case_hist_add_intern.php";
     }
 
     function viewdata(id, cno) {
@@ -72,6 +73,15 @@ include "alert.php";
 
             <div class="card">
                 <div class="card-body">
+                    <div class="card-title row">
+
+                        <div class="col-md-3">
+                            <label for="title" class="col-form-label">Date</label>
+                            <input type="date" name="dtxt" id="dtxt" onchange="get_data(this.value)"
+                                value="<?php echo isset($_COOKIE["filter_task_date"]) ? $_COOKIE["filter_task_date"] : "" ?>">
+                        </div>
+
+                    </div>
                     <table class="table datatable">
                         <thead>
                             <tr>
@@ -80,15 +90,23 @@ include "alert.php";
                                 <th scope="col">Instruction</th>
                                 <th scope="col">Alloted by</th>
                                 <th scope="col">Alloted Date</th>
+                                <th scope="col">Expected End Date</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
-                            $intern_id = $_SESSION['intern_id'];
-                            $stmt = $obj->con1->prepare("SELECT t.*, c.case_no, date_format(t.alloted_date, '%d-%m-%Y') as adt, s.name AS alloted_by_name, it.name AS alloted_to_name FROM task t left join staff as s on s.id = t.alloted_by LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN staff it ON t.alloted_to = it.id where t.alloted_to = ? ORDER BY t.id DESC;");
-                            $stmt->bind_param("i", $intern_id);
+
+                            if (isset($_COOKIE["filter_task_date"]) && $_COOKIE["filter_task_date"] != "") {
+                                $stmt = $obj->con1->prepare("SELECT t.*, c.case_no, date_format(t.alloted_date, '%d-%m-%Y') as adt,date_format(t.expected_end_date, '%d-%m-%Y') as edt, s.name AS alloted_by_name, it.name AS alloted_to_name FROM `task` t LEFT JOIN `staff` s ON t.alloted_by = s.id LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN staff it ON t.alloted_to = it.id WHERE t.alloted_date = ? AND t.alloted_to = ? ORDER BY t.id DESC;");
+                                $stmt->bind_param("si", $_COOKIE["filter_task_date"], $_SESSION['intern_id']);
+                                setcookie("filter_task_date", "", time() - 3600, "/");
+                            } else {
+                                $stmt = $obj->con1->prepare("SELECT t.*, c.case_no, date_format(t.alloted_date, '%d-%m-%Y') as adt,date_format(t.expected_end_date, '%d-%m-%Y') as edt, s.name AS alloted_by_name, it.name AS alloted_to_name FROM task t LEFT JOIN staff s ON t.alloted_by = s.id LEFT JOIN `case` c ON t.case_id = c.id LEFT JOIN staff it ON t.alloted_to = it.id WHERE t.alloted_to = ? ORDER BY t.id DESC;");
+                                $stmt->bind_param("i", $_SESSION['intern_id']);
+
+                            }
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
@@ -100,6 +118,7 @@ include "alert.php";
                                     <td><?php echo $row["instruction"] ?></td>
                                     <td><?php echo $row["alloted_by_name"] ?></td>
                                     <td><?php echo $row["adt"] ?></td>
+                                    <td><?php echo $row["edt"] ?></td>
                                     <td>
                                         <h4>
                                             <span class="badge rounded-pill bg-<?php
@@ -153,21 +172,14 @@ include "alert.php";
     </div>
 </section>
 
+<script type="text/javascript">
 
-<script>
-    $(document).ready(function () {
-        $('#example').DataTable({
-            "ordering": false, // Completely disables sorting
-            "bSort": false, // Alternative option for older DataTables versions
-            "columnDefs": [{
-                "orderable": false,
-                "targets": "_all"
-            } // Ensures all columns remain unsortable
-            ]
-        });
-    });
+    function get_data(date) {
+        console.log("date=" + date);
+        createCookie("filter_task_date", date, 1);
+        window.location = window.location.href;
+    }
 </script>
-
 <?php
 include "footer_intern.php";
 ?>

@@ -1,11 +1,11 @@
 <?php
-include "header.php";
+include "header_intern.php";
 error_reporting(E_ALL);
 
 if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
-    $mode = isset($_COOKIE['edit_id']) ? 'edit' : 'view';
-    $Id = isset($_COOKIE['edit_id']) ? $_COOKIE['edit_id'] : $_COOKIE['view_id'];
-    $stmt = $obj->con1->prepare("SELECT * FROM case_hist WHERE id=?");
+    $mode = (isset($_COOKIE['edit_id'])) ? 'edit' : 'view';
+    $Id = (isset($_COOKIE['edit_id'])) ? $_COOKIE['edit_id'] : $_COOKIE['view_id'];
+    echo $stmt = $obj->con1->prepare("SELECT * FROM `case_hist` WHERE id=?");
     $stmt->bind_param('i', $Id);
     $stmt->execute();
     $data = $stmt->get_result()->fetch_assoc();
@@ -36,19 +36,13 @@ if (isset($_REQUEST["save"])) {
 
     try {
         // Insert the new record into the case_hist table
-        $stmt = $obj->con1->prepare("INSERT INTO case_hist(`task_id`, `stage`, `remarks`, `dos`,`status`,`added_by`) VALUES (?,?,?,?,?,?)");
-        $stmt->bind_param("issssi", $tid, $stage, $remark, $date, $status, $_SESSION['id']);
-        $Resp = false;
-        if ($stmt->execute()) {
-            $Resp = true; // Set to true if the statement was executed successfully
-        } else {
-            // Handle the error
-            throw new Exception("Problem in adding! " . strtok($obj->con1->error, "("));
-        }
+        $stmt = $obj->con1->prepare("INSERT INTO case_hist(`task_id`, `stage`, `remarks`, `dos`, `status`,`added_by`) VALUES (?,?,?,?,?,?)");
+        $stmt->bind_param("issssi", $tid, $stage, $remark, $date, $status, $_SESSION['intern_id']);
+        $Resp = $stmt->execute();
 
         //update case stage
 
-        //$stmt_case = $obj->con1->prepare("UPDATE `case` SET `stage`=?,`next_stage`=? WHERE `id`=?");
+        //$stmt_case = $obj->con1->prepare("UPDATE `case` SET `stage`=?,`next_stage`=? WHERE id=?");
         //$stmt_case->bind_param("isii",  $stage,$next_stage,$Resp_case["id"]);
         //$Resp_case_update = $stmt_case->execute();
 
@@ -65,10 +59,11 @@ if (isset($_REQUEST["save"])) {
 
                 // Move uploaded file
                 move_uploaded_file($SubImageTemp, "documents/case/" . $SubImageName);
-                $added_by = $_SESSION["id"];
+                $added_by = $_SESSION["intern_id"];
+                $user_type = "intern";
 
-                $stmt_image = $obj->con1->prepare("INSERT INTO `multiple_doc`(`c_id`, `docs`,`added_by`) VALUES (?, ?,?)");
-                $stmt_image->bind_param("isi", $Resp_case["id"], $SubImageName, $added_by);
+                $stmt_image = $obj->con1->prepare("INSERT INTO `multiple_doc`(`c_id`, `docs`,`added_by`,`user_type`) VALUES (?, ?,?,?)");
+                $stmt_image->bind_param("isis", $Resp_case["id"], $SubImageName, $added_by, $user_type);
                 $Resp_img = $stmt_image->execute();
                 $stmt_image->close();
 
@@ -82,7 +77,7 @@ if (isset($_REQUEST["save"])) {
         $stmt->close();
 
         // Update the status of the associated task in the task table
-        $updateStmt = $obj->con1->prepare("UPDATE `task` SET `status` = ? WHERE id = ?");
+        $updateStmt = $obj->con1->prepare("UPDATE `task` SET `status` = ? WHERE `id` = ?");
         $updateStmt->bind_param("si", $status, $tid);
         $updateResp = $updateStmt->execute();
 
@@ -91,35 +86,37 @@ if (isset($_REQUEST["save"])) {
         }
         $updateStmt->close();
 
-        if ($Resp && $updateResp) {
-
-            if ($status == "completed") {
-
-                $stmt_task = $obj->con1->prepare("select * from `task` where id=?");
-                $stmt_task->bind_param("i", $tid);
-                $stmt_task->execute();
-                $Resp_task = $stmt_task->get_result()->fetch_assoc();
-                $stmt_task->close();
-
-                //add into notification tbl
-
-                // echo "INSERT INTO notification (`task_id`, `type`, `sender_id`,`receiver_id`, `msg`, `sender_type`,`receiver_type`, `status`, `playstatus`) VALUES ('$tid','$noti_type', '".$_SESSION["id"]."','".$Resp_task["alloted_by"]."', '$noti_msg', '$sender_type','$receiver_type', '$noti_status', '$play_status')";
-
-                $stmt_noti = $obj->con1->prepare("INSERT INTO `notification` (`task_id`, `type`, `sender_id`,`receiver_id`, `msg`, `status`, `playstatus`) VALUES (?, ?, ?, ?, ?, ?, ?)");
-
-                $stmt_noti->bind_param("isiisii", $tid, $noti_type, $_SESSION["id"], $Resp_task["alloted_by"], $noti_msg, $noti_status, $play_status);
-                $Resp_noti = $stmt_noti->execute();
-                $stmt_noti->close();
-            }
-            setcookie("msg", "data", time() + 3600, "/");
-            header("location:task_alloted_to_me.php");
-        } else {
-            setcookie("msg", "fail", time() + 3600, "/");
-            header("location:task_alloted_to_me.php");
-        }
-
     } catch (\Exception $e) {
         setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
+    }
+
+    if ($Resp && $updateResp) {
+
+        if ($status == "completed") {
+
+            $stmt_task = $obj->con1->prepare("select * from `task` where id=?");
+            $stmt_task->bind_param("i", $tid);
+            $stmt_task->execute();
+            $Resp_task = $stmt_task->get_result()->fetch_assoc();
+            $stmt_task->close();
+
+
+
+            //add into notification tbl
+
+            // echo "INSERT INTO `notification` (`task_id`, `type`, `sender_id`,`receiver_id`, `msg`, `sender_type`,`receiver_type`, `status`, `playstatus`) VALUES ('$tid','$noti_type', '".$_SESSION["intern_id"]."','".$Resp_task["alloted_by"]."', '$noti_msg', '$sender_type','$receiver_type', '$noti_status', '$play_status')";
+
+            $stmt_noti = $obj->con1->prepare("INSERT INTO `notification` (`task_id`, `type`, `sender_id`,`receiver_id`, `msg`, `status`, `playstatus`) VALUES (?, ?, ?, ?, ?,?, ?)");
+
+            $stmt_noti->bind_param("isiisii", $tid, $noti_type, $_SESSION["intern_id"], $Resp_task["alloted_by"], $noti_msg, $noti_status, $play_status);
+            $Resp_noti = $stmt_noti->execute();
+            $stmt_noti->close();
+        }
+        setcookie("msg", "data", time() + 3600, "/");
+        header("location:task_alloted_to_me_intern.php");
+    } else {
+        setcookie("msg", "fail", time() + 3600, "/");
+        header("location:task_alloted_to_me_intern.php");
     }
 }
 
@@ -136,7 +133,7 @@ if (isset($_REQUEST["update"])) {
 
 
     try {
-        $stmt = $obj->con1->prepare("UPDATE `case_hist` SET `task_id`=?, `stage`=?,`remarks`=?,`dos`=?,`status`=? WHERE `id`=?");
+        $stmt = $obj->con1->prepare("UPDATE case_hist SET task_id=?, stage=?,remarks=?,dos=?,status=? WHERE id=?");
         $stmt->bind_param("issssi", $tid, $stage, $remark, $date, $status, $e_id);
         $Resp = $stmt->execute();
         if (!$Resp) {
@@ -159,7 +156,7 @@ if (isset($_REQUEST["update"])) {
 
 
     }
-    header("location:task_alloted_to_me.php");
+    header("location:case_hist.php");
 }
 
 // Function to generate unique file name
@@ -183,10 +180,10 @@ function generateUniqueFileName($directory, $filename)
     <h1>Task</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+            <li class="breadcrumb-item"><a href="index_intern.php">Home</a></li>
             <li class="breadcrumb-item">Task History</li>
             <li class="breadcrumb-item active">
-                <?php echo isset($mode) ? (($mode == 'view') ? 'View' : 'Edit') : 'Add' ?> Task for -
+                <?php echo (isset($mode)) ? (($mode == 'view') ? 'View' : 'Edit') : 'Add' ?> Task for -
                 <strong><?= $cno ?></strong>
             </li>
         </ol>
@@ -237,7 +234,7 @@ function generateUniqueFileName($directory, $filename)
                                 <?php echo isset($mode) && $mode == 'view' ? 'readonly' : ''; ?>>
                         </div>
 
-                        <div class="col-md-12" <?php echo isset($mode) ? 'hidden' : '' ?>>
+                        <div class="col-md-12" <?php echo (isset($mode)) ? 'hidden' : '' ?>>
                             <label for="docs" class="form-label">Documents</label>
                             <input type="file" class="form-control mb-3" id="docs" name="docs[]"
                                 onchange="readURL_multiple(this)" multiple>
@@ -252,7 +249,7 @@ function generateUniqueFileName($directory, $filename)
                                 <input class="form-check-input" type="radio" name="radio" id="radio1" value="pending" <?php
                                 echo (isset($data) && isset($data['status']) && $data['status'] == 'pending') ? 'checked' : 'checked';
                                 echo (isset($mode) && $mode == 'view') ? ' disabled' : '';
-                                ?>    required />
+                                ?> required />
                                 <label class="form-check-label" for="radio1">Pending</label>
                             </div>
 
@@ -292,7 +289,7 @@ function generateUniqueFileName($directory, $filename)
         eraseCookie("view_id");
         eraseCookie("add_id");
         eraseCookie("case_no");
-        window.location = "task_alloted_to_me.php";
+        window.location = "task_alloted_to_me_intern.php";
     }
     function readURL_multiple(input) {
         $('#preview_file_div').html(""); // Clear previous preview
@@ -324,5 +321,5 @@ function generateUniqueFileName($directory, $filename)
     }
 </script>
 <?php
-include "footer.php";
+include "footer_intern.php";
 ?>

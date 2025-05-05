@@ -921,9 +921,7 @@ class DbOperation
 
 
 
-
-
-        // Extract task details for reassignment
+        // Entxtract task details for reassignme
         $case_id = $data["case_id"];
         $old_alloted_to = $data["alloted_to"];
         $old_alloted_by = $data["alloted_by"];

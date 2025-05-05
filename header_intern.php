@@ -254,16 +254,23 @@ if (!isset($_SESSION["intern_userlogin"])) {
 
 
       <!-- Forms And Application -->
+
       <li class="nav-item">
-        <a class="nav-link collapsed" href="task_intern.php">
+        <a class="nav-link collapsed" href="task_alloted_to_me_intern.php">
           <i class="bi bi-file-earmark"></i>
-          <span>Task</span>
+          <span>Task Alloted to me</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="task_alloted_by_me_intern.php">
+          <i class="bi bi-file-earmark"></i>
+          <span>Task Alloted by me</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link collapsed" href="todays_case_intern.php">
           <i class="bi bi-file-earmark"></i>
-          <span>Today's Cases</span>
+          <span>Upcoming Cases</span>
         </a>
       </li>
       <li class="nav-item">
