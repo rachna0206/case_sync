@@ -32,22 +32,12 @@ if (isset($_REQUEST["btndelete"])) {
         window.location = "task_add.php";
     }
 
-    function editdata(id) {
-        eraseCookie("view_id");
-        createCookie("edit_id", id, 1);
-        window.location = "task_add.php";
-    }
-
-    function viewdata(id) {
-        eraseCookie("edit_id");
-        createCookie("view_id", id, 1);
-        window.location = "task_add.php";
-    }
     function add_remark(id, cno) {
         eraseCookie("edit_id");
         eraseCookie("view_id");
         createCookie("add_id", id, 1);
-        createCookie("case_no", cno, 1);
+        createCookie("task", "alloted_by", 1);
+        createCookie("c_no", cno, 1);
         window.location = "case_hist_add.php";
     }
 
@@ -65,6 +55,34 @@ if (isset($_REQUEST["btndelete"])) {
 
     }
 </script>
+<style>
+    .status-label {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 18px;
+        font-weight: 700;
+        min-width: 120px;
+        /* consistent width */
+        text-align: center;
+        border-radius: 20px;
+        text-transform: capitalize;
+    }
+
+    .bg-voilate {
+        background-color: #8a2be2;
+        color: white;
+    }
+
+    .bg-green {
+        background-color: rgb(56, 169, 147);
+        color: white;
+    }
+
+    .bg-light-green {
+        background-color: rgb(70, 191, 33);
+        color: white;
+    }
+</style>
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
@@ -158,11 +176,11 @@ if (isset($_REQUEST["btndelete"])) {
                                     <td scope="row"><?php echo $row["edt"] ?></td>
                                     <td>
                                         <h4>
-                                            <span class="badge rounded-pill bg-<?php
+                                            <span class="status-label badge rounded-pill bg-<?php
                                             echo ($row['status'] == 'pending') ? 'warning' :
-                                                (($row['status'] == 'completed') ? 'success' :
+                                                (($row['status'] == 'completed') ? 'light-green' :
                                                     (($row['status'] == 'allotted') ? 'primary' :
-                                                        (($row['status'] == 'reassign') ? 'info' : 'danger')));
+                                                        (($row['status'] == 're_alloted') ? 'green' : 'voilate')));
                                             ?>">
                                                 <?php echo ucfirst(str_replace("_", "-", $row["status"])); ?>
                                             </span>
@@ -172,24 +190,12 @@ if (isset($_REQUEST["btndelete"])) {
 
 
                                     <td>
-                                        <a href="javascript:viewdata('<?php echo $row["id"] ?>')"><i
-                                                class="bx bx-show-alt bx-sm me-2"></i> </a>
-                                        <a href="javascript:editdata('<?php echo $row["id"] ?>')"><i
-                                                class="bx bx-edit-alt bx-sm me-2 text-success"></i> </a>
-                                        <?php
-                                        if ($row["status"] != "completed") {
-                                            ?>
-                                            <a
-                                                href="javascript:add_remark('<?php echo $row["id"] ?>','<?php echo $row["case_no"] ?>')"><i
-                                                    class="bi bi-plus-circle me-1  bx-sm me-2 text-success"></i> </a>
-                                            <a
-                                                href="javascript:assign_task('<?php echo $row["id"] ?>','<?php echo $row["case_id"] ?>')"><i
-                                                    class="bi bi-arrow-right-circle me-1  bx-sm me-2 text-danger"></i> </a>
-
-                                            <?php
-
-                                        }
-                                        ?>
+                                        <a
+                                            href="javascript:add_remark('<?php echo $row["id"] ?>','<?php echo $row["case_no"] ?>')"><i
+                                                class="bi bi-plus-circle me-1  bx-sm me-2 text-success"></i> </a>
+                                        <a
+                                            href="javascript:assign_task('<?php echo $row["id"] ?>','<?php echo $row["case_id"] ?>')"><i
+                                                class="bi bi-arrow-right-circle me-1  bx-sm me-2 text-danger"></i> </a>
                                         <a href="javascript:deletedata('<?php echo $row["id"] ?>');"><i
                                                 class="bx bx-trash bx-sm me-2 text-danger"></i> </a>
                                     </td>

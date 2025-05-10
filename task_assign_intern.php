@@ -212,7 +212,7 @@ function go_back() {
     eraseCookie("edit_id");
     eraseCookie("view_id");
     eraseCookie("add_id");
-    eraseCookie("case_no");
+    eraseCookie("case_id");
     window.location = "task_alloted_to_me_intern.php";
 }
 </script>

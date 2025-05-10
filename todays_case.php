@@ -2,30 +2,6 @@
 include "header.php"; // this already includes session_start and db_connect
 include "alert.php";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_priority') {
-    if (!isset($_SESSION['id'])) {
-        echo "Session expired.";
-        exit;
-    }
-
-    if (!isset($_POST['priority_id']) || empty($_POST['priority_id'])) {
-        echo "Invalid priority ID.";
-        exit;
-    }
-
-    $priority_id = (int) $_POST['priority_id'];
-    $stmt = $obj->con1->prepare("DELETE FROM temp_sequence WHERE id = ?");
-    $stmt->bind_param("i", $priority_id);
-
-    if ($stmt->execute()) {
-        echo "Priority deleted successfully!";
-    } else {
-        echo "Failed to delete priority.";
-    }
-
-    $stmt->close();
-    exit;
-}
 ?>
 
 
@@ -41,6 +17,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $('#delete_id').val(id);
     }
 </script>
+<style>
+    .status-label {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 18px;
+        font-weight: 700;
+        min-width: 120px;
+        /* consistent width */
+        text-align: center;
+        border-radius: 20px;
+        text-transform: capitalize;
+    }
+
+    .bg-light-green {
+        background-color: rgb(70, 191, 33);
+        color: white;
+    }
+</style>
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
@@ -223,7 +217,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                             $Resp = $stmt->get_result();
                             $i = 1;
                             while ($row = mysqli_fetch_array($Resp)) {
-                                ?>
+                                if ($row['status'] == 'disposed') {
+                                    $class = "danger";
+                                } else if ($row['status'] == 'pending') {
+                                    $class = "warning";
+                                } else {
+                                    $class = "light-green";
+                                } ?>
+
                                 <tr>
                                     <th scope="row"><?php echo $i; ?></th>
                                     <td><?php echo $row["case_no"]; ?></td>
@@ -233,8 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                     <td><?php echo $row["nextdt"]; ?></td>
                                     <td><?php echo $row["smndt"]; ?></td>
                                     <td>
-                                        <h4><span
-                                                class="badge rounded-pill bg-<?php echo ($row['status'] == 'pending') ? 'warning' : 'primary'; ?>">
+                                        <h4><span class="status-label badge rounded-pill bg-<?php echo $class ?>">
                                                 <?php echo ucfirst($row["status"]); ?>
                                             </span></h4>
                                     </td>
@@ -288,9 +288,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             <label for="remark">Remark:</label>
             <textarea id="remark" name="remark" class="form-control" required></textarea>
         </div>
+        <input type="hidden" id="added_by" name="added_by" value="<?php echo $_SESSION["id"]; ?>">
+
         <button type="button" onclick="savePriority()" class="btn btn-primary">Save</button>
         <button type="button" onclick="deletePriority()" class="btn btn-danger" id="deleteBtn"
             style="display:none;">Delete</button>
+
         <button type="button" onclick="closePriorityPopup()" class="btn btn-secondary">Cancel</button>
     </form>
 </div>
@@ -301,7 +304,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 </div>
 
 <!-- Add the following styles -->
-
 <style>
     .priority-icon {
         display: inline-flex;
@@ -366,6 +368,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         var priority_number = document.getElementById('priority_number').value;
         var remark = document.getElementById('remark').value;
         var priority_id = document.getElementById('priority_id').value;
+        var added_by = document.getElementById('added_by').value; // <-- New field
+
 
         if (priority_number === "" || remark === "") {
             alert("Please fill all fields!");
@@ -373,14 +377,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
 
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "save_priority.php", true);
+        xhr.open("POST", "action.php", true);
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         xhr.onload = function () {
             alert(this.responseText);
             closePriorityPopup();
             location.reload();
         };
-        xhr.send("case_id=" + case_id + "&priority_number=" + priority_number + "&remark=" + encodeURIComponent(remark) + "&priority_id=" + priority_id);
+        xhr.send("action=save_priority&case_id=" + case_id + "&priority_number=" + priority_number + "&remark=" + encodeURIComponent(remark) + "&priority_id=" + priority_id +
+            "&added_by=" + added_by);
+
     }
 
     function deletePriority() {

@@ -20,7 +20,7 @@ include "alert.php";
     function file_data(id) {
         eraseCookie("edit_id");
         eraseCookie("view_id", id, 1);
-        createCookie("case_id", id, 1);
+        createCookie("case_doc_id", id, 1);
         window.location = "case_files_intern.php";
     }
 
@@ -29,6 +29,24 @@ include "alert.php";
         $('#delete_id').val(id);
     }
 </script>
+<style>
+    .status-label {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 18px;
+        font-weight: 700;
+        min-width: 120px;
+        /* consistent width */
+        text-align: center;
+        border-radius: 20px;
+        text-transform: capitalize;
+    }
+
+    .bg-light-green {
+        background-color: rgb(70, 191, 33);
+        color: white;
+    }
+</style>
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
@@ -56,7 +74,7 @@ include "alert.php";
     <h1>Case History <span></span></h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+            <li class="breadcrumb-item"><a href="index_intern.php">Home</a></li>
             <li class="breadcrumb-item">Case Histroy</li>
             <li class="breadcrumb-item active">Data</li>
         </ol>
@@ -90,16 +108,33 @@ include "alert.php";
 
                             $alloted_to_value = $_SESSION['intern_id']; // Get the ID of the logged-in intern
                             
-                            $stmt = $obj->con1->prepare("SELECT `case`.*, DATE_FORMAT(`case`.sr_date, '%d-%m-%Y') AS smndt, `case`.id AS case_id, company.name AS company_name, case_type.case_type AS case_type_name, court.name AS cname, city.name AS city_name FROM `case` INNER JOIN `company` ON `case`.company_id = company.id INNER JOIN `case_type` ON `case`.case_type = case_type.id INNER JOIN `court` ON court.id = `case`.court_name INNER JOIN `city` ON city.id = `case`.city_id WHERE `case`.id IN (SELECT DISTINCT case_id FROM `task` WHERE alloted_to = ?) ORDER BY `case`.id DESC;");
+                            //$stmt = $obj->con1->prepare("SELECT `case`.*, DATE_FORMAT(`case`.sr_date, '%d-%m-%Y') AS smndt, `case`.id AS case_id, company.name AS company_name, case_type.case_type AS case_type_name, court.name AS cname, city.name AS city_name FROM `case` INNER JOIN `company` ON `case`.company_id = company.id INNER JOIN `case_type` ON `case`.case_type = case_type.id INNER JOIN `court` ON court.id = `case`.court_name INNER JOIN `city` ON city.id = `case`.city_id WHERE `case`.id IN (SELECT DISTINCT case_id FROM `task` WHERE alloted_to = ?) ORDER BY `case`.id DESC;");
+                            $stmt = $obj->con1->prepare("SELECT 
+                                    `case`.*, 
+                                    date_format(case.sr_date,'%d-%m-%Y') as smndt , 
+                                    case.id as case_id,
+                                    company.name as company_name, 
+                                    court.name as cname, 
+                                    city.name as city_name,
+                                    45-DATEDIFF(CURRENT_DATE, case.sr_date) AS case_counter  
+                                    FROM `case`  join `company` on case.company_id = company.id 
+                                    join `court` on court.id = case.court_name     
+                                    join `city` on city.id = case.city_id 
+                                    ORDER BY case.id DESC");
 
-                            // Bind the parameter
-                            $stmt->bind_param("i", $alloted_to_value);
-
+                            // Bind the parameter                            
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
 
-                            while ($row = mysqli_fetch_array($Resp)) { ?>
+                            while ($row = mysqli_fetch_array($Resp)) {
+                                if ($row['status'] == 'disposed') {
+                                    $class = "danger";
+                                } else if ($row['status'] == 'pending') {
+                                    $class = "warning";
+                                } else {
+                                    $class = "light-green";
+                                } ?>
                                 <tr>
 
                                     <th scope="row"><?php echo $i; ?></th>
@@ -111,7 +146,7 @@ include "alert.php";
                                     <td><?php echo $row["smndt"] ?></td>
                                     <td>
                                         <h4><span
-                                                class="badge rounded-pill bg-<?php echo ($row['status'] == 'pending') ? 'warning' : 'primary' ?>"><?php echo ucfirst($row["status"]); ?></span>
+                                                class="status-label badge rounded-pill bg-<?php echo $class ?>"><?php echo ucfirst($row["status"]); ?></span>
                                         </h4>
                                     </td>
 
@@ -139,15 +174,6 @@ include "alert.php";
         </div>
     </div>
 </section>
-<script>
-    function go_back() {
-        eraseCookie("edit_id");
-        eraseCookie("view_id");
-        window.location = "case_hist.php";
-    }
-
-</script>
-
 <?php
 include "footer_intern.php";
 ?>

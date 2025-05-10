@@ -11,11 +11,25 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
     $stmt->close();
 }
 
-
-
-
-
 ?>
+<style>
+    .status-label {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 18px;
+        font-weight: 700;
+        min-width: 120px;
+        /* consistent width */
+        text-align: center;
+        border-radius: 20px;
+        text-transform: capitalize;
+    }
+
+    .bg-light-green {
+        background-color: rgb(70, 191, 33);
+        color: white;
+    }
+</style>
 <!-- <a href="javascript:go_back();"><i class="bi bi-arrow-left"></i></a> -->
 <div class="pagetitle">
     <h1>Task History</h1>
@@ -61,7 +75,14 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
-                            while ($row = mysqli_fetch_array($Resp)) { ?>
+                            while ($row = mysqli_fetch_array($Resp)) {
+                                if ($row['status'] == 'disposed') {
+                                    $class = "danger";
+                                } else if ($row['status'] == 'pending') {
+                                    $class = "warning";
+                                } else {
+                                    $class = "light-green";
+                                } ?>
                                 <tr>
 
                                     <th scope="row"><?php echo $i; ?></th>
@@ -75,7 +96,7 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
                                     <td><?php echo $row["fdt"] ?></td>
                                     <td>
                                         <h4><span
-                                                class="badge rounded-pill bg-<?php echo ($row['status'] == 'completed') ? 'success' : 'warning' ?>"><?php echo ucfirst($row["status"]); ?></span>
+                                                class="status-label badge rounded-pill bg-<?php echo $class ?>"><?php echo ucfirst($row["status"]); ?></span>
                                         </h4>
                                     </td>
                                     <?php $i++;

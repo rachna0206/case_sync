@@ -14,6 +14,24 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
 
 
 ?>
+<style>
+    .status-label {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 18px;
+        font-weight: 700;
+        min-width: 120px;
+        /* consistent width */
+        text-align: center;
+        border-radius: 20px;
+        text-transform: capitalize;
+    }
+
+    .bg-light-green {
+        background-color: rgb(70, 191, 33);
+        color: white;
+    }
+</style>
 <!-- <a href="javascript:go_back();"><i class="bi bi-arrow-left"></i></a> -->
 <div class="pagetitle">
     <h1>Case History</h1>
@@ -35,7 +53,8 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
                     <h5 class="card-title">Case No : <?php echo $data["case_no"] ?> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                         Company : <?php echo $data["name"] ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Case Type :
                         <?php echo $data["case_type"] ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Advocate :
-                        <?php echo $data["name"] ?></h5>
+                        <?php echo $data["name"] ?>
+                    </h5>
 
 
                     <table class="table datatable">
@@ -61,7 +80,14 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
-                            while ($row = mysqli_fetch_array($Resp)) { ?>
+                            while ($row = mysqli_fetch_array($Resp)) {
+                                if ($row['status'] == 'disposed') {
+                                    $class = "danger";
+                                } else if ($row['status'] == 'pending') {
+                                    $class = "warning";
+                                } else {
+                                    $class = "light-green";
+                                } ?>
                                 <tr>
                                     <th scope="row"><?php echo $i; ?></th>
                                     <td><?php echo $row["intern_name"] ?></td>
@@ -72,8 +98,7 @@ if (isset($_COOKIE['edit_id']) || isset($_COOKIE['view_id'])) {
                                     <td><?php echo $row["fdt"] ?></td>
                                     <td>
                                         <h4>
-                                            <span
-                                                class="badge rounded-pill bg-<?php echo ($row['status'] == 'completed') ? 'success' : 'warning' ?>">
+                                            <span class="status-label badge rounded-pill bg-<?php echo $class ?>">
                                                 <?php echo ucfirst($row["status"]); ?>
                                             </span>
                                         </h4>

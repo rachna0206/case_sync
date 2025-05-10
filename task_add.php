@@ -23,9 +23,6 @@ if (isset($_REQUEST["save"])) {
     $noti_status = 1;
     $play_status = 1;
     $noti_type = "task_assigned";
-    $sender_type = "advocate";
-   
-    $receiver_type="intern";
     $noti_msg = "New task has been assigned";
 
     try {
@@ -62,7 +59,7 @@ if (isset($_REQUEST["save"])) {
         header("location:task.php");
     }
 }
-
+/*
 if (isset($_REQUEST["btn_city"])) {
 
     $state = $_REQUEST['state_id'];
@@ -91,6 +88,7 @@ if (isset($_REQUEST["btn_city"])) {
         header("location:task_add.php");
     }
 }
+    */
 
 if (isset($_REQUEST["btn_intern"])) {
 
@@ -124,7 +122,7 @@ if (isset($_REQUEST["btn_intern"])) {
         header("location:task_add.php");
     }
 }
-
+/*
 if (isset($_REQUEST["btn_case_type"])) {
 
     $case_type_m = $_REQUEST['c_type'];
@@ -153,12 +151,10 @@ if (isset($_REQUEST["btn_case_type"])) {
     }
 }
 
-
+*/
 
 if (isset($_REQUEST["update"])) {
     $e_id = $_COOKIE['edit_id'];
-    $cid = $_REQUEST['case_number_id'];
-    $ato = $_REQUEST['alloted_to'];
     $adate = $_REQUEST['alloted_date'];
     $edate = $_REQUEST['exp_end_date'];
     $status = $_REQUEST['radio'];
@@ -166,8 +162,8 @@ if (isset($_REQUEST["update"])) {
 
 
     try {
-        $stmt = $obj->con1->prepare("UPDATE `task` SET `case_id`=?, `alloted_to`=?,`instruction`=?,`alloted_date`=?,`expected_end_date`=?,`status`=? WHERE `id`=?");
-        $stmt->bind_param("isssssi",  $cid, $ato, $instruction, $adate, $edate, $status, $e_id);
+        $stmt = $obj->con1->prepare("UPDATE `task` SET `instruction`=?,`alloted_date`=?,`expected_end_date`=?,`status`=? WHERE `id`=?");
+        $stmt->bind_param("ssssi", $instruction, $adate, $edate, $status, $e_id);
         $Resp = $stmt->execute();
         if (!$Resp) {
             throw new Exception(
@@ -214,7 +210,7 @@ if (isset($_REQUEST["update"])) {
                                 <label for="case_type" class="form-label">Case Type</label>
                                 <div class="d-flex">
                                     <select class="form-select me-2" id="case_type" name="case_type"
-                                        <?= isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                        <?= (isset($mode) && ($mode === 'view' || $mode === 'edit')) ? 'disabled' : '' ?>>
                                         <option value="">Select Case Type</option>
                                         <?php
                                         $comp = "SELECT * FROM `case_type` WHERE status='enable' and id!=0";
@@ -237,7 +233,7 @@ if (isset($_REQUEST["update"])) {
                                 <label for="city" class="form-label">City</label>
                                 <div class="d-flex">
                                     <select class="form-select me-2" id="city" name="city" onblur="filterTask()"
-                                        <?= isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                        <?= (isset($mode) && ($mode === 'view' || $mode === 'edit')) ? 'disabled' : '' ?>>
                                         <option value="">Select City</option>
                                         <?php
                                         $task = "SELECT * FROM `city` WHERE status='enable'";
@@ -264,11 +260,11 @@ if (isset($_REQUEST["update"])) {
                         <label for="case_id" class="form-label">Case Number <span id="updatedMsg" style="font-style: italic; color: green; display: none;">( Updated )</span></label>
 
                         <select class="form-select" id="case_number_id" name="case_number_id"
-                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
+                            <?php echo (isset($mode) && ($mode === 'view' || $mode === 'edit')) ? 'disabled' : '' ?> required>
                             <option value="">Select a Case</option>
                             <?php
                             if (isset($mode)) {
-                                $task = "SELECT id, case_no FROM `case`";
+                                $task = "SELECT id, case_no FROM `case` where `status` != 'disposed'";
                                 $result = $obj->select($task);
                                 $selectedCaseId = isset($data['case_id']) ? $data['case_id'] : '';
 
@@ -286,7 +282,7 @@ if (isset($_REQUEST["update"])) {
                         <label for="alloted_to_id" class="form-label">Alloted To</label>
                         <div class="d-flex">
                             <select class="form-select" id="alloted_to" name="alloted_to"
-                                <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                <?php echo (isset($mode) && ($mode === 'view' || $mode === 'edit')) ? 'disabled' : '' ?>>
                                 <option value="">Select Intern</option>
                                 <?php
                                 $task = "SELECT * FROM `staff` where `status`='enable'";
@@ -302,7 +298,7 @@ if (isset($_REQUEST["update"])) {
                                 <?php } ?>
                             </select>
                             <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
-                                data-bs-target="#addintrnmodal" <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                data-bs-target="#addintrnmodal" <?php echo (isset($mode) && ($mode === 'view' || $mode === 'edit')) ? 'disabled' : '' ?>>
                                 <i class="bi bi-plus"></i>
                             </button>
                         </div>
@@ -312,8 +308,7 @@ if (isset($_REQUEST["update"])) {
                     <div class="col-md-12">
                         <label for="inputPassword" class="col-sm-2 col-form-label">Task Instruction</label>
                         <textarea class="form-control" style="height: 100px" id="instruction" name="instruction"
-                            required
-                            <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>><?php echo (isset($mode)) ? $data['instruction'] : '' ?></textarea>
+                            required <?php echo isset($mode) && $mode == 'view' ? 'readonly' : '' ?>> <?php echo (isset($mode)) ? $data['instruction'] : '' ?></textarea>
                     </div>
                     <div class="row pt-3">
                         <div class="col-md-6">

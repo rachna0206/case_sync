@@ -60,8 +60,8 @@ if (isset($_REQUEST["save"])) {
         }
 
         // Update the `case` table with the next stage
-        $stmt_case = $obj->con1->prepare("UPDATE `case` SET stage=? WHERE id=?");
-        $stmt_case->bind_param("ii", $next_stage, $_COOKIE['case_id']);
+        $stmt_case = $obj->con1->prepare("UPDATE `case` SET stage=? ,next_date=? WHERE id=?");
+        $stmt_case->bind_param("isi", $next_stage, $next_date, $_COOKIE['case_id']);
         $stmt_case->execute();
         $stmt_case->close();
 
@@ -291,7 +291,7 @@ if (isset($_REQUEST["save"])) {
                         <tbody>
                             <?php
                             $id = $_COOKIE["view_id"];
-                            $stmt = $obj->con1->prepare("SELECT cp.*,s.stage,st.name as inserted_by_name from case_procedings as cp join stage as s on s.id = cp.next_stage join staff as st on st.id = cp.inserted_by where cp.case_id = ? order by cp.id desc;");
+                            $stmt = $obj->con1->prepare("SELECT cp.*,date_format(next_date,'%d-%m-%Y') as next_date,s.stage,st.name as inserted_by_name from case_procedings as cp join stage as s on s.id = cp.next_stage join staff as st on st.id = cp.inserted_by where cp.case_id = ? order by cp.id desc;");
                             $stmt->bind_param("i", $id);
                             $stmt->execute();
                             $Resp = $stmt->get_result();

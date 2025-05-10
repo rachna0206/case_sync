@@ -1,36 +1,8 @@
 <?php
 include "header_intern.php";
 include "alert.php";
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_priority') {
-    if (!isset($_SESSION['id'])) {
-        echo "Session expired.";
-        exit;
-    }
-
-    if (!isset($_POST['priority_id']) || empty($_POST['priority_id'])) {
-        echo "Invalid priority ID.";
-        exit;
-    }
-
-    $priority_id = (int) $_POST['priority_id'];
-    $stmt = $obj->con1->prepare("DELETE FROM temp_sequence WHERE id = ?");
-    $stmt->bind_param("i", $priority_id);
-
-    if ($stmt->execute()) {
-        echo "Priority deleted successfully!";
-    } else {
-        echo "Failed to delete priority.";
-    }
-
-    $stmt->close();
-    exit;
-}
-
 ?>
 <script type="text/javascript">
-
-
     function viewdata(id) {
         eraseCookie("edit_id");
         createCookie("view_id", id, 1);
@@ -42,6 +14,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $('#delete_id').val(id);
     }
 </script>
+<style>
+    .status-label {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 18px;
+        font-weight: 700;
+        min-width: 120px;
+        /* consistent width */
+        text-align: center;
+        border-radius: 20px;
+        text-transform: capitalize;
+    }
+
+    .bg-light-green {
+        background-color: rgb(70, 191, 33);
+        color: white;
+    }
+</style>
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
@@ -127,7 +117,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
-                            while ($row = mysqli_fetch_array($Resp)) { ?>
+                            while ($row = mysqli_fetch_array($Resp)) {
+                                if ($row['status'] == 'disposed') {
+                                    $class = "danger";
+                                } else if ($row['status'] == 'pending') {
+                                    $class = "warning";
+                                } else {
+                                    $class = "light-green";
+                                } ?>
                                 <tr>
 
                                     <th scope="row"><?php echo $i; ?></th>
@@ -140,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                     <td><?php echo $row["smndt"] ?></td>
                                     <td>
                                         <h4><span
-                                                class="badge rounded-pill bg-<?php echo ($row['status'] == 'pending') ? 'warning' : 'primary' ?>"><?php echo ucfirst($row["status"]); ?></span>
+                                                class="status-label badge rounded-pill bg-<?php echo $class ?>"><?php echo ucfirst($row["status"]); ?></span>
                                         </h4>
                                     </td>
 

@@ -50,6 +50,35 @@ if (isset($_REQUEST["btndelete"])) {
 
     }
 </script>
+<style>
+    .status-label {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 18px;
+        font-weight: 700;
+        min-width: 120px;
+        /* consistent width */
+        text-align: center;
+        border-radius: 20px;
+        text-transform: capitalize;
+    }
+
+    .bg-voilate {
+        background-color: #8a2be2;
+        color: white;
+    }
+
+    .bg-green {
+        background-color: rgb(56, 169, 147);
+        color: white;
+    }
+
+    .bg-light-green {
+        background-color: rgb(70, 191, 33);
+        color: white;
+    }
+</style>
+
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
@@ -141,11 +170,11 @@ if (isset($_REQUEST["btndelete"])) {
                                     <td scope="row"><?php echo $row["edt"] ?></td>
                                     <td>
                                         <h4>
-                                            <span class="badge rounded-pill bg-<?php
+                                            <span class="status-label badge rounded-pill bg-<?php
                                             echo ($row['status'] == 'pending') ? 'warning' :
-                                                (($row['status'] == 'completed') ? 'success' :
+                                                (($row['status'] == 'completed') ? 'light-green' :
                                                     (($row['status'] == 'allotted') ? 'primary' :
-                                                        (($row['status'] == 'reassign') ? 'info' : 'danger')));
+                                                        (($row['status'] == 're_alloted') ? 'green' : 'voilate')));
                                             ?>">
                                                 <?php echo ucfirst(str_replace("_", "-", $row["status"])); ?>
                                             </span>

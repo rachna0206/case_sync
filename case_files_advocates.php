@@ -48,7 +48,6 @@ if (isset($_REQUEST["btndelete"])) {
         if (!$Resp_subimg) {
             throw new Exception("Problem in deleting! " . strtok($obj->con1->error, '('));
         }
-        $stmt_del->close();
 
 
     } catch (\Exception $e) {
@@ -112,9 +111,12 @@ if (isset($_REQUEST["btndelete"])) {
                     <h5 class="card-title">Case No : <?php echo $data["case_no"] ?> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                         Company : <?php echo $data["name"] ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Case Type :
                         <?php echo $data["case_type"] ?>
-                        <?php echo $id ?>
 
                     </h5>
+                    <div class="card-title">
+                        <a href="javascript:addmuldocs('<?= $id ?>');"><button type="button" class="btn btn-success">
+                                <i class="bi bi-plus me-1"></i> Add Documents</button></a>
+                    </div>
 
                     <table class="table datatable">
                         <thead>
@@ -130,7 +132,8 @@ if (isset($_REQUEST["btndelete"])) {
                         <tbody>
                             <?php
 
-                            $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.case_type,c1.docs,c1.id as file_id,'main' as file_type,c1.sr_date as date_time,handle_by as handled_by from `case` c1,case_type c2 WHERE c1.case_type=c2.id and c1.id=? and docs!='' union SELECT c1.case_no,c2.case_type,m.docs,m.id as file_id ,'sub' as file_type,m.date_time,m.added_by as handled_by from `case` c1,case_type c2,multiple_doc m WHERE c1.case_type=c2.id and m.c_id=c1.id and c1.id=?;");
+                            $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.case_type,c1.docs,c1.id as file_id,'main' as file_type,c1.sr_date as date_time,handle_by as handled_by from `case` c1,case_type c2 WHERE c1.case_type=c2.id and c1.id=? and docs!='' 
+                            union SELECT c1.case_no,c2.case_type,m.docs,m.id as file_id ,'sub' as file_type,m.date_time,m.added_by as handled_by from `case` c1,case_type c2,multiple_doc m WHERE c1.case_type=c2.id and m.c_id=c1.id and c1.id=?;");
                             $stmt->bind_param("ii", $id, $id);
                             $stmt->execute();
                             $Resp = $stmt->get_result();
@@ -165,9 +168,16 @@ if (isset($_REQUEST["btndelete"])) {
                                     ?></td>
 
                                     <td><?php echo date("d/m/Y", strtotime($row["date_time"])) ?></td>
-                                    <td><a
-                                            href="javascript:deletedata('<?php echo $row["file_id"] ?>','<?php echo $row["file_type"] ?>')"><i
-                                                class="bx bx-trash bx-sm me-2 text-danger"></i> </a></td>
+                                    <td>
+                                        <a
+                                            href="javascript:editmuldocs('<?php echo $row["file_id"] ?>','<?php echo $id ?>');">
+                                            <i class="bx bx-edit-alt bx-sm text-success me-2"></i>
+                                        </a>
+                                        <a
+                                            href="javascript:deletedata('<?php echo $row["file_id"] ?>','<?php echo $row["file_type"] ?>')">
+                                            <i class="bx bx-trash bx-sm me-2 text-danger"></i>
+                                        </a>
+                                    </td>
                                 </tr>
                                 <?php $i++;
                             }
@@ -189,7 +199,20 @@ if (isset($_REQUEST["btndelete"])) {
         eraseCookie("edit_id");
         eraseCookie("view_id");
         eraseCookie("case_id");
+        eraseCookie("case_doc_id");
         window.location = "case_hist.php";
+    }
+    function addmuldocs(id) {
+        eraseCookie("edit_id");
+        eraseCookie("case_id");
+        eraseCookie("edit_muldocs_id");
+        createCookie("view_id", id, 1);
+        window.location = "case_mul_doc.php";
+    }
+    function editmuldocs(id, case_id) {
+        createCookie("edit_muldocs_id", id, 1);
+        createCookie("edit_id", id, 1);
+        window.location = "case_mul_doc.php";
     }
 
 </script>

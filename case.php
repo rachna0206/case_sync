@@ -315,6 +315,24 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
         window.location = "case_mul_doc.php";
     }
 </script>
+<style>
+    .status-label {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 18px;
+        font-weight: 700;
+        min-width: 120px;
+        /* consistent width */
+        text-align: center;
+        border-radius: 20px;
+        text-transform: capitalize;
+    }
+
+    .bg-light-green {
+        background-color: rgb(70, 191, 33);
+        color: white;
+    }
+</style>
 
 <!-- Excel Modal -->
 <div class="modal fade" id="excelModal" tabindex="-1" aria-labelledby="excelModalLabel" aria-hidden="true">
@@ -507,11 +525,11 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                         while ($row = mysqli_fetch_array($Resp)) {
 
                             if ($row['status'] == 'disposed') {
-                                $class = "success";
+                                $class = "danger";
                             } else if ($row['status'] == 'pending') {
                                 $class = "warning";
                             } else {
-                                $class = "secondary";
+                                $class = "light-green";
                             }
 
 
@@ -527,7 +545,7 @@ if (isset($_REQUEST["btnexcelsubmit"]) && $_FILES["excel_file"]["tmp_name"] !== 
                                 <td><?php echo $row["city_name"] ?></td>
                                 <td>
                                     <h4><span
-                                            class="badge rounded-pill bg-<?php echo $class ?>"><?php echo ucfirst($row["status"]); ?></span>
+                                            class="status-label badge rounded-pill bg-<?php echo $class ?>"><?php echo ucfirst($row["status"]); ?></span>
                                     </h4>
                                 </td>
 

@@ -200,28 +200,32 @@ if (isset($_REQUEST['action'])) {
 
     if ($_REQUEST["action"] == "filter_case") {
         $html_case = "";
-        $case_type_id = $_REQUEST["case_type_id"];
-        $city_id = $_REQUEST["city_id"];
+        $case_type_id = intval($_REQUEST["case_type_id"]);
+        $city_id = intval($_REQUEST["city_id"]);
+        $status = "disposed";
 
-        $stmt = $obj->con1->prepare("SELECT c1.id, c1.case_no, a1.name FROM `case` c1, `staff` a1 WHERE c1.handle_by = a1.id AND `case_type` = ? AND `city_id` = ?");
-        $stmt->bind_param("ii", $case_type_id, $city_id);
+        $stmt = $obj->con1->prepare("
+        SELECT c1.id, c1.case_no, a1.name 
+        FROM `case` c1 
+        JOIN `staff` a1 ON c1.handle_by = a1.id 
+        WHERE c1.case_type = ? AND c1.city_id = ? AND c1.status != ?
+    ");
+
+        $stmt->bind_param("iis", $case_type_id, $city_id, $status);
         $stmt->execute();
         $Resp = $stmt->get_result();
         $stmt->close();
 
-        while ($row = mysqli_fetch_array($Resp)) {
-
-            $html_case .= '<option value="' . $row['id'] . '" >' . $row["case_no"] . ' - (' . $row["name"] . ')' . '</option>';
+        while ($row = $Resp->fetch_assoc()) {
+            $html_case .= '<option value="' . $row['id'] . '">' . htmlspecialchars($row["case_no"]) . ' - (' . htmlspecialchars($row["name"]) . ')</option>';
         }
+
         echo $html_case;
     }
 
+
     // DELETE PRIORITY
     if ($_POST['action'] === 'delete_priority') {
-        if (!isset($_SESSION['id'])) {
-            echo "Session expired.";
-            exit;
-        }
 
         if (!isset($_POST['priority_id']) || empty($_POST['priority_id'])) {
             echo "Invalid priority ID.";
@@ -229,7 +233,7 @@ if (isset($_REQUEST['action'])) {
         }
 
         $priority_id = (int) $_POST['priority_id'];
-        $stmt = $obj->con1->prepare("DELETE FROM temp_sequence WHERE id = ?");
+        $stmt = $obj->con1->prepare("DELETE FROM `temp_sequence` WHERE `id` = ?");
         $stmt->bind_param("i", $priority_id);
 
         if ($stmt->execute()) {
@@ -240,5 +244,26 @@ if (isset($_REQUEST['action'])) {
 
         $stmt->close();
         exit;
+    }
+
+    if ($_POST["action"] == "save_priority") {
+        $case_id = intval($_POST["case_id"]);
+        $priority_number = intval($_POST["priority_number"]);
+        $remark = trim($_POST["remark"]);
+        $priority_id = isset($_POST["priority_id"]) && $_POST["priority_id"] != "" ? intval($_POST["priority_id"]) : null;
+        $added_by = isset($_POST["added_by"]) ? $_POST["added_by"] : null;
+
+
+        if ($priority_id) {
+            // Update
+            $stmt = $obj->con1->prepare("UPDATE `temp_sequence` SET `sequence` = ?, `remark` = ?,`added_by`= ? WHERE `id` = ?");
+            $stmt->bind_param("isii", $priority_number, $remark, $added_by, $priority_id);
+            echo $stmt->execute() ? "Priority updated successfully." : "Failed to update priority.";
+        } else {
+            // Insert
+            $stmt = $obj->con1->prepare("INSERT INTO `temp_sequence` (`case_id`, `sequence`, `remark`,`added_by`) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("iisi", $case_id, $priority_number, $remark, $added_by);
+            echo $stmt->execute() ? "Priority added successfully." : "Failed to add priority.";
+        }
     }
 }

@@ -2,7 +2,7 @@
 include "header_intern.php";
 include "alert.php";
 
-$id = isset($_COOKIE["case_id"]) ? $_COOKIE["case_id"] : "";
+$id = isset($_COOKIE["case_doc_id"]) ? $_COOKIE["case_doc_id"] : "";
 
 $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.name,c3.case_type FROM `case` c1, company c2,case_type c3 WHERE c1.company_id=c2.id and c1.case_type=c3.id and c1.id=?");
 $stmt->bind_param('i', $id);
@@ -12,40 +12,58 @@ $stmt->close();
 
 if (isset($_REQUEST["btndelete"])) {
     $c_id = $_REQUEST['delete_id'];
+    $file_type = $_REQUEST["delete_record"];
 
     try {
-        $stmt_subimg = $obj->con1->prepare("SELECT * FROM `case` WHERE id=?");
-        $stmt_subimg->bind_param("i", $c_id);
+        if ($file_type == "main") {
+            $stmt_subimg = $obj->con1->prepare("SELECT * FROM `case` WHERE id=?");
+            $stmt_subimg->bind_param("i", $c_id);
+
+
+            $stmt_del = $obj->con1->prepare("update  `case` set docs='' where id=?");
+
+        } else {
+
+
+            $stmt_subimg = $obj->con1->prepare("SELECT * FROM `multiple_doc` WHERE id=?");
+            $stmt_subimg->bind_param("i", $c_id);
+            $stmt_del = $obj->con1->prepare("delete from multiple_doc where id=?");
+        }
         $stmt_subimg->execute();
         $Resp_subimg = $stmt_subimg->get_result()->fetch_assoc();
         $stmt_subimg->close();
 
-        if (file_exists("documents/case" . $Resp_subimg["docs"])) {
-            unlink("documents/case" . $Resp_subimg["docs"]);
+        $stmt_del->bind_param("i", $c_id);
+        $stmt_del->execute();
+        $stmt_del->close();
+
+
+
+        if (file_exists("documents/case/" . $Resp_subimg["docs"])) {
+            unlink("documents/case/" . $Resp_subimg["docs"]);
         }
 
-        $stmt_del = $obj->con1->prepare("DELETE FROM `case` WHERE id=?");
-        $stmt_del->bind_param("i", $c_id);
-        $Resp = $stmt_del->execute();
-        if (!$Resp) {
+
+        if (!$Resp_subimg) {
             throw new Exception("Problem in deleting! " . strtok($obj->con1->error, '('));
         }
-        $stmt_del->close();
+
+
     } catch (\Exception $e) {
         setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
     }
 
-    if ($Resp) {
+    if ($Resp_subimg) {
         setcookie("msg", "data_del", time() + 3600, "/");
     }
     header("location:case_files_intern.php");
 }
 ?>
 <script type="text/javascript">
-    function deletedata(id, case_no) {
+    function deletedata(id, file_type) {
         $('#deleteModal').modal('toggle');
         $('#delete_id').val(id);
-        $('#delete_record').html(case_no);
+        $('#delete_record').val(file_type);
     }
 </script>
 <!-- Basic Modal -->
@@ -56,10 +74,12 @@ if (isset($_REQUEST["btndelete"])) {
                 <h5 class="modal-title">Confirm Deletion</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="post" action="case.php">
+            <form method="post" action="case_files_intern.php">
                 <input type="hidden" name="delete_id" id="delete_id">
+                <input type="hidden" name="delete_record" id="delete_record">
+
                 <div class="modal-body">
-                    Are you sure you really want to delete Case No: "<span id="delete_record"></span>" ?
+                    Are you sure you really want to delete Case File ?
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -90,8 +110,13 @@ if (isset($_REQUEST["btndelete"])) {
                 <div class="card-body">
                     <h5 class="card-title">Case No : <?php echo $data["case_no"] ?> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                         Company : <?php echo $data["name"] ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Case Type :
-                        <?php echo $data["case_type"] ?></h5>
+                        <?php echo $data["case_type"] ?>
+                    </h5>
 
+                    <div class="card-title">
+                        <a href="javascript:addmuldocs('<?= $id ?>');"><button type="button" class="btn btn-success">
+                                <i class="bi bi-plus me-1"></i> Add Documents</button></a>
+                    </div>
                     <table class="table datatable">
                         <thead>
                             <tr>
@@ -99,13 +124,13 @@ if (isset($_REQUEST["btndelete"])) {
                                 <th scope="col">Case Files</th>
                                 <th scope="col">Added By</th>
                                 <th scope="col">Date Time</th>
-
+                                <th scope="col">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
 
-                            $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.case_type,c1.docs,c1.id as file_id,'main' as file_type,c1.sr_date as date_time,'admin' as handled_by from `case` c1,case_type c2 WHERE c1.case_type=c2.id  and  c1.id=? and docs!=''
+                            $stmt = $obj->con1->prepare("SELECT c1.case_no,c2.case_type,c1.docs,c1.id as file_id,'main' as file_type,c1.sr_date as date_time,handle_by as handled_by from `case` c1,case_type c2 WHERE c1.case_type=c2.id  and  c1.id=? and docs!=''
                                 union
                                 SELECT c1.case_no,c2.case_type,m.docs,m.id as file_id ,'sub' as file_type,m.date_time,m.added_by as handled_by from `case` c1,case_type c2,multiple_doc m WHERE c1.case_type=c2.id and   m.c_id=c1.id and c1.id=?");
                             $stmt->bind_param("ii", $id, $id);
@@ -143,6 +168,16 @@ if (isset($_REQUEST["btndelete"])) {
 
                                     ?></td>
                                     <td><?php echo date("d/m/Y", strtotime($row["date_time"])) ?></td>
+                                    <td>
+                                        <a
+                                            href="javascript:editmuldocs('<?php echo $row["file_id"] ?>','<?php echo $id ?>');">
+                                            <i class="bx bx-edit-alt bx-sm text-success me-2"></i>
+                                        </a>
+                                        <a
+                                            href="javascript:deletedata('<?php echo $row["file_id"] ?>','<?php echo $row["file_type"] ?>')">
+                                            <i class="bx bx-trash bx-sm me-2 text-danger"></i>
+                                        </a>
+                                    </td>
                                 </tr>
                                 <?php $i++;
                             }
@@ -163,9 +198,22 @@ if (isset($_REQUEST["btndelete"])) {
     function go_back() {
         eraseCookie("edit_id");
         eraseCookie("view_id");
+        eraseCookie("case_id");
+        eraseCookie("case_doc_id");
         window.location = "case_hist_intern.php";
     }
-
+    function addmuldocs(id) {
+        eraseCookie("edit_id");
+        eraseCookie("case_id");
+        eraseCookie("edit_muldocs_id");
+        createCookie("view_id", id, 1);
+        window.location = "case_mul_doc_intern.php";
+    }
+    function editmuldocs(id, case_id) {
+        createCookie("edit_muldocs_id", id, 1);
+        createCookie("edit_id", id, 1);
+        window.location = "case_mul_doc_intern.php";
+    }
 </script>
 
 <?php

@@ -1,5 +1,5 @@
 <?php
-include "header.php";
+include "header_intern.php";
 
 $case_id = isset($_COOKIE['edit_id']) ? $_COOKIE['edit_id'] : $_COOKIE['view_id'];
 
@@ -53,14 +53,14 @@ if (isset($_REQUEST["save"])) {
 
         // Success
         setcookie("msg", "data", time() + 3600, "/");
-        header("location:case_files_advocates.php");
+        header("location:case_files_intern.php");
         exit();
 
     } catch (Exception $e) {
         // Log error
         setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
         setcookie("msg", "fail", time() + 3600, "/");
-        header("location:case_files_advocates.php");
+        header("location:case_files_intern.php");
         exit();
     }
 }
@@ -70,7 +70,7 @@ if (isset($_REQUEST["update"])) {
     $file_name_one = $_FILES['file_name_one']['name'];
     $file_name_one = str_replace(' ', '_', $file_name_one);
     $file_path_one = $_FILES['file_name_one']['tmp_name'];
-    $old_img = $_REQUEST['old_img'];
+    //$old_img = $_REQUEST['old_img'];
 
     // Rename file for product image
     if ($file_name_one != "") {
@@ -96,10 +96,10 @@ if (isset($_REQUEST["update"])) {
     if ($Resp) {
         setcookie("edit_muldocs_id", "", time() - 3600, "/");
         setcookie("msg", "update", time() + 3600, "/");
-        header("location:case_files_advocates.php");
+        header("location:case_files_intern.php");
     } else {
         setcookie("msg", "fail", time() + 3600, "/");
-        header("location:case_files_advocates.php");
+        header("location:case_files_intern.php");
     }
 }
 
@@ -125,7 +125,7 @@ function generateUniqueFileName($directory, $filename)
     <h1>Case Documents</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+            <li class="breadcrumb-item"><a href="index_intern.php">Home</a></li>
             <li class="breadcrumb-item">Case Documents</li>
             <li class="breadcrumb-item active">
                 <?php echo (isset($mode)) ? (($mode == 'view') ? 'View' : 'Edit') : 'Add' ?> Case Documents
@@ -214,10 +214,9 @@ function generateUniqueFileName($directory, $filename)
         eraseCookie("view_id");
         eraseCookie("edit_muldocs_id");
         eraseCookie("view_muldocs_id");
-        window.location = "case_files_advocates.php";
+        window.location = "case_files_intern.php";
     }
 </script>
-
 <?php
-include "footer.php";
+include "footer_intern.php";
 ?>

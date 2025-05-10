@@ -1,13 +1,38 @@
 <?php
 include "header_intern.php";
 include "alert.php";
+
+
+if (isset($_REQUEST["btndelete"])) {
+    $id = $_REQUEST['delete_id'];
+    try {
+        $stmt_del = $obj->con1->prepare("DELETE FROM task WHERE id = ?");
+        $stmt_del->bind_param("i", $id);
+        $Resp = $stmt_del->execute();
+        if (!$Resp) {
+            throw new Exception("Problem in deleting! " . strtok($obj->con1->error, '('));
+        }
+        $stmt_del->close();
+    } catch (\Exception $e) {
+        setcookie("sql_error", urlencode($e->getMessage()), time() + 3600, "/");
+    }
+
+    if ($Resp) {
+        setcookie("msg", "data_del", time() + 3600, "/");
+        header("location:task_alloted_to_me_intern.php");
+    } else {
+        setcookie("msg", "fail", time() + 3600, "/");
+        header("location:task_alloted_to_me_intern.php");
+    }
+}
 ?>
 <script type="text/javascript">
     function add_data(id, cno) {
         eraseCookie("edit_id");
         eraseCookie("view_id");
         createCookie("add_id", id, 1);
-        createCookie("case_no", cno, 1);
+        createCookie("task", "alloted_to", 1);
+        createCookie("c_no", cno, 1);
         window.location = "case_hist_add_intern.php";
     }
 
@@ -29,10 +54,43 @@ include "alert.php";
     function viewdata(id, cno) {
         eraseCookie("edit_id");
         createCookie("view_id", id, 1);
-        createCookie("case_no", cno, 1);
+        //createCookie("case_no", cno, 1);
         window.location = "task_intern_view.php";
     }
+    function deletedata(id) {
+        $('#deleteModal').modal('toggle');
+        $('#delete_id').val(id);
+
+    }
 </script>
+<style>
+    .status-label {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 18px;
+        font-weight: 700;
+        min-width: 120px;
+        /* consistent width */
+        text-align: center;
+        border-radius: 20px;
+        text-transform: capitalize;
+    }
+
+    .bg-voilate {
+        background-color: #8a2be2;
+        color: white;
+    }
+
+    .bg-green {
+        background-color: rgb(56, 169, 147);
+        color: white;
+    }
+
+    .bg-light-green {
+        background-color: rgb(70, 191, 33);
+        color: white;
+    }
+</style>
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
@@ -41,7 +99,7 @@ include "alert.php";
                 <h5 class="modal-title">Confirm Deletion</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="post" action="case.php">
+            <form method="post" action="task_alloted_to_me_intern.php">
                 <input type="hidden" name="delete_id" id="delete_id">
                 <div class="modal-body">
                     Are you sure you want to delete this record?
@@ -121,15 +179,13 @@ include "alert.php";
                                     <td><?php echo $row["edt"] ?></td>
                                     <td>
                                         <h4>
-                                            <span class="badge rounded-pill bg-<?php
+                                            <span class="status-label badge rounded-pill bg-<?php
                                             echo ($row['status'] == 'pending') ? 'warning' :
-                                                (($row['status'] == 'completed') ? 'success' :
+                                                (($row['status'] == 'completed') ? 'light-green' :
                                                     (($row['status'] == 'allotted') ? 'primary' :
-                                                        (($row['status'] == 'reassign') ? 'info' : 'danger')));
+                                                        (($row['status'] == 're_alloted') ? 'green' : 'voilate')));
                                             ?>">
-                                                <?php
-                                                echo ucfirst(str_replace("_", "-", $row["status"]));
-                                                ?>
+                                                <?php echo ucfirst(str_replace("_", "-", $row["status"])); ?>
                                             </span>
                                         </h4>
                                     </td>
@@ -155,9 +211,8 @@ include "alert.php";
 
                                         }
                                         ?>
-
-
-
+                                        <a href="javascript:deletedata('<?php echo $row["id"] ?>');"><i
+                                                class="bx bx-trash bx-sm me-2 text-danger"></i> </a>
 
                                     </td>
                                 </tr>

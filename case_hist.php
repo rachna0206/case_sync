@@ -18,19 +18,38 @@ include "alert.php";
         createCookie("view_id", id, 1);
         window.location = "case_hist_view.php";
     }
+    function file_data(id) {
+        eraseCookie("edit_id");
+        eraseCookie("view_id", id, 1);
+        createCookie("case_doc_id", id, 1);
+        window.location = "case_files_advocates.php";
+    }
 
     function deletedata(id) {
         $('#deleteModal').modal('toggle');
         $('#delete_id').val(id);
     }
-    function viewproceeding(id) {
-        eraseCookie("edit_id");
-        createCookie("view_id", id, 1);
-        window.location = "case_proceeding_view.php";
-    }
 
 
 </script>
+<style>
+    .status-label {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 18px;
+        font-weight: 700;
+        min-width: 120px;
+        /* consistent width */
+        text-align: center;
+        border-radius: 20px;
+        text-transform: capitalize;
+    }
+
+    .bg-light-green {
+        background-color: rgb(70, 191, 33);
+        color: white;
+    }
+</style>
 <!-- Basic Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
@@ -106,7 +125,14 @@ include "alert.php";
                             $stmt->execute();
                             $Resp = $stmt->get_result();
                             $i = 1;
-                            while ($row = mysqli_fetch_array($Resp)) { ?>
+                            while ($row = mysqli_fetch_array($Resp)) {
+                                if ($row['status'] == 'disposed') {
+                                    $class = "danger";
+                                } else if ($row['status'] == 'pending') {
+                                    $class = "warning";
+                                } else {
+                                    $class = "light-green";
+                                } ?>
                                 <tr>
 
                                     <th scope="row"><?php echo $i; ?></th>
@@ -119,7 +145,7 @@ include "alert.php";
                                     <td><?php echo $row["smndt"] ?></td>
                                     <td>
                                         <h4><span
-                                                class="badge rounded-pill bg-<?php echo ($row['status'] == 'pending') ? 'warning' : 'primary' ?>"><?php echo ucfirst($row["status"]); ?></span>
+                                                class="status-label badge rounded-pill bg-<?php echo $class ?>"><?php echo ucfirst($row["status"]); ?></span>
                                         </h4>
                                     </td>
 
@@ -145,15 +171,6 @@ include "alert.php";
         </div>
     </div>
 </section>
-
-<script type="text/javascript">
-    function file_data(id) {
-        eraseCookie("edit_id");
-        eraseCookie("view_id", id, 1);
-        createCookie("case_doc_id", id, 1);
-        window.location = "case_files_advocates.php";
-    }
-</script>
 
 <?php
 include "footer.php";

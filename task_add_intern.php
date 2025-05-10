@@ -23,9 +23,6 @@ if (isset($_REQUEST["save"])) {
     $noti_status = 1;
     $play_status = 1;
     $noti_type = "task_assigned";
-    $sender_type = "intern";
-
-    $receiver_type = "intern";
     $noti_msg = "New task has been assigned";
 
     try {
@@ -62,7 +59,7 @@ if (isset($_REQUEST["save"])) {
         header("location:task_alloted_by_me_intern.php");
     }
 }
-
+/*
 if (isset($_REQUEST["btn_city"])) {
 
     $state = $_REQUEST['state_id'];
@@ -91,6 +88,7 @@ if (isset($_REQUEST["btn_city"])) {
         header("location:task_add_intern.php");
     }
 }
+    */
 
 if (isset($_REQUEST["btn_intern"])) {
 
@@ -124,7 +122,7 @@ if (isset($_REQUEST["btn_intern"])) {
         header("location:task_add_intern.php");
     }
 }
-
+/*
 if (isset($_REQUEST["btn_case_type"])) {
 
     $case_type_m = $_REQUEST['c_type'];
@@ -152,12 +150,10 @@ if (isset($_REQUEST["btn_case_type"])) {
         header("location:task_add_intern.php");
     }
 }
-
+*/
 
 if (isset($_REQUEST["update"])) {
     $e_id = $_COOKIE['edit_id'];
-    $cid = $_REQUEST['case_number_id'];
-    $ato = $_REQUEST['alloted_to'];
     $adate = $_REQUEST['alloted_date'];
     $edate = $_REQUEST['exp_end_date'];
     $status = $_REQUEST['radio'];
@@ -165,8 +161,8 @@ if (isset($_REQUEST["update"])) {
 
 
     try {
-        $stmt = $obj->con1->prepare("UPDATE task SET case_id=?, alloted_to=?,instruction=?,alloted_date=?,expected_end_date=?,status=? WHERE id=?");
-        $stmt->bind_param("isssssi", $cid, $ato, $instruction, $adate, $edate, $status, $e_id);
+        $stmt = $obj->con1->prepare("UPDATE task SET instruction=?,alloted_date=?,expected_end_date=?,status=? WHERE id=?");
+        $stmt->bind_param("ssssi",  $instruction, $adate, $edate, $status, $e_id);
         $Resp = $stmt->execute();
         if (!$Resp) {
             throw new Exception(
@@ -213,7 +209,7 @@ if (isset($_REQUEST["update"])) {
                                 <label for="case_type" class="form-label">Case Type</label>
                                 <div class="d-flex">
                                     <select class="form-select me-2" id="case_type" name="case_type"
-                                        <?= isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                        <?= (isset($mode) && ($mode === 'view' || $mode === 'edit')) ? 'disabled' : '' ?>>
                                         <option value="">Select Case Type</option>
                                         <?php
                                         // Query all enabled case types
@@ -238,7 +234,7 @@ if (isset($_REQUEST["update"])) {
                                 <label for="city" class="form-label">City</label>
                                 <div class="d-flex">
                                     <select class="form-select me-2" id="city" name="city" onchange="filterTask()"
-                                        <?= (isset($mode) && $mode === 'view') ? 'disabled' : '' ?>>
+                                        <?= (isset($mode) && ($mode === 'view' || $mode === 'edit')) ? 'disabled' : '' ?>>
                                         <option value="">Select City</option>
                                         <?php
                                         // Make sure to fetch cities properly
@@ -271,7 +267,7 @@ if (isset($_REQUEST["update"])) {
                         <label for="case_id" class="form-label">Case Number <span id="updatedMsg" style="font-style: italic; color: green; display: none;">( Updated )</span></label>
 
                         <select class="form-select" id="case_number_id" name="case_number_id"
-                            <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?> required>
+                            <?php echo (isset($mode) && ($mode === 'view' || $mode === 'edit')) ? 'disabled' : '' ?> required>
                             <option value="">Select a Case</option>
                             <?php
                             if (isset($mode)) {
@@ -293,7 +289,7 @@ if (isset($_REQUEST["update"])) {
                         <label for="alloted_to_id" class="form-label">Alloted To</label>
                         <div class="d-flex">
                             <select class="form-select" id="alloted_to" name="alloted_to"
-                                <?php echo isset($mode) && $mode === 'view' ? 'disabled' : '' ?>>
+                                <?php echo (isset($mode) && ($mode === 'view' || $mode === 'edit')) ? 'disabled' : ''?>>
                                 <option value="">Select Intern</option>
                                 <?php
                                 $task = "SELECT * FROM `staff` where `status`='enable'";
@@ -459,15 +455,3 @@ if (isset($_REQUEST["update"])) {
 <?php
 include "footer_intern.php";
 ?>
-
-
-
-
-
-
-
-
-
-
-
-jhanvi	9874563210	j@gmail.com	11-04-2025	
